@@ -49,7 +49,7 @@ def test_build_models_returns_full_spine() -> None:
         "Business": 1,
         "Domain": 9,
         "IntelligenceProduct": 6,
-        "Platform": 5,
+        "Platform": 12,  # 5 top-level + 7 sub-platforms (google/meta sub-channels)
     }
     # Every node validated to its declared model type.
     by_label = {
@@ -115,11 +115,11 @@ def test_dry_run_builds_without_db() -> None:
     buf = io.StringIO()
     with redirect_stdout(buf):
         results = spine_seed.seed_spine(dry_run=True)
-    assert len(results) == 21
+    assert len(results) == 28  # 1 Business + 9 Domain + 6 Product + 12 Platform
     assert {r["status"] for r in results} == {"dry_run"}
     assert all({"label", "key"} <= set(r) for r in results)
     # The dry-run banner prints the count (and no DB was acquired).
-    assert "21 spine nodes" in buf.getvalue()
+    assert "28 spine nodes" in buf.getvalue()
 
 
 # ---------------------------------------------------------------------------
