@@ -1,18 +1,26 @@
 # ThoughtWire Causal Knowledge Graph (dc-kg)
 
-AI-first ingestion engine + **Neo4j** causal knowledge graph + live canvas, built to the
-authoritative spec in [`docs/final-schema-claude.md`](docs/final-schema-claude.md) and the
-approved plan in [`docs/implementation-kg-plan.md`](docs/implementation-kg-plan.md).
+LLM-built **Neo4j** causal knowledge graph + live canvas for the **rare_seeds** tenant,
+built to the authoritative spec in [`docs/final-schema-claude.md`](docs/final-schema-claude.md).
 
 The graph is the "business body" an agent wakes into: a single `Business` root with a
-tri-axis spine (`Domain ∥ IntelligenceProduct ∥ Platform`), a `Metric` hub, and an
-evidence-backed causal layer — built by parallel proposer agents and **reviewed before write**.
+tri-axis spine (`Domain ∥ IntelligenceProduct ∥ Platform`), a `Metric` hub, and a
+two-type metric→metric edge layer (structural `DECOMPOSES_INTO` + causal `INFLUENCES`).
+
+The spine is **seeded deterministically**; the **metric/edge layer is built by an LLM
+agentic harness** (`harness/agentic/`) — an LLM reads every metric and constructs the
+nodes + edges itself, auto-approving its writes through the graph MCP tools.
 
 ## Architecture (one line)
 
-deterministic pre-pass → per-dashboard proposer agents (own context, read-only) →
-proposal queue → **single arbitration writer** (idempotent `MERGE` on canonical id →
-no write races, no dup nodes) → canvas review (accept/edit/reject) → reconcile → causal pass.
+deterministic spine seed (Phase 0) → LLM **node** agents (parallel, by namespace) →
+**BARRIER** → LLM **structural-edge** agents → LLM **weave-causal** agents → LLM
+**critique** (loops / orphans / leaves report) — every write lands in Neo4j via the
+single `MERGE` arbitration writer.
+
+> **dc-kg is NOT a git repo.** There is no git rollback. The **Neo4j backup**
+> (`harness/store/backup.py export`) is the only safety net for graph data — a live
+> build always exports first, then wipes, then rebuilds.
 
 ## Stack
 
@@ -20,187 +28,164 @@ no write races, no dup nodes) → canvas review (accept/edit/reject) → reconci
 |---|---|
 | Backend | Python ≥3.12, managed with **uv** |
 | Graph DB | **Neo4j 6.x** driver + **`neo4j-rust-ext`** (Rust PackStream accelerator) → local Homebrew Neo4j (Community) |
-| Agent | **claude-agent-sdk** (uses your Claude Code CLI subscription login automatically) |
-| MCP | **FastMCP** stdio server (`mcp__graph__*`), shared by the CLI and the SDK harness |
-| Frontend (M2) | Vite + React + shadcn/ui + `@xyflow/react` + Zustand |
+| Builder | LLM agentic harness over **claude-agent-sdk** (`claude-opus-4-8`, `bypassPermissions`); uses your Claude Code CLI subscription login automatically |
+| MCP | **FastMCP** stdio server (`mcp__graph__*`) — write + doc-reading tools shared by the CLI, the SDK harness, and Claude Code |
+| Frontend | Vite + React + shadcn/ui + `@xyflow/react` + Zustand |
 
-## Quickstart (M1 — spine bootstrap)
+## Quickstart
 
 ```bash
-# 0. Neo4j must be running (you already have it):  brew services start neo4j
+# 0. Neo4j must be running:
+brew services start neo4j
+
 # 1. Add your Neo4j password:
 #    edit harness/.env  →  NEO4J_PASSWORD=<your password>
 
 # 2. Install (uv creates .venv and installs everything, including the Rust ext):
 uv sync --extra dev
 
-# 3. Apply schema constraints/indexes:
+# 3. Apply schema constraints/indexes, then seed the tri-axis spine:
 uv run kg schema-init
+uv run python -m harness.ingest.spine_seed       # 1 Business · 9 Domain · 6 Product · 5 Platform
 
-# 4. Bootstrap the spine (Business / Domain / IntelligenceProduct):
-uv run kg bootstrap-spine        # non-interactive path (smoke test)
+# 4. Preview the LLM build plan (offline — no SDK, no Neo4j writes):
+uv run kg build --dry-plan
 
 # 5. Status:
 uv run kg status
 ```
 
-## KG skeleton build (meaningful metrics + causal edges)
+## The spine (seeded deterministically)
 
-Builds scope-correct `Metric` nodes — **one clean core formula each** — from the chart-registry +
-OpenAPI dynamic-metric inventory, **enriched by the BC_2 dbt seeds**, then the two-type causal layer
-(`DECOMPOSES_INTO` + `INFLUENCES`, with `relation` subtypes). Full design + rationale:
-[`docs/kg-skeleton-build-implementation.md`](docs/kg-skeleton-build-implementation.md).
-
-```bash
-# Inspect/validate the BC_2 offline snapshot (hashes, row counts, SQL-noise rejection) — no writes
-uv run kg import-bc2-snapshot --tenant rare_seeds
-
-# Build scoped Metric nodes (one core formula each):
-uv run kg build-skeleton --tenant rare_seeds --dry-run --write-csv   # compute + artifacts, no write
-uv run kg build-skeleton --tenant rare_seeds                          # write metric proposals to queue
-uv run kg build-skeleton --tenant rare_seeds --apply-safe            # approve + apply nodes via arbitration
-
-# Causal edges (review-only except auto-safe formula/component):
-uv run kg run-causal --reconcile     # deterministic edges + deprecate stale (never delete)
-uv run kg run-causal --dry-run       # compute + write data/skeleton/edge_diff.* , no writes
-uv run kg run-causal --llm           # + curated cross-domain + LLM residual (judge+refuter, review-only)
-
-# Migrate any legacy ROLLS_UP_TO / CORRELATES_WITH / CAUSES edges to the 2-type model:
-uv run kg migrate-metric-edges --dry-run
-```
-
-**Edge model:** `DECOMPOSES_INTO` (`relation` ∈ formula·component·identity·rollup·crossproduct·funnel)
-+ `INFLUENCES` (`relation` ∈ curated_rule·llm_verified·statistical·statistical_candidate·promoted).
-`formula`/`identity` are hard same-scope (Google-Search never → YouTube); `crossproduct`/`rollup` are
-additive channel→blended (a ratio is never summed). Artifacts land in `data/skeleton/`
-(`canonical_metric_registry.<t>.json`, `metric_registry.<t>.csv`, `composites.<t>.csv`,
-`coverage_report.<t>.json`, `edge_diff.<t>.<run>.json`).
-
-**Blank-canvas bootstrap** (destructive — back up first): `backup export` → `backup wipe --yes` →
-`schema-init` → `bootstrap-spine` → `build-skeleton --apply-safe` → `link-spine --apply-safe` →
-`run-causal --reconcile` → (`run-causal --llm` / `import-discovered-edges`) → review → `apply`.
-**The exact, copy-pasteable ordered sequence is the [Full rebuild runbook](#full-rebuild-runbook-backup--fresh-build--spine--causal--stats) below.**
-
-**MCP proposal tools + slash commands** (proposal-only; never bypass arbitration):
-`/inspect-bc2`, `/propose-skeleton`, `/propose-influences`, `/validate-edge`, `/lookup-notes`
-(backed by `mcp__graph__{inspect_bc2_sources, propose_metric_nodes, propose_metric_edges_from_formula,
-propose_metric_to_spine_edges, propose_influence_candidates, validate_edge_candidate,
-explain_edge_candidate, lookup_metric_notes, list_metrics_by_domain, list_metrics_by_scope,
-get_chart_registry_entry}`).
-
-## Statistical discovery integration (knowledgeGraph feed)
-
-Folds the teammate's *measured* causal-discovery output (PCMCI+ / Granger / FDR / deseasonalized,
-nonlinear CMIknn) into the graph as **review-only `INFLUENCES {relation: statistical}`** edges through
-the same proposal → review → arbitration path — replacing the 4 hand-typed correlation seeds with
-measured evidence. **Self-contained**: the discovery engine is ported into `harness/discovery/` behind
-an optional `[discovery]` extra, so the heavy scientific stack (`tigramite`/`statsmodels`) never enters
-the core runtime and there is **no runtime dependency on the sibling repo**.
+The reusable, client-portable backbone is seeded by
+[`harness/ingest/spine_seed.py`](harness/ingest/spine_seed.py) from two local seed files
+(`harness/seed/spine_seed.json` + `harness/seed/platforms.json`), each upserted through the
+single arbitration writer (idempotent `MERGE` — re-running never duplicates):
 
 ```bash
-# Import the (vendored, offline) discovered-edges feed → review-only INFLUENCES proposals
-uv run kg import-discovered-edges --tenant rare_seeds --dry-run   # resolution report, no writes
-uv run kg import-discovered-edges --tenant rare_seeds             # → proposal queue
-
-# Regenerate the feed yourself (opt-in; heavy stats isolated from core)
-uv sync --extra discovery
-uv run kg discover --mode synthetic --tenant smoketest            # offline self-test (no network)
-TW_API_BASE=http://localhost:8005 \
-  uv run kg discover --mode pcmci --tenant rare_seeds             # live: needs BC_2 API + Snowflake creds
+uv run python -m harness.ingest.spine_seed             # seed into Neo4j
+uv run python -m harness.ingest.spine_seed --dry-run   # build + validate + print only (no DB)
 ```
 
-Platform-coarse ids (`google.roas`) resolve onto the **existing** scoped nodes (`metric:google:roas`)
-via a scope-map + chart-map + aliases, **strict same-scope** (never cross-scope); unresolved / `ml.*` /
-chart-noise pairs are logged with reason codes in `data/skeleton/discovery_import.<t>.json` (no silent
-drops). Edges carry a **measured** Beta weight (`|corr|` × `discovery_score` × `fdr_pass`), are FDR-gated,
-**reconcile-protected** (`kg_discovery` never auto-deprecated), never overwrite a human-reviewed edge,
-and never promote to `CAUSES`. Upstream/downstream traversal (`/api/traverse/*`) spans both edge types
-with **structural ("made-of") vs causal ("driven-by") hop labels**. Proposal-only MCP tool +
-`/import-discovery` slash command (`mcp__graph__propose_discovery_edges`). Vendored fixtures:
-`data/discovered_edges.<t>.csv`. Full design: [`docs/kg-integration-plan-claude.md`](docs/kg-integration-plan-claude.md)
-+ [`INTEGRATION-ANALYSIS-claude.md`](INTEGRATION-ANALYSIS-claude.md).
+It seeds **1 `Business`** root, **9 `Domain`** functional columns, **6 `IntelligenceProduct`**
+apps (`miq`, `ciq`, `piq`, **`storefront_iq`**, `dc`, `creative_iq`), and **5 `Platform`**
+source/action vendors (`ga4`, `google_ads`, `meta_ads`, `klaviyo`, `magento`).
 
-## Full rebuild runbook (backup → fresh build → spine → causal → stats)
+> The **Magento platform now displays as "StoreFront IQ"** (`platform_name`), but its
+> `platform_id` stays `magento` so Snowflake / dbt-mart lineage joins survive.
 
-The exact, ordered sequence to rebuild the whole graph from a clean slate. Every step flows through
-the single arbitration writer; nothing is ever destroyed without an explicit backup first. Run from the
-repo root with Neo4j up and `harness/.env` carrying `NEO4J_PASSWORD`. The default `--tenant` is
-`rare_seeds` throughout — change it consistently if you rebuild another tenant.
+## Building the graph (LLM agentic builder)
+
+The metric/edge layer is built by [`harness/agentic/`](harness/agentic/) — driven by
+`kg build`. **A live build WIPES + REBUILDS the graph** (it exports a backup first). It runs
+**phased-parallel**:
+
+| Phase | What it does |
+|---|---|
+| **0 — spine-seed** *(deterministic)* | `backup export` → `wipe --yes` → run `spine_seed.py`. The **wipe is skipped on `--smoke`** (subset layered onto the existing graph). |
+| **1 — nodes** *(parallel)* | One agent per namespace/domain bucket (~13 buckets, **max 35 metrics each**); each reads its slice via the doc tools and creates `Metric` nodes + spine edges. **BARRIER** — every node exists before any edge is drawn. |
+| **2 — structural edges** *(parallel)* | `DECOMPOSES_INTO` edges from each metric's formula. |
+| **3 — weave causal** *(parallel)* | `INFLUENCES` edges from reasoning over notes / `depends_on` / BC_2 SQL. |
+| **4 — critique** *(single agent)* | Audits the finished graph; writes `data/build-report.<runId>.json` with loops, orphans, and leaves. |
+
+Agents work **only** through the `mcp__graph__*` tools (filesystem/shell/web builtins are
+denied) and **auto-approve** their writes (`bypassPermissions`) — there is no human review
+queue in this build path.
 
 ```bash
-# ── 0. Install ────────────────────────────────────────────────────────────────
-brew services start neo4j                      # Neo4j must be running
-uv sync --extra dev                            # core runtime + pytest (everything except heavy stats)
-#   (only if you will REGENERATE the discovery feed yourself — step 6b:)
-# uv sync --extra discovery                     # adds tigramite/statsmodels/… (heavy, isolated)
+# Offline preview: phase plan, node slices, system prompts, resolved SDK options.
+# Never imports the SDK and never touches Neo4j.
+uv run kg build --dry-plan
+uv run kg build --dry-plan --smoke                 # preview just the smoke subset
 
-# ── 1. Back up the current graph (non-destructive — do this first) ────────────
-uv run python -m harness.store.backup export   # → data/backups/neo4j-backup-<ts>.json (verified)
-# uv run python -m harness.store.backup info data/backups/neo4j-backup-<ts>.json   # optional: inspect
+# Smoke build: build ONLY the blended.* ROAS chain (one small namespace) and
+# SKIP the destructive wipe — a fast, non-destructive end-to-end validation.
+uv run kg build --smoke
 
-# ── 2. Start fresh (DESTRUCTIVE — drops schema + all nodes/edges) ─────────────
-uv run python -m harness.store.backup wipe --yes
-#   to undo: uv run python -m harness.store.backup restore data/backups/neo4j-backup-<ts>.json
+# Full build (DESTRUCTIVE — exports a backup, wipes, then rebuilds the whole graph):
+uv run kg build
 
-# ── 3. Schema + tri-axis spine (Business · 9 Domain · 5 Product · 5 Platform · chart-types) ──
-uv run kg schema-init                          # constraints + indexes
-uv run kg bootstrap-spine                      # seeds spine + Platform nodes + HAS_/USES_PLATFORM edges
-uv run kg status                               # sanity: node counts + constraints
-
-# ── 4. Build the metric skeleton (scoped Metric nodes, one clean formula each) ─
-uv run kg import-bc2-snapshot --tenant rare_seeds                    # inspect/validate sources, no writes
-uv run kg build-skeleton --tenant rare_seeds --dry-run --write-csv   # compute + artifacts, no writes
-uv run kg build-skeleton --tenant rare_seeds --apply-safe            # apply Metric nodes via arbitration
-
-# ── 5. Connect every metric to the spine (Domain · Product · Platform) ────────
-uv run kg link-spine --tenant rare_seeds --dry-run        # coverage per axis; asserts 0 metrics → 'dc'
-uv run kg link-spine --tenant rare_seeds --apply-safe     # apply deterministic BELONGS_TO_DOMAIN / PART_OF_PRODUCT / SOURCES
-# uv run kg link-spine --tenant rare_seeds --llm           # OPTIONAL: LLM fills the residual axes (review-only)
-
-# ── 6a. Causal edges — decomposition + influences ─────────────────────────────
-uv run kg run-causal --auto-approve --reconcile   # land auto-safe DECOMPOSES_INTO{formula} + deprecate stale
-#   (identity / rollup / crossproduct / funnel DECOMPOSES_INTO are deterministic but held REVIEW-ONLY by
-#    policy — apply them in step 7. Bare `run-causal --reconcile` queues everything for review instead.)
-# uv run kg run-causal --llm                        # OPTIONAL: curated + LLM-residual INFLUENCES (judge+refuter, review-only)
-
-# ── 6b. Densify metric→metric edges (relationship layers) ─────────────────────
-# Native: emit the BC_2 dbt-seed relationship layer (component_of/computes → DECOMPOSES_INTO,
-# correlated_with/causes → INFLUENCES). Same-scope structural edges auto-apply; INFLUENCES review-only:
-uv run kg import-bc2-edges --tenant rare_seeds --dry-run             # resolution report per relation
-uv run kg import-bc2-edges --tenant rare_seeds --apply-safe          # land same-scope structural; hold influences
-# Import knowledgeGraph's vendored edge layers (structural/compositional/crossproduct), all review-only:
-uv run kg import-graph-edges --tenant rare_seeds --dry-run           # per-layer resolution report
-uv run kg import-graph-edges --tenant rare_seeds                     # → review-only DECOMPOSES_INTO proposals
-
-# ── 6c. Statistical discovery (the "stats" feed) ──────────────────────────────
-# Uses the VENDORED, offline feed by default — no network, no sibling repo needed:
-uv run kg import-discovered-edges --tenant rare_seeds --dry-run      # resolution report, no writes
-uv run kg import-discovered-edges --tenant rare_seeds               # → review-only INFLUENCES{statistical} proposals
-#   Regenerate the feed yourself (opt-in; needs `uv sync --extra discovery` from step 0):
-# uv run kg discover --mode synthetic --tenant smoketest             # offline self-test (no network)
-# TW_API_BASE=http://localhost:8005 uv run kg discover --mode pcmci --test cmiknn --tenant rare_seeds  # live: needs API + creds
-
-# ── 7. Review + apply the review-only proposals (steps 5 --llm / 6a --llm / 6b) ─
-uv run kg proposals list                       # newest run; --run <id> for a specific one
-uv run kg proposals approve --all --run <id>   # or approve/reject individually (or use the canvas queue)
-uv run kg apply --run <id>                     # land the approved proposals via arbitration
-
-# ── 8. Verify ─────────────────────────────────────────────────────────────────
-uv run kg status                               # spine + metric + edge counts > 0
-uv run pytest harness/tests -q                 # full suite green (266 passed)
+# Restrict the node phase to specific source namespaces (pipe-delimited):
+uv run kg build --namespaces 'google_ads|meta_ads'
 ```
 
-**What auto-applies vs what waits for review:** `bootstrap-spine`, `build-skeleton --apply-safe`,
-`link-spine --apply-safe`, and the deterministic stages of `run-causal` land automatically (idempotent,
-`review:false`). Everything LLM or statistical — `link-spine --llm`, `run-causal --llm`,
-`import-discovered-edges` — is **review-only**: it writes proposals you triage in step 7 (CLI or the
-canvas review queue). Re-running any step is idempotent: a second `build-skeleton`/`link-spine`/
-`run-causal` is a no-op when nothing changed, and `run-causal --reconcile` deprecates (never deletes)
-edges the recompute no longer produces.
+`kg build` has exactly three flags: `--smoke`, `--namespaces`, and `--dry-plan`.
+
+### Edge model
+
+Two metric→metric edge types, both written via `draw_edge`:
+
+* **`DECOMPOSES_INTO`** (structural / definitional) — carries a `role`
+  (`numerator` · `denominator` · `addend` · `subtrahend` · `factor` · `driver` · `component`)
+  and `confidence = 1.0` (no decay). The arbitration writer rejects any other role. The
+  **sign is derived** from the role (`denominator` / `subtrahend` ⇒ −1, else +1).
+* **`INFLUENCES`** (causal) — carries an LLM **confidence tier** (`0.8` / `0.6` / `0.4`), a
+  low `evidence_mass`, a one-sentence `mechanism`, and a `cross_domain` flag. Causal sign is
+  **deferred** (unset in V1).
+
+> Statistical scoring (Snowflake / PCMCI) is **deferred** — `INFLUENCES` edges are
+> LLM-reasoned, not statistically estimated. The optional `kg discover` engine and its
+> vendored feed remain on disk but feed nothing into the build path.
+
+### Metric node fields
+
+Each `Metric` node carries, beyond identity/classification: `node_kind`
+(`metric` · `intermediary` · `input` · `constant`), `has_endpoint`, the ML fields
+`is_ml` / `ml_kind` (`prediction` · `performance` · `hybrid`) / `ml_task` / `ml_model` /
+`ml_entity`, `chart_id` + `chart_type`, `source_expr` (SQL expr from the metric registry),
+and `bc2_ref` (backend repo `file:line`).
+
+### OpenAPI ingestion filter
+
+[`harness/ingest/endpoint_filters.py`](harness/ingest/endpoint_filters.py) keeps only
+KG-relevant routes. `DENY_GROUPS` excludes the operational route groups —
+`admin`, `auth`, `master-config`, `feature-flags`, `tenants`, `support`, `audit-log`,
+`health`, `discovery`, `alerts-config`, `data-quality` — so they never seed a metric or
+become a metric's endpoint. The 8 `operational.*` metrics are dropped from the node set.
+
+## Full rebuild runbook
+
+The exact, ordered sequence to rebuild the whole graph from a clean slate. Run from the
+repo root with Neo4j up and `harness/.env` carrying `NEO4J_PASSWORD`.
+
+```bash
+# ── 0. Neo4j up + password ────────────────────────────────────────────────────
+brew services start neo4j                          # Neo4j must be running
+#    edit harness/.env  →  NEO4J_PASSWORD=<your password>
+uv sync --extra dev                                # core runtime + pytest
+
+# ── 1. Back up the current graph (the ONLY safety net — do this first) ─────────
+uv run python -m harness.store.backup export       # → data/backups/neo4j-backup-<ts>.json (verified)
+#    to undo a later wipe:
+#    uv run python -m harness.store.backup restore data/backups/neo4j-backup-<ts>.json
+
+# ── 2. Preview the build plan (offline — no SDK, no writes) ────────────────────
+uv run kg build --dry-plan                         # phases, slices, prompts, resolved SDK options
+
+# ── 3. Smoke-build to validate the pipeline (non-destructive — wipe skipped) ───
+uv run kg build --smoke                            # builds only the blended.* ROAS chain
+
+# ── 4. Full build (DESTRUCTIVE — Phase 0 exports a backup, then wipes + rebuilds)
+uv run kg build                                    # phased-parallel LLM build of the whole graph
+
+# ── 5. Review the build report ────────────────────────────────────────────────
+#    data/build-report.<runId>.json — node/edge counts, loops, orphans, leaves
+uv run kg status                                   # spine + metric + edge counts > 0
+
+# ── 6. Start the canvas (backend, then frontend) ──────────────────────────────
+uv run uvicorn harness.api.server:app --port 8000  # backend (FastAPI + SSE)
+cd app/kg-canvas && bun run dev                     # frontend → http://localhost:5173
+```
+
+`kg build` does **not** re-apply the schema — its Phase 0 only backs up, wipes, and re-seeds
+the spine. The constraints/indexes are assumed to exist, so run `kg schema-init` once on a
+fresh DB (Quickstart step 3). Every step above flows through the single arbitration writer;
+nothing is destroyed without the explicit Phase-0 backup first.
 
 ## Dev servers (canvas)
 
-Start the **backend** first (Neo4j must be running and `harness/.env` must have `NEO4J_PASSWORD` set):
+Start the **backend** first (Neo4j must be running and `harness/.env` must have
+`NEO4J_PASSWORD` set):
 
 ```bash
 # FastAPI + SSE on http://127.0.0.1:8000
@@ -220,37 +205,56 @@ bun run dev          # → http://localhost:5173
 
 Health check: `http://127.0.0.1:8000/api/health`
 
-### Driving it from the Claude Code CLI (the intended UX)
+**Canvas UI:** a persistent, decoupled sidebar + filter panel (state survives reloads;
+toggling sidebar tabs never hides the filter); a **signed / cyclic TraversalPanel**
+(upstream / downstream paths with per-hop sign and `path_sign`); **shift-click** a metric to
+render its chart in the `MetricChartPanel`; and edge styling that reflects sign,
+`cross_domain`, and leaf / loop membership. There is **no Run-Causal button** (the graph is
+built by `kg build`, not from the canvas).
 
-With `.mcp.json` registered, restart Claude Code in this dir, then:
+**API surface:** traversal (`/api/traverse/{upstream,downstream}`) returns
+`{paths, cyclic_paths, summary}` — acyclic paths in `paths`, loop-bearing paths surfaced
+separately in `cyclic_paths` — each path carrying per-hop `sign` and a `path_sign`.
+`/api/metric-chart?metric_uid=` backs shift-click. `POST /api/run-causal` is removed and
+returns **501 Not Implemented** (superseded by the agentic builder).
+
+### Driving it from the Claude Code CLI
+
+With `.mcp.json` registered, restart Claude Code in this dir. The graph MCP server exposes:
+
+* **Write tools:** `create_business_node`, `create_domain_node`, `create_product_node`,
+  `create_metric_node`, `draw_edge`.
+* **Doc-reading tools** (read source files, never the graph): `list_metrics`,
+  `get_metric_source`, `get_bc2_sql`, `lookup_metric_notes`, `get_chart_registry_entry`,
+  `inspect_bc2_sources`.
+* **Graph reads:** `lookup_node`, `search_nodes`, `kg_status`, `list_metrics_by_domain`,
+  `list_metrics_by_scope`, `validate_edge_candidate`, `explain_edge_candidate`.
+
+A `PreToolUse` hook renders a field table for each proposed spine node and asks you to
+confirm before it is written.
+
+## CLI reference
 
 ```
-/create-business-node          # confirm-before-create table → approve → written
-/create-domain-node marketing
-/create-product-node miq
-/kg-status
+kg schema-init           Apply Neo4j constraints and indexes.
+kg bootstrap-spine       Upsert the spine from the seed (via the kg CLI; see also spine_seed).
+kg status                Node counts per label + existing constraints.
+kg lookup <label> <key>  Fetch one node by label + key.
+kg build                 Build the metric/edge layer with the LLM agentic builder
+                           (--smoke | --namespaces 'a|b' | --dry-plan).
+kg migrate-metric-edges  Rewrite legacy ROLLS_UP_TO / CORRELATES_WITH / CAUSES edges onto
+                           the V1 DECOMPOSES_INTO + INFLUENCES model (originals deprecated).
+kg prune-empty           Delete Domains / chart-types that no Metric uses.
+kg reconcile             Collapse duplicate nodes (e.g. concept metrics).
+kg discover              Optional [discovery] extra: synthetic / scan / PCMCI+ feed
+                           (writes data/discovered_edges.<tenant>.csv; not used by `kg build`).
 ```
 
-A `PreToolUse` hook renders a field table for each proposed node and asks you to confirm;
-nodes derived from excluded endpoints (`master-config`, `POST/DELETE`, `/auth`…) are denied.
+The `prepass` / `ingest-dashboard` / `ingest-all` / `proposals` / `apply` subcommands belong
+to the older deterministic ingestion engine (review-queue path) and remain available, but the
+metric/edge **graph is built by `kg build`**, not by them.
 
-## Layout
-
-```
-harness/   Python backend — kg/ (driver·schema·models·arbitration·reconcile),
-           mcp/ (graph_server), cli/ (kg), hooks/, store/, api/, seed/,
-           ingest/ (prepass·proposer·apply·causal + skeleton·bc2_snapshot·openapi_inventory·edge_scoring·import_discovery),
-           discovery/ (ported PCMCI+/Granger/CMIknn engine — optional [discovery] extra, lazy-loaded)
-harness/seed/  spine_seed, component_types, rare_seeds_*, identities, funnel_flow,
-               concept_causal_rules, formula_overrides.<t>, skeleton_overrides.<t>
-app/       Vite canvas (graph view · node/edge detail · review queue · edge-diff · traversal · Cmd+K search · discovery evidence)
-.claude/   MCP registration, hooks, slash commands
-data/      events.jsonl, proposals, backups, runs, discovered_edges.<t>.csv,
-           skeleton/ (canonical_metric_registry, coverage, edge_diff, discovery_import…)
-docs/      final-schema-claude.md (THE spec), kg-skeleton-build-implementation.md, frd-docs/
-```
-
-### Backup / restore (full graph, online, APOC-free)
+## Backup / restore (full graph, online, APOC-free)
 
 ```bash
 uv run python -m harness.store.backup export        # → data/backups/neo4j-backup-<ts>.json (verified)
@@ -259,61 +263,43 @@ uv run python -m harness.store.backup restore <file># re-create nodes + relation
 uv run python -m harness.store.backup wipe --yes    # drop schema + all data (destructive)
 ```
 
+## Layout
+
+```
+harness/
+  agentic/   LLM build harness — orchestrator (phased-parallel slicing + run),
+             runner (ClaudeAgentOptions + Phase 0 backup/wipe/seed), prompts (per-phase)
+  ingest/    spine_seed, endpoint_filters, openapi_inventory, bc2_snapshot, edge_scoring,
+             + the older review-queue pipeline (prepass·proposer·apply·orchestrator)
+  kg/        driver · schema · models · arbitration (single MERGE writer) · reconcile · config
+  mcp/       graph_server (FastMCP mcp__graph__* — write + doc-reading tools)
+  cli/       kg (the `kg` console script)
+  api/       server (FastAPI + SSE; traverse · metric-chart)
+  store/     backup (export/restore/info/wipe) · proposals · jsonl
+  seed/      spine_seed.json · platforms.json · component_types.json · …
+  discovery/ optional PCMCI+/Granger/CMIknn engine ([discovery] extra, lazy-loaded)
+app/kg-canvas/   Vite canvas — graph view · node/edge detail · TraversalPanel ·
+                 MetricChartPanel · Cmd+K search · persistent sidebar/filter
+data/      build-report.<runId>.json · backups/ · events.jsonl · metric_nodes.rare_seeds.json
+docs/      final-schema-claude.md (THE spec) · frd-docs/
+.claude/   MCP registration, hooks, slash commands
+```
+
 ## Status
 
-- **M1 — spine bootstrap** ✅ _complete & verified on live Neo4j_: schema (12 constraints,
-  6 indexes), single arbitration writer (idempotent MERGE), FastMCP graph server,
-  confirm-before-create + exclusion hook, spine slash commands + CLI, 26 passing tests.
-  DB is a pristine V1 graph (Business + 9 Domain + 5 IntelligenceProduct).
-- **M2 — metric/UIComponent ingestion engine + canvas** ✅ _engine + canvas live_:
-  deterministic pre-pass → per-dashboard proposer agents → proposal queue → single
-  arbitration writer → reconcile; Vite canvas + SSE + review queue. 432 `Metric` +
-  full spine on live Neo4j (ingest of the remaining dashboards is resumable).
-- **M3 — causal layer (the point)** ✅ _implemented & verified_: `ingest/causal.py` +
-  `kg run-causal` + `/run-causal`. Two metric→metric edge types — `DECOMPOSES_INTO` (relation
-  formula·component·identity·rollup·crossproduct·funnel) + `INFLUENCES` (relation
-  curated_rule·llm_verified·statistical·statistical_candidate·promoted) — `ROLLS_UP_TO` /
-  `CORRELATES_WITH` / `CAUSES` retired into `relation` (with `migrate-metric-edges`). Deterministic
-  formula/identity/rollup/crossproduct/funnel + LLM-proposed influences (`--llm`: judge + refuter +
-  self-consistency + `Beta(α,β)`, **review-only**). Per-edge scoring at creation
-  (`ingest/edge_scoring.py`); stale deterministic edges deprecated, never deleted
-  (`kg run-causal --reconcile`).
-- **KG skeleton build (BC_2 ingestion)** ✅ _implemented & verified_: meaningful scope-correct
-  `Metric` nodes with **one clean core formula each** from chart-registry + OpenAPI dynamic-metric
-  inventory + BC_2 dbt seeds (`ingest/{openapi_inventory,bc2_snapshot,skeleton}.py`,
-  `kg import-bc2-snapshot` / `kg build-skeleton`). Composite tables decomposed (not metrics);
-  hard same-scope gate (Google-Search never → YouTube); 11 proposal-only MCP tools + 5 slash
-  commands; canvas redesign (relation styling, edge detail, edge-diff, traversal). `kg-canvas` builds
-  clean. Full reference:
-  [`docs/kg-skeleton-build-implementation.md`](docs/kg-skeleton-build-implementation.md).
-- **Statistical discovery integration (knowledgeGraph feed)** ✅ _implemented & verified_: the PCMCI+ /
-  Granger / FDR feed imported as review-only `INFLUENCES{statistical}` onto existing nodes
-  (`ingest/import_discovery.py`, `kg import-discovered-edges`) — 29/61 of the vendored feed resolved,
-  the rest logged with reason codes (no silent drops). Discovery engine ported **self-contained** behind
-  the optional `[discovery]` extra (`harness/discovery/`, `kg discover --mode synthetic|scan|pcmci`);
-  strict same-scope resolution (scope-map + chart-map + aliases); **measured** Beta weight; `kg_discovery`
-  reconcile-protected + no-clobber of reviewed edges; unified structural/causal traversal with labeled
-  hops; canvas adds Cmd+K search, a discovery-evidence panel, a discovery review bucket, an always-visible
-  edge legend, and scope/domain filters. Reference:
-  [`docs/kg-integration-plan-claude.md`](docs/kg-integration-plan-claude.md).
-- **Tri-axis spine connection** ✅ _implemented & verified_: every skeleton Metric is wired onto the
-  spine — `BELONGS_TO_DOMAIN` (Domain), `PART_OF_PRODUCT` (IntelligenceProduct), `SOURCES`
-  (Platform) — by a deterministic-first cascade (`ingest/spine_links.py`, `kg link-spine`), multi-valued
-  (a metric can carry several domains/products/platforms; blended metrics union their components'
-  platforms), sourced **only** from chart-registry + OpenAPI + dc-kg enums (no BC_2 seeds). Platform
-  nodes (ga4·google_ads·meta_ads·klaviyo·magento) are seeded at `bootstrap-spine`. **Decision Canvas
-  (`dc`) is never auto-assigned** (built separately) — the LLM-residual vocab excludes it, a hard guard
-  drops any `dc` the model returns, and the CLI asserts 0 `dc` assignments. The LLM (`--llm`) only fills
-  the genuinely-ambiguous residual axes, review-only.
-- **Metric→metric densification (relationship layers)** ✅ _implemented & verified_: the dormant BC_2
-  dbt-seed relationship layer (`component_of`/`computes` → `DECOMPOSES_INTO`, `correlated_with`/`causes`
-  → `INFLUENCES`) is now emitted as edges (`ingest/relationship_edges.py`, `kg import-bc2-edges`) — a
-  three-tier resolver (provenance ref → coded-name reconciliation → concept) maps BC_2 ids onto live
-  metrics, with a **same-scope hard gate** (cross-scope structural dropped) and direction flips for
-  `component_of`/`computes`. knowledgeGraph's vendored edge layers (structural/compositional/crossproduct)
-  import review-only via `ingest/import_graph_layers.py` / `kg import-graph-edges`. Together: **metric→metric
-  edges 333 → 404, leaf metrics 605 → 582.** The remaining fine-grained leaves need the (deferred)
-  statistical layer — `kg discover --mode pcmci --test cmiknn` against the live API. **274 passing tests**
-  (incl. an end-to-end `test_smoke.py` exercising every CLI/importer/API/MCP surface); `kg-canvas` builds
-  clean (bun).
-- M4 — RBAC + Org-Graph engine
+- **Spine** ✅ seeded deterministically (`spine_seed.py`): 1 Business · 9 Domain ·
+  6 IntelligenceProduct (incl. `storefront_iq`) · 5 Platform (Magento displayed as
+  "StoreFront IQ"). Idempotent `MERGE` — re-runs never duplicate.
+- **LLM agentic builder** ✅ `harness/agentic/` + `kg build`: phased-parallel
+  (seed → nodes → BARRIER → structural → weave → critique), auto-approved writes via the
+  `mcp__graph__*` tools, build report to `data/build-report.<runId>.json`. Offline
+  `--dry-plan` preview; non-destructive `--smoke` validation on the `blended.*` chain.
+- **Edge model** ✅ two metric→metric types: structural `DECOMPOSES_INTO` (role + derived
+  sign + confidence 1.0) and causal `INFLUENCES` (LLM confidence tier + mechanism +
+  `cross_domain`). Statistical (Snowflake / PCMCI) scoring deferred.
+- **Canvas** ✅ persistent decoupled sidebar/filter, signed/cyclic TraversalPanel,
+  shift-click MetricChartPanel, edge sign / cross-domain / leaf-loop styling.
+- **Deferred:** temporal DAG, statistical scoring, governance population (Policy / Threshold
+  / RBAC), multi-client import tooling (schema fields stay defined).
+</content>
+</invoke>
