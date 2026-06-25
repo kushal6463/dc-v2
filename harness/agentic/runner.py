@@ -309,18 +309,23 @@ def _new_run_id() -> str:
     return datetime.now(UTC).strftime("%Y%m%dT%H%M%SZ")
 
 
-def phase0_backup_and_seed(*, run_id: str, smoke: bool) -> dict[str, Any]:
+def phase0_backup_and_seed(
+    *, run_id: str, smoke: bool, resume: bool = False
+) -> dict[str, Any]:
     """Phase 0 (deterministic): backup export → wipe → spine seed.
 
     The Neo4j backup is the ONLY safety net (dc-kg is not a git repo), so a live
     build ALWAYS exports first, then wipes, then re-seeds the tri-axis spine. The
     backup / wipe / driver imports are local so this is only reached on a live
     run (never from ``--dry-plan``). On a ``smoke`` build the wipe is skipped so a
-    small subset can be layered onto the existing graph non-destructively.
+    small subset can be layered onto the existing graph non-destructively. On a
+    ``resume`` build the wipe is also skipped so the partially-built graph is kept
+    and the orchestrator only fills in the missing buckets/edges.
 
     Args:
         run_id: The build run id (recorded in the phase-0 event).
         smoke: When ``True``, skip the destructive wipe (seed is idempotent).
+        resume: When ``True``, skip the wipe to preserve a partial graph.
 
     Returns:
         ``{"backup_path", "wipe"?, "seed"}`` summary.
@@ -337,7 +342,7 @@ def phase0_backup_and_seed(*, run_id: str, smoke: bool) -> dict[str, Any]:
     )
 
     summary: dict[str, Any] = {"backup_path": str(backup_path)}
-    if not smoke:
+    if not smoke and not resume:
         summary["wipe"] = backup.wipe(db)
         append_event(
             {"type": "build_phase", "phase": 0, "run_id": run_id, "step": "wipe",
@@ -357,6 +362,7 @@ async def run(
     smoke: bool = False,
     namespaces: list[str] | None = None,
     dry_plan: bool = False,
+    resume: bool = False,
 ) -> dict[str, Any]:
     """Drive the full agentic build (phases 0–4) and write the build report.
 
@@ -387,14 +393,16 @@ async def run(
 
     run_id = _new_run_id()
     append_event({"type": "build_start", "run_id": run_id, "smoke": smoke,
-                  "namespaces": namespaces, "tool_calling": SDK_TOOLCALL_SUPPORTED})
+                  "namespaces": namespaces, "resume": resume,
+                  "tool_calling": SDK_TOOLCALL_SUPPORTED})
 
-    phase0 = phase0_backup_and_seed(run_id=run_id, smoke=smoke)
+    phase0 = phase0_backup_and_seed(run_id=run_id, smoke=smoke, resume=resume)
 
     report = await orchestrator.build(
         smoke=smoke,
         namespaces=namespaces,
         dry_plan=dry_plan,
+        resume=resume,
         run_id=run_id,
     )
     report["phase0"] = phase0

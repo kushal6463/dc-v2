@@ -992,6 +992,7 @@ def cmd_build(args: argparse.Namespace) -> int:
     """
     namespaces = _parse_namespaces(getattr(args, "namespaces", None))
     smoke = bool(getattr(args, "smoke", False))
+    resume = bool(getattr(args, "resume", False))
 
     # Offline plan path: import only the orchestrator's pure planner + the
     # options preview — never the SDK, never the Neo4j driver.
@@ -1002,16 +1003,17 @@ def cmd_build(args: argparse.Namespace) -> int:
         return 0
 
     # Live build. Backup reminder up front (the engine also exports in Phase 0).
+    # --resume keeps the existing (partial) graph and only fills the gaps.
     print(
-        "NOTE: a live build wipes + rebuilds the graph. It is preceded by an "
-        "automatic Phase-0 backup, but you may also run "
-        "`python -m harness.store.backup export` first.",
+        "NOTE: a live build wipes + rebuilds the graph (skipped with --resume / "
+        "--smoke). It is preceded by an automatic Phase-0 backup, but you may "
+        "also run `python -m harness.store.backup export` first.",
         file=sys.stderr,
     )
     from harness.agentic import runner
 
     report = engine.run_sync(
-        runner.run(smoke=smoke, namespaces=namespaces, dry_plan=False)
+        runner.run(smoke=smoke, namespaces=namespaces, dry_plan=False, resume=resume)
     )
     print(json.dumps(report, indent=2, default=str))
     return 0
@@ -1186,6 +1188,13 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Restrict the node phase to these source namespaces, pipe-delimited "
         "(e.g. 'google_ads|meta_ads'). Default: all.",
+    )
+    p_build.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume a partial build: skip the Phase-0 wipe, skip node buckets "
+        "already fully materialized, and re-run the edge phases (idempotent) to "
+        "fill the gaps. Use after a rate-limited build left the graph incomplete.",
     )
     p_build.add_argument(
         "--dry-plan",

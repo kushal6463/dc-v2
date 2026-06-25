@@ -460,11 +460,28 @@ def _graph_report() -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 
+def _existing_metric_uids() -> set[str]:
+    """Return the set of ``metric_uid``s already present in the graph (resume).
+
+    Lazy driver import keeps the offline/``--dry-plan`` path clean. Used by a
+    ``resume`` build to skip node buckets that are already fully materialized so
+    a rate-limited run picks up where it left off instead of rebuilding from
+    scratch.
+    """
+    from harness.kg.driver import get_db
+
+    return {
+        row["uid"]
+        for row in get_db().read("MATCH (m:Metric) RETURN m.metric_uid AS uid")
+    }
+
+
 async def build(
     *,
     smoke: bool = False,
     namespaces: list[str] | None = None,
     dry_plan: bool = False,
+    resume: bool = False,
     run_id: str = "adhoc",
     concurrency: int = DEFAULT_CONCURRENCY,
 ) -> dict[str, Any]:
@@ -500,8 +517,27 @@ async def build(
                   "buckets": [b["label"] for b in buckets],
                   "metrics": sum(b["count"] for b in buckets)})
 
-    # Phase 1 — nodes (parallel, BARRIER).
-    phase1 = await _run_phase(phase=1, buckets=buckets, concurrency=concurrency,
+    # Resume: skip node buckets already fully materialized (a rate-limited run
+    # picks up where it left off). Edge phases always re-run on every bucket —
+    # the arbitration writer MERGEs, so re-drawing an existing edge is a no-op,
+    # and the edge phases are the ones that fail first under a budget cap.
+    node_buckets = buckets
+    skipped: list[str] = []
+    if resume:
+        present = _existing_metric_uids()
+        node_buckets = []
+        for b in buckets:
+            if all(uid in present for uid in b["metric_ids"]):
+                skipped.append(b["label"])
+            else:
+                node_buckets.append(b)
+        append_event({"type": "build_resume", "run_id": run_id,
+                      "skipped_node_buckets": skipped,
+                      "node_buckets": [b["label"] for b in node_buckets]})
+
+    # Phase 1 — nodes (parallel, BARRIER). On resume, only the not-yet-complete
+    # buckets are (re)built.
+    phase1 = await _run_phase(phase=1, buckets=node_buckets, concurrency=concurrency,
                               run_id=run_id)
     # Phase 2 — structural edges (parallel, BARRIER). Same buckets; all nodes now exist.
     phase2 = await _run_phase(phase=2, buckets=buckets, concurrency=concurrency,
