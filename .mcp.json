@@ -1,0 +1,15 @@
+{
+  "mcpServers": {
+    "graph": {
+      "type": "stdio",
+      "command": "uv",
+      "args": [
+        "run",
+        "python",
+        "-m",
+        "harness.mcp.graph_server"
+      ],
+      "env": {}
+    }
+  }
+}

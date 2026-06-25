@@ -1,0 +1,21 @@
+{
+  "component_types": [
+    { "component_id": "uic:line", "component_kind": "chart", "chart_type": "line", "display_name": "Line Chart", "status": "active" },
+    { "component_id": "uic:area", "component_kind": "chart", "chart_type": "area", "display_name": "Area Chart", "status": "active" },
+    { "component_id": "uic:bar", "component_kind": "chart", "chart_type": "bar", "display_name": "Bar Chart", "status": "active" },
+    { "component_id": "uic:horizontal_bar", "component_kind": "chart", "chart_type": "horizontal_bar", "display_name": "Horizontal Bar Chart", "status": "active" },
+    { "component_id": "uic:grouped_bar", "component_kind": "chart", "chart_type": "grouped_bar", "display_name": "Grouped Bar Chart", "status": "active" },
+    { "component_id": "uic:pie", "component_kind": "chart", "chart_type": "pie", "display_name": "Pie Chart", "status": "active" },
+    { "component_id": "uic:donut", "component_kind": "chart", "chart_type": "donut", "display_name": "Donut Chart", "status": "active" },
+    { "component_id": "uic:sankey", "component_kind": "chart", "chart_type": "sankey", "display_name": "Sankey Chart", "status": "active" },
+    { "component_id": "uic:heatmap", "component_kind": "chart", "chart_type": "heatmap", "display_name": "Heatmap Chart", "status": "active" },
+    { "component_id": "uic:table", "component_kind": "table", "chart_type": "table", "display_name": "Table", "status": "active" },
+    { "component_id": "uic:sparkline", "component_kind": "chart", "chart_type": "sparkline", "display_name": "Sparkline Chart", "status": "active" },
+    { "component_id": "uic:scatter", "component_kind": "chart", "chart_type": "scatter", "display_name": "Scatter Chart", "status": "active" },
+    { "component_id": "uic:treemap", "component_kind": "chart", "chart_type": "treemap", "display_name": "Treemap Chart", "status": "active" },
+    { "component_id": "uic:gauge", "component_kind": "chart", "chart_type": "gauge", "display_name": "Gauge Chart", "status": "active" },
+    { "component_id": "uic:funnel", "component_kind": "chart", "chart_type": "funnel", "display_name": "Funnel Chart", "status": "active" },
+    { "component_id": "uic:kpi_card", "component_kind": "kpi_card", "chart_type": null, "display_name": "KPI Card", "status": "active" },
+    { "component_id": "uic:alert_panel", "component_kind": "alert_panel", "chart_type": null, "display_name": "Alert Panel", "status": "active" }
+  ]
+}

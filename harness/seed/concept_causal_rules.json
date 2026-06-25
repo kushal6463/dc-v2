@@ -1,0 +1,90 @@
+{
+  "source_profile_id": "rare_seeds",
+  "description": "Curated cross-domain causal-mechanism rules. Each rule names source+target CONCEPTS (resolved via ConceptIndex + aliases), required evidence keywords (must appear in a resolved metric's formula/title/explanation/how_to_read/decisions_answered/narration/category/role), a mechanism template, and a prior_confidence. The candidate flow: resolve both endpoints -> require evidence text on both -> (constraint-role source only if allow_constraint_source) -> LLM judge + refuter -> Beta fold -> review-only INFLUENCES {relation: curated_rule}. The LLM never invents endpoints; rejected candidates log a reason code. These rules generate CANDIDATES only — every edge is human-reviewed.",
+  "rules": [
+    {
+      "rule_id": "deliverability_to_campaign_engagement",
+      "source_concepts": ["deliverability", "inbox_placement", "bounce_rate", "spam_rate"],
+      "target_concepts": ["open_rate", "click_rate", "ctor", "engagement_rate"],
+      "relation": "curated_rule",
+      "direction": "source_to_target",
+      "required_source_keywords": ["deliverability", "bounce", "spam", "inbox", "delivered"],
+      "required_target_keywords": ["open", "click", "engagement", "campaign"],
+      "mechanism_template": "Deliverability constrains whether recipients can open or click campaign messages.",
+      "allow_constraint_source": true,
+      "review_required": true,
+      "prior_confidence": 0.6,
+      "temporal_lag": "P0D"
+    },
+    {
+      "rule_id": "stockout_to_revenue",
+      "source_concepts": ["out_of_stock", "stockout_risk", "category_availability", "inventory_availability"],
+      "target_concepts": ["revenue", "conversion_rate", "orders", "lost_revenue"],
+      "relation": "curated_rule",
+      "direction": "source_to_target",
+      "required_source_keywords": ["stock", "inventory", "availability", "out of stock", "oos"],
+      "required_target_keywords": ["revenue", "conversion", "orders", "sales", "lost"],
+      "mechanism_template": "Stockouts suppress conversion and revenue: customers cannot buy unavailable items.",
+      "allow_constraint_source": true,
+      "review_required": true,
+      "prior_confidence": 0.65,
+      "temporal_lag": "P0D"
+    },
+    {
+      "rule_id": "marketing_demand_to_stockout",
+      "source_concepts": ["spend", "impressions", "sessions", "demand"],
+      "target_concepts": ["out_of_stock", "stockout_risk", "inventory_turnover"],
+      "relation": "curated_rule",
+      "direction": "source_to_target",
+      "required_source_keywords": ["spend", "impression", "demand", "traffic", "session"],
+      "required_target_keywords": ["stock", "inventory", "turnover", "availability"],
+      "mechanism_template": "Marketing-driven demand accelerates sell-through, raising stockout risk for popular items.",
+      "allow_constraint_source": false,
+      "review_required": true,
+      "prior_confidence": 0.55,
+      "temporal_lag": "P3D"
+    },
+    {
+      "rule_id": "price_to_demand",
+      "source_concepts": ["price", "discount", "promotion", "markdown"],
+      "target_concepts": ["orders", "conversion_rate", "units_sold", "demand"],
+      "relation": "curated_rule",
+      "direction": "source_to_target",
+      "required_source_keywords": ["price", "discount", "promo", "markdown", "offer"],
+      "required_target_keywords": ["orders", "conversion", "units", "demand", "sales"],
+      "mechanism_template": "Lower effective price / promotions raise demand and conversion (price elasticity).",
+      "allow_constraint_source": false,
+      "review_required": true,
+      "prior_confidence": 0.6,
+      "temporal_lag": "P0D"
+    },
+    {
+      "rule_id": "ad_fatigue_to_performance",
+      "source_concepts": ["frequency", "fatigue", "ad_fatigue"],
+      "target_concepts": ["ctr", "cvr", "roas", "click_rate"],
+      "relation": "curated_rule",
+      "direction": "source_to_target",
+      "required_source_keywords": ["frequency", "fatigue", "saturation"],
+      "required_target_keywords": ["ctr", "click", "conversion", "roas", "performance"],
+      "mechanism_template": "High ad frequency causes creative fatigue, degrading CTR/CVR/ROAS over time.",
+      "allow_constraint_source": false,
+      "review_required": true,
+      "prior_confidence": 0.6,
+      "temporal_lag": "P7D"
+    },
+    {
+      "rule_id": "acquisition_to_retention",
+      "source_concepts": ["new_customers", "acquisition", "cac"],
+      "target_concepts": ["retention_rate", "repeat_customers", "ltv", "churn_rate"],
+      "relation": "curated_rule",
+      "direction": "source_to_target",
+      "required_source_keywords": ["new", "acquisition", "acquire", "first"],
+      "required_target_keywords": ["retention", "repeat", "ltv", "churn", "returning"],
+      "mechanism_template": "Acquisition mix/quality shapes downstream retention and lifetime value.",
+      "allow_constraint_source": false,
+      "review_required": true,
+      "prior_confidence": 0.5,
+      "temporal_lag": "P30D"
+    }
+  ]
+}

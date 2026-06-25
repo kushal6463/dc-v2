@@ -1,0 +1,15 @@
+{
+  "source_profile_id": "rare_seeds",
+  "description": "Authored formula corrections, keyed by metric_uid OR registry canonical_id. Applied as the HIGHEST-priority core-formula source in harness.ingest.skeleton.resolve_core_formula (override > bc2_seed > registry_split > null). Use this for the cases formula_reconciliation flags as wrong/missing, where the chart-registry narration is messy and the BC_2 seed is absent. BC_2 stays a read-only snapshot; dc-kg is the system of record. Each entry: {core_formula, components?, scope_key?, note}.",
+  "overrides": {
+    "metric:blended:marketing_spend": {
+      "core_formula": "google_spend + meta_spend + email_cost",
+      "components": ["spend", "cost"],
+      "note": "Blended marketing spend is the additive sum of channel spends (BC_2 ontology marketing-spend)."
+    },
+    "data-quality:schema_health": {
+      "core_formula": "Schema Health % = (Fresh Schemas + Acceptable Schemas) / Total Schemas * 100",
+      "note": "Strip the threshold-definition lines (Fresh/Acceptable/Stale) from the registry bundle; keep the single core ratio."
+    }
+  }
+}

@@ -1,0 +1,42 @@
+{
+  "source_profile_id": "rare_seeds",
+  "description": "The 4 statistical correlation edges from the rare_seeds pilot profile (decision-canvas-os). Imported as CORRELATES_WITH (statistical association, NOT causal) per implementation-kg-plan.md §5e and final-schema-claude.md §8 — never auto-promoted to CAUSES. Endpoints are expressed by concept and resolved against each Metric's concept_key / metric_base / metric_id at import time; an endpoint that resolves to no live Metric is skipped (and logged), so this seed is robust to which dashboards have actually been ingested.",
+  "correlations": [
+    {
+      "a": "spend",
+      "b": "revenue",
+      "correlation": 0.82,
+      "p_value": 0.001,
+      "lag": 7,
+      "sample_size": 365,
+      "note": "Marketing spend leads revenue by ~1 week (rare_seeds pilot)."
+    },
+    {
+      "a": "conversion_rate",
+      "b": "revenue",
+      "correlation": 0.71,
+      "p_value": 0.004,
+      "lag": 0,
+      "sample_size": 365,
+      "note": "Site conversion rate co-moves with revenue (rare_seeds pilot)."
+    },
+    {
+      "a": "average_order_value",
+      "b": "revenue",
+      "correlation": 0.64,
+      "p_value": 0.010,
+      "lag": 0,
+      "sample_size": 365,
+      "note": "AOV co-moves with revenue (rare_seeds pilot)."
+    },
+    {
+      "a": "spend",
+      "b": "roas",
+      "correlation": -0.45,
+      "p_value": 0.020,
+      "lag": 0,
+      "sample_size": 365,
+      "note": "Diminishing returns: higher spend correlates with lower ROAS (rare_seeds pilot)."
+    }
+  ]
+}

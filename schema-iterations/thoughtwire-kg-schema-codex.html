@@ -1,0 +1,622 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThoughtWire Causal KG Blueprint - Codex</title>
+  <style>
+    :root {
+      --bg: #f6f7f9;
+      --ink: #172033;
+      --muted: #627086;
+      --panel: #ffffff;
+      --line: #dce2ea;
+      --blue: #3769d6;
+      --green: #248b68;
+      --gold: #a76d12;
+      --violet: #7657b7;
+      --red: #b44646;
+      --slate: #34445b;
+      --soft-blue: #eaf0ff;
+      --soft-green: #e9f6f1;
+      --soft-gold: #fff3d9;
+      --soft-violet: #f1edff;
+      --soft-red: #fff0ef;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 14px 22px;
+      display: flex;
+      gap: 18px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin: 0;
+      font-size: 20px;
+      letter-spacing: 0;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    nav a {
+      color: var(--slate);
+      text-decoration: none;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    main {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 22px;
+    }
+
+    section {
+      margin: 0 0 22px;
+      padding: 22px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    h2 {
+      font-size: 18px;
+      margin-bottom: 12px;
+    }
+
+    h3 {
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .subtle { color: var(--muted); }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(120px, 1fr));
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .stat {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfe;
+      min-height: 82px;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 24px;
+      line-height: 1.1;
+      margin-bottom: 5px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .grid.three {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #fbfcfe;
+    }
+
+    .box.blue { background: var(--soft-blue); border-color: #c9d7ff; }
+    .box.green { background: var(--soft-green); border-color: #c7eadc; }
+    .box.gold { background: var(--soft-gold); border-color: #f3d59d; }
+    .box.violet { background: var(--soft-violet); border-color: #d9cffb; }
+    .box.red { background: var(--soft-red); border-color: #f0c9c6; }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 9px;
+      border-radius: 999px;
+      background: #fff;
+      border: 1px solid var(--line);
+      color: var(--slate);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      background: var(--slate);
+    }
+
+    .dot.blue { background: var(--blue); }
+    .dot.green { background: var(--green); }
+    .dot.gold { background: var(--gold); }
+    .dot.violet { background: var(--violet); }
+    .dot.red { background: var(--red); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      padding: 9px 8px;
+    }
+
+    th {
+      color: var(--slate);
+      font-weight: 650;
+      background: #f8fafc;
+    }
+
+    code {
+      font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      background: #eef2f7;
+      border: 1px solid #dfe5ee;
+      border-radius: 4px;
+      padding: 1px 4px;
+    }
+
+    pre {
+      overflow: auto;
+      background: #111827;
+      color: #e8eefc;
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .flow {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .layer {
+      display: grid;
+      grid-template-columns: 170px 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfe;
+    }
+
+    .layer strong {
+      color: var(--slate);
+    }
+
+    .lane {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      border-radius: 6px;
+      border: 1px solid var(--line);
+      background: #fff;
+      padding: 7px 9px;
+      font-size: 12px;
+      color: var(--slate);
+    }
+
+    .svgwrap {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fbfcfe;
+    }
+
+    svg text {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      fill: var(--ink);
+    }
+
+    .callout {
+      border-left: 4px solid var(--blue);
+      padding: 10px 12px;
+      background: #f7faff;
+      border-radius: 6px;
+      color: var(--slate);
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    @media (max-width: 900px) {
+      .topbar { align-items: flex-start; flex-direction: column; }
+      nav { justify-content: flex-start; }
+      .stats, .grid, .grid.three { grid-template-columns: 1fr; }
+      .layer { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="topbar">
+      <h1>ThoughtWire Causal Knowledge Graph - Codex</h1>
+      <nav aria-label="Page navigation">
+        <a href="#verdict">Verdict</a>
+        <a href="#layers">Layers</a>
+        <a href="#nodes">Nodes</a>
+        <a href="#edges">Edges</a>
+        <a href="#harvest">Harvest</a>
+        <a href="#rare">Rare Seeds</a>
+        <a href="#mvp">MVP</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="verdict">
+      <h2>Executive Verdict</h2>
+      <p>
+        Build the graph as a product-aware temporal causal knowledge graph, not as a pure tree.
+        Use a tree-like spine for navigation and access control, but keep causal links as temporal graph edges with lag, evidence, confidence, and review state.
+      </p>
+      <div class="stats">
+        <div class="stat"><b>902</b><span>OpenAPI paths checked from live/checked-in spec</span></div>
+        <div class="stat"><b>787</b><span>business-plane GET candidates after exclusions</span></div>
+        <div class="stat"><b>646</b><span>chart registry entries</span></div>
+        <div class="stat"><b>5</b><span>known analytics connectors</span></div>
+        <div class="stat"><b>355</b><span>rare-seeds metric inventory nodes</span></div>
+      </div>
+      <div class="callout" style="margin-top:14px">
+        Live localhost OpenAPI returned HTTP 200 and matched the checked-in spec hash exactly. Swagger UI at /docs and ReDoc at /redoc are active and both point to /openapi.json. Treat them as human-review surfaces, not business metric sources.
+      </div>
+    </section>
+
+    <section id="layers">
+      <h2>Recommended Top Layer</h2>
+      <p class="subtle">Product/IQ ownership sits above business domains so RBAC, product gates, and cross-product capsules stay explicit.</p>
+      <div class="flow">
+        <div class="layer">
+          <strong>Tenant</strong>
+          <div class="lane">
+            <span class="pill">rare_seeds</span>
+            <span class="pill">tenant-scoped graph</span>
+            <span class="pill">RLS/product gates</span>
+          </div>
+        </div>
+        <div class="layer">
+          <strong>IntelligenceProduct</strong>
+          <div class="lane">
+            <span class="pill">Marketing IQ</span>
+            <span class="pill">Customer IQ</span>
+            <span class="pill">Product IQ</span>
+            <span class="pill">Creative IQ</span>
+            <span class="pill">Decision Canvas</span>
+          </div>
+        </div>
+        <div class="layer">
+          <strong>Domain</strong>
+          <div class="lane">
+            <span class="pill">Marketing</span>
+            <span class="pill">Google Ads</span>
+            <span class="pill">Meta Ads</span>
+            <span class="pill">Customer</span>
+            <span class="pill">Product</span>
+            <span class="pill">Inventory</span>
+            <span class="pill">Finance</span>
+          </div>
+        </div>
+        <div class="layer">
+          <strong>Metric Layer</strong>
+          <div class="lane">
+            <span class="pill">MetricConcept</span>
+            <span class="pill">Metric</span>
+            <span class="pill">Formula</span>
+            <span class="pill">Dimension</span>
+            <span class="pill">CausalRelation</span>
+          </div>
+        </div>
+        <div class="layer">
+          <strong>Surface + Control</strong>
+          <div class="lane">
+            <span class="pill">Dashboard</span>
+            <span class="pill">UIComponent</span>
+            <span class="pill">Endpoint</span>
+            <span class="pill">Connector</span>
+            <span class="pill">Threshold</span>
+            <span class="pill">Policy</span>
+            <span class="pill">Role</span>
+          </div>
+        </div>
+        <div class="layer">
+          <strong>Memory</strong>
+          <div class="lane">
+            <span class="pill">Thoughtlet</span>
+            <span class="pill">DecisionCapsule</span>
+            <span class="pill">MonitoringContract</span>
+            <span class="pill">LearningCandidate</span>
+            <span class="pill">PromotedMemory</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Graph Shape</h2>
+      <div class="svgwrap">
+        <svg viewBox="0 0 1120 420" role="img" aria-label="ThoughtWire KG layer diagram" width="100%" height="420">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#627086"></path>
+            </marker>
+          </defs>
+          <rect x="30" y="30" width="170" height="58" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="115" y="55" text-anchor="middle" font-weight="700">Tenant</text>
+          <text x="115" y="75" text-anchor="middle" font-size="12" fill="#627086">rare_seeds</text>
+
+          <rect x="270" y="22" width="150" height="44" rx="8" fill="#eaf0ff" stroke="#c9d7ff"></rect>
+          <text x="345" y="49" text-anchor="middle" font-weight="700">Marketing IQ</text>
+          <rect x="270" y="82" width="150" height="44" rx="8" fill="#e9f6f1" stroke="#c7eadc"></rect>
+          <text x="345" y="109" text-anchor="middle" font-weight="700">Customer IQ</text>
+          <rect x="270" y="142" width="150" height="44" rx="8" fill="#fff3d9" stroke="#f3d59d"></rect>
+          <text x="345" y="169" text-anchor="middle" font-weight="700">Product IQ</text>
+          <rect x="270" y="202" width="150" height="44" rx="8" fill="#f1edff" stroke="#d9cffb"></rect>
+          <text x="345" y="229" text-anchor="middle" font-weight="700">Creative IQ</text>
+          <rect x="270" y="262" width="150" height="44" rx="8" fill="#fff0ef" stroke="#f0c9c6"></rect>
+          <text x="345" y="289" text-anchor="middle" font-weight="700">Decision Canvas</text>
+
+          <rect x="500" y="65" width="150" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="575" y="92" text-anchor="middle" font-weight="700">Domain</text>
+          <rect x="500" y="145" width="150" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="575" y="172" text-anchor="middle" font-weight="700">MetricConcept</text>
+          <rect x="500" y="225" width="150" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="575" y="252" text-anchor="middle" font-weight="700">Metric</text>
+
+          <rect x="735" y="40" width="160" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="815" y="67" text-anchor="middle" font-weight="700">Dashboard</text>
+          <rect x="735" y="100" width="160" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="815" y="127" text-anchor="middle" font-weight="700">UIComponent</text>
+          <rect x="735" y="160" width="160" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="815" y="187" text-anchor="middle" font-weight="700">Endpoint</text>
+          <rect x="735" y="220" width="160" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="815" y="247" text-anchor="middle" font-weight="700">Connector</text>
+          <rect x="735" y="280" width="160" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="815" y="307" text-anchor="middle" font-weight="700">Policy/Threshold</text>
+
+          <rect x="960" y="85" width="130" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="1025" y="112" text-anchor="middle" font-weight="700">Thoughtlet</text>
+          <rect x="960" y="155" width="130" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="1025" y="182" text-anchor="middle" font-weight="700">Capsule</text>
+          <rect x="960" y="225" width="130" height="44" rx="8" fill="#ffffff" stroke="#dce2ea"></rect>
+          <text x="1025" y="252" text-anchor="middle" font-weight="700">Learning</text>
+
+          <line x1="200" y1="59" x2="270" y2="44" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="200" y1="59" x2="270" y2="104" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="200" y1="59" x2="270" y2="164" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="420" y1="44" x2="500" y2="87" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="420" y1="104" x2="500" y2="87" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="420" y1="164" x2="500" y2="87" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="575" y1="109" x2="575" y2="145" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="575" y1="189" x2="575" y2="225" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="650" y1="247" x2="735" y2="122" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="650" y1="247" x2="735" y2="182" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="650" y1="247" x2="735" y2="242" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="650" y1="247" x2="735" y2="302" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="895" y1="122" x2="960" y2="107" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="895" y1="302" x2="960" y2="177" stroke="#627086" marker-end="url(#arrow)"></line>
+          <line x1="1025" y1="199" x2="1025" y2="225" stroke="#627086" marker-end="url(#arrow)"></line>
+        </svg>
+      </div>
+    </section>
+
+    <section id="nodes">
+      <h2>Core Nodes</h2>
+      <div class="grid three">
+        <div class="box blue">
+          <h3>Business/Semantic</h3>
+          <p>Tenant, IntelligenceProduct, Domain, Platform, MetricConcept, Metric, Formula, Dimension.</p>
+          <p class="small">Metric stores product, domain, source_set, causal_role, card endpoint, series endpoint, threshold summary, policy summary.</p>
+        </div>
+        <div class="box green">
+          <h3>Data/Experience</h3>
+          <p>APISource, SourceProfile, Endpoint, Connector, DataAsset, Dashboard, DashboardView, UIComponent.</p>
+          <p class="small">Chart registry belongs mostly on UIComponent and Formula, not inside Metric as a blob.</p>
+        </div>
+        <div class="box gold">
+          <h3>Governance/Social</h3>
+          <p>Role, Person, Policy, Threshold, ApprovalRule, Action, Tool.</p>
+          <p class="small">Role graph filters context before an agent sees any restricted metric or downstream effect.</p>
+        </div>
+        <div class="box violet">
+          <h3>Memory/Learning</h3>
+          <p>Thoughtlet, DecisionCapsule, MonitoringContract, WakeCondition, LearningCandidate, PromotedMemory, GraphChangeProposal.</p>
+          <p class="small">Capsules anchor to graph nodes but do not mutate causal truth directly.</p>
+        </div>
+        <div class="box red">
+          <h3>Causal Evidence</h3>
+          <p>CausalRelation, EvidenceEvent, GraphVersion.</p>
+          <p class="small">Confidence is derived from an evidence ledger; deterministic formula edges can be pinned at confidence 1.0.</p>
+        </div>
+        <div class="box">
+          <h3>Product Seed</h3>
+          <p><code>miq</code>, <code>ciq</code>, <code>piq</code>, <code>creative_iq</code>, <code>dc</code>.</p>
+          <p class="small">Tenant access is modeled with <code>ENTITLED_TO</code> and product-level RBAC.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="edges">
+      <h2>Edge Catalog</h2>
+      <table>
+        <thead>
+          <tr><th>Relationship</th><th>From -> To</th><th>Purpose</th><th>Key Properties</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>ENTITLED_TO</code></td><td>Tenant -> IntelligenceProduct</td><td>Product gate</td><td>is_active, source, valid_from</td></tr>
+          <tr><td><code>PART_OF_PRODUCT</code></td><td>Metric/Dashboard/UIComponent -> Product</td><td>Top-layer ownership</td><td>source, confidence, primary</td></tr>
+          <tr><td><code>BELONGS_TO</code></td><td>Metric -> Domain</td><td>Business grouping</td><td>confidence, source</td></tr>
+          <tr><td><code>INSTANCE_OF</code></td><td>Metric -> MetricConcept</td><td>Canonical meaning</td><td>resolution_method</td></tr>
+          <tr><td><code>ROLLS_UP_TO</code></td><td>Metric -> Metric</td><td>Scoped aggregation</td><td>aggregation_method, lag</td></tr>
+          <tr><td><code>CURRENT_VALUE_ENDPOINT</code></td><td>Metric -> Endpoint</td><td>Scalar/card value</td><td>path_param_value, sample_hash</td></tr>
+          <tr><td><code>SERIES_ENDPOINT</code></td><td>Metric -> Endpoint</td><td>Trend/time series</td><td>grain, sample_hash</td></tr>
+          <tr><td><code>VISUALIZES</code></td><td>UIComponent -> Metric</td><td>Chart/card to metric</td><td>match_type, confidence</td></tr>
+          <tr><td><code>GOVERNED_BY</code></td><td>Metric/Action -> Policy</td><td>Policy scope</td><td>priority, status</td></tr>
+          <tr><td><code>HAS_THRESHOLD</code></td><td>Metric -> Threshold</td><td>Boundary</td><td>context, is_default</td></tr>
+          <tr><td><code>CAUSES</code></td><td>Metric -> Metric</td><td>Approved causal link</td><td>confidence, lag, mechanism</td></tr>
+          <tr><td><code>CORRELATES_WITH</code></td><td>Metric -> Metric</td><td>Association only</td><td>correlation, p_value, lag</td></tr>
+          <tr><td><code>CONFIG_EVIDENCE_FROM</code></td><td>Policy/Threshold/Concept -> Endpoint</td><td>Master/config evidence</td><td>reviewed_by, source_profile_id</td></tr>
+          <tr><td><code>ANCHORED_TO</code></td><td>DecisionCapsule -> Metric/Policy/Action</td><td>Memory anchor</td><td>anchor_role, graph_version_id</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="harvest">
+      <h2>Endpoint Harvesting Rules</h2>
+      <div class="grid">
+        <div class="box green">
+          <h3>Promote</h3>
+          <div class="chips">
+            <span class="chip"><span class="dot green"></span>GET metric card endpoints</span>
+            <span class="chip"><span class="dot green"></span>GET metric series endpoints</span>
+            <span class="chip"><span class="dot green"></span>GET chart data endpoints</span>
+            <span class="chip"><span class="dot green"></span>GET dashboard data endpoints</span>
+            <span class="chip"><span class="dot green"></span>Discovery manifests</span>
+          </div>
+        </div>
+        <div class="box red">
+          <h3>Exclude From Business Metric Discovery</h3>
+          <div class="chips">
+            <span class="chip"><span class="dot red"></span>auth/login/logout/token</span>
+            <span class="chip"><span class="dot red"></span>health/ready/status</span>
+            <span class="chip"><span class="dot red"></span>docs/redoc/openapi as graph nodes</span>
+            <span class="chip"><span class="dot red"></span>admin/settings/billing</span>
+            <span class="chip"><span class="dot red"></span>master-config/master</span>
+            <span class="chip"><span class="dot red"></span>POST/PUT/PATCH/DELETE</span>
+          </div>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:14px">
+        Use /docs for interactive SourceProfile review because Swagger deep links, extensions, and common extensions are enabled. Use /redoc for readable schema review. Neither page should create Metric, Dashboard, Chart, Policy, or CausalRelation nodes by itself.
+      </div>
+      <pre><code>{
+  "path_template": "/api/v1/ceo-pulse/metrics/orders",
+  "endpoint_role": "metric_card_value",
+  "endpoint_kind": "card",
+  "harvest_decision": "promote_business_metric",
+  "product_id": "miq",
+  "dashboard_id": "ceo-pulse",
+  "metric_id_from_path": "orders"
+}</code></pre>
+    </section>
+
+    <section id="rare">
+      <h2>Rare-Seeds HTML Takeaways</h2>
+      <p>The rare-seeds file is valuable as a metric inventory and visual inspection pattern. It is not yet a causal graph because it has only 4 edges across 355 nodes.</p>
+      <div class="stats">
+        <div class="stat"><b>233</b><span>Marketing IQ nodes</span></div>
+        <div class="stat"><b>68</b><span>Customer IQ nodes</span></div>
+        <div class="stat"><b>54</b><span>Product IQ nodes</span></div>
+        <div class="stat"><b>26</b><span>ML output nodes</span></div>
+        <div class="stat"><b>4</b><span>correlation candidate edges</span></div>
+      </div>
+      <table>
+        <thead><tr><th>Rare-Seeds Field</th><th>KG Mapping</th><th>Decision</th></tr></thead>
+        <tbody>
+          <tr><td><code>product</code></td><td><code>PART_OF_PRODUCT</code></td><td>Promote to first-class product ownership</td></tr>
+          <tr><td><code>type</code>, <code>ring</code></td><td><code>Metric.causal_role</code></td><td>Use as proposed role, not approved causality</td></tr>
+          <tr><td><code>type_confidence</code></td><td><code>Metric.causal_role_confidence</code></td><td>Keep for review priority</td></tr>
+          <tr><td><code>card_endpoint</code></td><td><code>CURRENT_VALUE_ENDPOINT</code></td><td>Separate from series endpoint</td></tr>
+          <tr><td><code>series_endpoint</code></td><td><code>SERIES_ENDPOINT</code></td><td>Store grain and trend source</td></tr>
+          <tr><td><code>source_set</code></td><td><code>SOURCED_FROM</code></td><td>Split into platforms/connectors</td></tr>
+          <tr><td><code>mart_source</code></td><td><code>DataAsset</code> later, property now</td><td>Useful lineage field</td></tr>
+          <tr><td><code>corr</code>, <code>score</code></td><td><code>EvidenceEvent</code> or <code>CORRELATES_WITH</code></td><td>Do not auto-promote to CAUSES</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="mvp">
+      <h2>MVP Build Order</h2>
+      <div class="grid">
+        <div class="box"><h3>1. Ingestion</h3><p>OpenAPI, chart registry, section nav, connector overview, rare-seeds inventory. Emit proposals only.</p></div>
+        <div class="box"><h3>2. Product Graph</h3><p>Tenant, IntelligenceProduct, Domain, Platform, Connector, Dashboard, UIComponent, Endpoint.</p></div>
+        <div class="box"><h3>3. Metric Graph</h3><p>MetricConcept, Metric, Alias, Formula, Dimension, card endpoint, series endpoint, source lineage.</p></div>
+        <div class="box"><h3>4. Governance</h3><p>Threshold, Policy, Role, ApprovalRule, Action, Tool, role-filtered context packs.</p></div>
+        <div class="box"><h3>5. Causal</h3><p>CausalRelation, EvidenceEvent, temporal DAG projection, upstream/downstream/blast-radius queries.</p></div>
+        <div class="box"><h3>6. Memory</h3><p>Thoughtlet, DecisionCapsule, MonitoringContract, LearningCandidate, PromotedMemory, GraphChangeProposal, GraphVersion.</p></div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Answer Shape For Agents</h2>
+      <pre><code>Question: What do you know about blended.orders?
+
+Answer:
+- Product: Marketing IQ
+- Domain: Finance / Exec
+- Concept: Orders
+- Metric scope: blended
+- Causal role: outcome, confidence high
+- Current endpoint: /api/v1/ceo-pulse/metrics/orders
+- Series endpoint: /api/v1/ceo-pulse/charts/orders-trend
+- Sources: GA4, Google Ads, LinkedIn Ads, Meta Ads
+- Dashboards: ceo-pulse, weekly-exec
+- Policies: active order-volume monitoring policy
+- Thresholds: active warning/critical threshold summary
+- Upstream candidates: sessions, spend, conversion rate
+- Access note: filtered by caller product/domain permissions</code></pre>
+    </section>
+  </main>
+</body>
+</html>

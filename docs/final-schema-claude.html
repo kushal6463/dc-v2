@@ -1,0 +1,990 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ThoughtWire Final V1 KG Schema — Claude (master-config-free)</title>
+  <style>
+    :root {
+      --bg: #f4f6f8;
+      --panel: #ffffff;
+      --panel-2: #f9fafb;
+      --ink: #172033;
+      --muted: #637086;
+      --faint: #8a96a8;
+      --line: #dce3ec;
+      --line-strong: #cbd5e1;
+      --blue: #315fbd;
+      --green: #1f7a5c;
+      --amber: #9b640f;
+      --violet: #6d55a8;
+      --red: #aa4141;
+      --cyan: #267389;
+      --soft-blue: #edf3ff;
+      --soft-green: #edf8f4;
+      --soft-amber: #fff6df;
+      --soft-violet: #f3f0ff;
+      --soft-red: #fff0ee;
+      --soft-cyan: #e8f4f7;
+      --shadow: 0 12px 30px rgba(23, 32, 51, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background: linear-gradient(180deg, #eef2f6 0, #f7f8fa 360px, var(--bg) 100%);
+      color: var(--ink);
+      font: 14px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+    }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin: 0; font-size: 28px; line-height: 1.12; }
+    h2 { margin-bottom: 12px; font-size: 19px; line-height: 1.25; }
+    h3 { margin-bottom: 8px; font-size: 14px; }
+    p { color: #34445b; }
+    .subtle { color: var(--muted); }
+    .shell {
+      display: grid;
+      grid-template-columns: 258px minmax(0, 1fr);
+      gap: 22px;
+      width: min(1480px, 100%);
+      margin: 0 auto;
+      padding: 22px;
+    }
+    .sidebar { position: sticky; top: 22px; height: calc(100vh - 44px); align-self: start; display: flex; flex-direction: column; gap: 14px; }
+    .brand { padding: 18px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,0.92); box-shadow: var(--shadow); }
+    .brand-kicker { margin-bottom: 7px; color: var(--blue); font-size: 11px; font-weight: 750; letter-spacing: 0.08em; text-transform: uppercase; }
+    .brand-title { margin: 0 0 8px; font-size: 18px; line-height: 1.2; font-weight: 780; }
+    .brand-meta { color: var(--muted); font-size: 12px; }
+    nav { padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,0.86); box-shadow: var(--shadow); overflow-y: auto; }
+    nav a { display: flex; align-items: center; gap: 9px; min-height: 32px; padding: 6px 9px; color: #34445b; text-decoration: none; border-radius: 6px; font-size: 13px; }
+    nav a:hover { background: #eef3f9; color: var(--ink); }
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); flex: 0 0 auto; }
+    nav a:nth-child(1) .nav-dot { background: var(--blue); }
+    nav a:nth-child(2) .nav-dot { background: var(--red); }
+    nav a:nth-child(3) .nav-dot { background: var(--green); }
+    nav a:nth-child(4) .nav-dot { background: var(--cyan); }
+    nav a:nth-child(5) .nav-dot { background: var(--amber); }
+    nav a:nth-child(6) .nav-dot { background: var(--violet); }
+    nav a:nth-child(7) .nav-dot { background: var(--blue); }
+    nav a:nth-child(8) .nav-dot { background: var(--green); }
+    nav a:nth-child(9) .nav-dot { background: var(--amber); }
+    nav a:nth-child(10) .nav-dot { background: var(--violet); }
+    .sidebar-note { padding: 13px; border: 1px solid #ecd0cc; border-radius: 8px; background: var(--soft-red); color: #613131; font-size: 12px; }
+    main { min-width: 0; }
+    section { scroll-margin-top: 24px; margin: 0 0 18px; padding: 22px; border: 1px solid var(--line); border-radius: 8px; background: rgba(255,255,255,0.94); box-shadow: 0 8px 24px rgba(23,32,51,0.05); }
+    .hero { padding: 28px; background: linear-gradient(135deg, rgba(237,243,255,0.92), rgba(255,255,255,0.96) 55%), var(--panel); border-color: #cfdaee; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0,1.35fr) minmax(280px,0.65fr); gap: 22px; align-items: start; }
+    .eyebrow { display: inline-flex; align-items: center; gap: 8px; margin-bottom: 12px; color: var(--blue); font-size: 12px; font-weight: 750; letter-spacing: 0.04em; text-transform: uppercase; }
+    .eyebrow::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--blue); }
+    .hero-copy { max-width: 820px; margin: 12px 0 0; color: #3d4b61; font-size: 15px; }
+    .decision-card { padding: 16px; border: 1px solid #cfe0d6; border-radius: 8px; background: #f1f9f5; }
+    .decision-card strong { display: block; margin-bottom: 6px; color: #1f5d46; font-size: 13px; }
+    .stats { display: grid; grid-template-columns: repeat(5, minmax(112px,1fr)); gap: 10px; margin-top: 20px; }
+    .stat { min-height: 88px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .stat b { display: block; margin-bottom: 6px; font-size: 24px; line-height: 1; color: var(--ink); }
+    .stat span { color: var(--muted); font-size: 12px; }
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 14px; }
+    .section-head p { max-width: 880px; margin-bottom: 0; }
+    .badge { display: inline-flex; align-items: center; min-height: 26px; padding: 4px 9px; border: 1px solid var(--line); border-radius: 999px; background: #fff; color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .node-strip { display: grid; grid-template-columns: repeat(9, minmax(0,1fr)); gap: 8px; margin-top: 18px; }
+    .node-chip { min-height: 64px; padding: 10px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .node-chip strong { display: block; margin-bottom: 4px; font-size: 12px; }
+    .node-chip span { color: var(--muted); font-size: 10.5px; }
+    .node-chip.root { border-color: #c9d4e6; background: #eef2f9; }
+    .node-chip.spine { border-color: #cdd8e8; background: #f3f6fb; }
+    .node-chip.metric { border-color: #bfe5d6; background: var(--soft-green); }
+    .node-chip.surface { border-color: #c8d9fb; background: var(--soft-blue); }
+    .node-chip.gov { border-color: #efdcad; background: var(--soft-amber); }
+    .node-chip.role { border-color: #d8cff7; background: var(--soft-violet); }
+    .node-chip.platform { border-color: #b4d4dd; background: var(--soft-cyan); }
+    .graph-layout { display: grid; grid-template-columns: minmax(0,1fr) 280px; gap: 14px; align-items: stretch; }
+    .svgwrap { min-height: 440px; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: linear-gradient(180deg, #ffffff 0%, #f9fbfd 100%); }
+    svg text { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif; fill: var(--ink); }
+    .legend { display: grid; gap: 10px; }
+    .legend-item { padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .legend-item strong { display: block; margin-bottom: 4px; font-size: 13px; }
+    .legend-line { display: inline-block; width: 30px; height: 3px; margin-right: 8px; vertical-align: middle; background: #627086; border-radius: 999px; }
+    .legend-line.green { background: var(--green); }
+    .legend-line.violet { background: var(--violet); }
+    .legend-line.gold { background: var(--amber); }
+    .legend-line.blue { background: var(--blue); }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; }
+    .grid.three { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .box { border: 1px solid var(--line); border-radius: 8px; padding: 15px; background: var(--panel-2); }
+    .box.blue { background: var(--soft-blue); border-color: #c8d9fb; }
+    .box.green { background: var(--soft-green); border-color: #c4eadb; }
+    .box.gold { background: var(--soft-amber); border-color: #efd7a4; }
+    .box.red { background: var(--soft-red); border-color: #edcbc6; }
+    .box.violet { background: var(--soft-violet); border-color: #d8cff7; }
+    .box h3 { margin-bottom: 6px; }
+    .callout { border-left: 4px solid var(--blue); padding: 12px 13px; background: #f7faff; border-radius: 6px; color: #34445b; }
+    .callout + .callout { margin-top: 10px; }
+    .warning { border-left-color: var(--amber); background: #fff9ea; }
+    .danger { border-left-color: var(--red); background: #fff6f5; }
+    .good { border-left-color: var(--green); background: #f1f9f5; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: #fff; margin-top: 4px; }
+    table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
+    th, td { text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); padding: 9px 11px; }
+    tr:last-child td { border-bottom: 0; }
+    th { color: #34445b; font-weight: 700; background: #f8fafc; white-space: nowrap; }
+    td:first-child { font-weight: 610; color: #26344a; }
+    code { font: 12px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: #edf1f6; border: 1px solid #dfe5ee; border-radius: 4px; padding: 1px 4px; }
+    pre { overflow: auto; margin: 10px 0 0; background: #111827; color: #e8eefc; padding: 15px; border-radius: 8px; font-size: 12px; line-height: 1.5; }
+    pre code { display: block; background: transparent; border: 0; color: inherit; padding: 0; white-space: pre; }
+    .node-panel { margin-top: 14px; padding: 0; overflow: hidden; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .node-panel-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; padding: 16px; border-bottom: 1px solid var(--line); background: #fbfcfe; }
+    .node-panel-header h3 { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; font-size: 15px; }
+    .node-panel-header p { margin: 0; color: var(--muted); font-size: 13px; }
+    .node-panel.metric .node-panel-header { background: var(--soft-green); }
+    .node-panel.governance .node-panel-header { background: var(--soft-amber); }
+    .node-panel.role .node-panel-header { background: var(--soft-violet); }
+    .tag { display: inline-block; padding: 2px 7px; border-radius: 999px; background: rgba(255,255,255,0.74); color: #34445b; border: 1px solid rgba(99,112,134,0.18); font-size: 11px; font-weight: 750; }
+    .tag.fix { background: #fdeeec; color: #aa4141; border-color: #edcbc6; }
+    .tag.new { background: #eef2f9; color: #315fbd; border-color: #c9d4e6; }
+    .tag.defer { background: #fff6df; color: #9b640f; border-color: #efd7a4; }
+    .edge-list { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+    .edge-card { padding: 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .edge-card code { display: inline-block; margin-bottom: 6px; }
+    .edge-card.causal { border-color: #c4eadb; background: var(--soft-green); }
+    .edge-card.rbac { border-color: #d8cff7; background: var(--soft-violet); }
+    .edge-card.spine { border-color: #cdd8e8; background: #f3f6fb; }
+    .req { display:inline-block; min-width:30px; text-align:center; padding:1px 7px; border-radius:999px; font-size:10.5px; font-weight:750; border:1px solid transparent; white-space:nowrap; }
+    .req.yes { background:#eafaf2; color:#1f7a5c; border-color:#b6e3cf; }
+    .req.rec { background:#fff6df; color:#9b640f; border-color:#efd7a4; }
+    .req.opt { background:#eef1f6; color:#637086; border-color:#dce3ec; }
+    tr.subhead td { background:#eef3fb; color:#315fbd; font-weight:780; font-size:11px; letter-spacing:0.05em; text-transform:uppercase; padding:7px 11px; }
+    .audit-note { padding:9px 13px; font-size:11.5px; color:var(--muted); border-top:1px solid var(--line); background:#fbfcfe; }
+    .node-panel.root .node-panel-header { background:#eef2f9; }
+    .node-panel.spine .node-panel-header { background:#f3f6fb; }
+    .node-panel.surface .node-panel-header { background:var(--soft-blue); }
+    .node-panel.platform .node-panel-header { background:var(--soft-cyan); }
+    .flow { display: grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: 10px; margin-top: 6px; }
+    .flow-step { position: relative; padding: 13px; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+    .flow-step b { display: block; margin-bottom: 5px; font-size: 12.5px; color: var(--blue); }
+    .flow-step span { font-size: 12px; color: #34445b; }
+    .flow-step:not(:last-child)::after { content: "▶"; position: absolute; right: -10px; top: 50%; transform: translateY(-50%); color: var(--faint); font-size: 11px; z-index: 2; }
+    @media (max-width: 1180px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar { position: static; height: auto; }
+      nav { display: flex; flex-wrap: wrap; gap: 6px; }
+      nav a { min-height: 32px; padding: 6px 8px; }
+      .sidebar-note { display: none; }
+    }
+    @media (max-width: 900px) {
+      .shell { padding: 14px; }
+      .hero-grid, .graph-layout, .grid, .grid.three, .stats, .node-strip, .edge-list, .flow { grid-template-columns: 1fr; }
+      .flow-step:not(:last-child)::after { content: "▼"; right: 50%; top: auto; bottom: -10px; transform: translateX(50%); }
+      h1 { font-size: 24px; }
+      section, .hero { padding: 16px; }
+      .svgwrap { min-height: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Document navigation">
+      <div class="brand">
+        <div class="brand-kicker">ThoughtWire KG</div>
+        <p class="brand-title">Final V1 Schema</p>
+        <div class="brand-meta">Claude backbone · master-config-free · Business root + tri-axis Domain∥Product∥Platform spine · seniority RBAC. 2026-06-14.</div>
+      </div>
+      <nav aria-label="Page navigation">
+        <a href="#verdict"><span class="nav-dot"></span> Verdict &amp; Decisions</a>
+        <a href="#mistakes"><span class="nav-dot"></span> Codex Mistakes</a>
+        <a href="#shape"><span class="nav-dot"></span> Graph Shape</a>
+        <a href="#metric"><span class="nav-dot"></span> Metric Hub</a>
+        <a href="#nodes"><span class="nav-dot"></span> Core Nodes</a>
+        <a href="#rbac"><span class="nav-dot"></span> RBAC &amp; Org Engine</a>
+        <a href="#edges"><span class="nav-dot"></span> Edges</a>
+        <a href="#sources"><span class="nav-dot"></span> Enums &amp; Ingestion</a>
+        <a href="#deferred"><span class="nav-dot"></span> Deferred to V2</a>
+        <a href="#compare"><span class="nav-dot"></span> Comparison</a>
+      </nav>
+      <div class="sidebar-note">
+        <strong>Zero master-config.</strong> Identity, edges, dashboards, and governance are sourced without it. Tenant is not a node — one Neo4j DB per tenant; <code>rare_seeds</code> is the pilot client, not a tenant.
+      </div>
+    </aside>
+
+    <main>
+      <!-- VERDICT -->
+      <section class="hero" id="verdict">
+        <div class="hero-grid">
+          <div>
+            <div class="eyebrow">Final V1 direction · supersedes both finalised drafts · cross-pollinated with final-schema-codex</div>
+            <h1>Business-rooted causal KG — tri-axis Domain ∥ Product ∥ Platform, master-config-free</h1>
+            <p class="hero-copy">
+              Ten node labels ship V1, anchored on a single <code>Business</code> root with an
+              <strong>equal tri-axis spine</strong> — <code>Domain</code> (the FRD's functional columns),
+              <code>IntelligenceProduct</code> (the IQ apps), and <code>Platform</code> (vendor source/action
+              systems — thin &amp; lazily materialized) — all feeding the <code>Metric</code> hub, which
+              <strong>denormalizes domain + product + platform</strong> onto itself. Governance
+              (<code>Policy</code>/<code>Threshold</code>) is defined now and populated later. RBAC is
+              <strong>seniority-clearance + domain-branch</strong>, fed by an adaptive Org Graph Engine.
+              <strong>Every <code>master-config</code> dependency is removed.</strong>
+            </p>
+          </div>
+          <div class="decision-card">
+            <strong>Verdict</strong>
+            Codex sourced identity/edges/governance from stale <code>master-config</code> and dropped the
+            product/domain nodes — both disqualifying. The Claude draft kept the nodes but rooted the spine on
+            <em>product</em>, contradicting the FRD, and lacked a <code>Business</code> root and real seniority RBAC.
+            This doc keeps the Claude backbone, fixes the topology to the FRD, and cuts master-config entirely.
+          </div>
+        </div>
+        <div class="stats">
+          <div class="stat"><b>10</b><span>V1 node labels</span></div>
+          <div class="stat"><b>0</b><span>master-config sources</span></div>
+          <div class="stat"><b>646</b><span>chart components (558 narration)</span></div>
+          <div class="stat"><b>877</b><span>OpenAPI GET ops</span></div>
+          <div class="stat"><b>355 / 4</b><span>rare_seeds nodes / edges</span></div>
+        </div>
+        <div class="node-strip" aria-label="Ten V1 nodes" style="grid-template-columns:repeat(10,minmax(0,1fr))">
+          <div class="node-chip root"><strong>Business</strong><span>root</span></div>
+          <div class="node-chip spine"><strong>Domain</strong><span>spine ∥</span></div>
+          <div class="node-chip spine"><strong>IntelligenceProduct</strong><span>spine ∥</span></div>
+          <div class="node-chip platform"><strong>Platform ☆</strong><span>thin · lazy</span></div>
+          <div class="node-chip metric"><strong>Metric</strong><span>hub</span></div>
+          <div class="node-chip surface"><strong>Dashboard</strong><span>surface</span></div>
+          <div class="node-chip surface"><strong>UIComponent</strong><span>chart/card</span></div>
+          <div class="node-chip gov"><strong>Policy</strong><span>defined ▸ later</span></div>
+          <div class="node-chip gov"><strong>Threshold</strong><span>defined ▸ later</span></div>
+          <div class="node-chip role"><strong>Role</strong><span>RBAC + org</span></div>
+        </div>
+
+        <h3 style="margin-top:22px">The four locked decisions</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Decision</th><th>Choice</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td>Graph root / topology</td><td><b>Tri-axis equal spine</b> — one <code>Business</code> root; <code>Domain</code>, <code>IntelligenceProduct</code>, and <code>Platform</code> (thin/lazy, added via Codex cross-pollination) first-class; every <code>Metric</code> links across all three. Decision/approval stays domain-owner-keyed per FRD.</td></tr>
+              <tr><td>2</td><td>Policy &amp; Threshold</td><td><b>Define now, populate later</b> — full OpenAPI-shaped node definitions, unpopulated in V1; instances wired only from a non-master-config source.</td></tr>
+              <tr><td>3</td><td>RBAC access</td><td><b>Clearance + domain branch</b> — VIEW iff <code>seniority_rank ≥ min_level</code> AND in the role's branch (or cross-grant). EDIT/APPROVE is a separate FRD-owner gate. Social graph built by an adaptive, editable Org Graph Engine.</td></tr>
+              <tr><td>4</td><td>Deliverables</td><td>This visual blueprint + the content-identical <code>final-schema-claude.md</code>.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- CODEX MISTAKES -->
+      <section id="mistakes">
+        <div class="section-head">
+          <div>
+            <h2>Mistakes &amp; leftovers in the Codex draft</h2>
+            <p class="subtle">Each item verified against the live FRD / OpenAPI / chart-registry. The Claude draft's own corrections follow.</p>
+          </div>
+          <span class="badge">7 corrected · 1 kept</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Codex position</th><th>Why it's wrong here</th><th>Correction</th></tr></thead>
+            <tbody>
+              <tr><td>1</td><td><b>master-config is the primary source</b> for edges (<code>knowledge-graph/relationships</code>), identity (<code>/config/metrics</code>), governance (<code>/config/thresholds</code>)</td><td>All under <code>master-config</code> — treated as stale → wrong results</td><td><b>All master-config sources removed</b> (§Ingestion)</td></tr>
+              <tr><td>2</td><td>Drops <code>IntelligenceProduct</code> &amp; <code>Domain</code> as nodes (6-label compaction)</td><td>Contradicts the stakeholder and the FRD's domain-centric decision flow</td><td><b>Both kept as nodes</b> under <code>Business</code>, and denormalized onto <code>Metric</code></td></tr>
+              <tr><td>3</td><td>Canonical-first identity via the master-config central metric library</td><td>That library is a master-config source</td><td><b>Master-config-free identity</b> (uid / canonical / slug + concept_key)</td></tr>
+              <tr><td>4</td><td>Flat RBAC (effect/permission/priority only)</td><td>No seniority, no social graph, no clearance comparison</td><td><b>Seniority + domain-branch</b> + adaptive Org Graph Engine</td></tr>
+              <tr><td>5</td><td>Per-action edge labels (<code>CAN_VIEW_METRIC</code>, <code>CAN_EDIT_THRESHOLD</code>…)</td><td>Label explosion; non-uniform queries</td><td><b>Generic labels + <code>permission</code> prop</b></td></tr>
+              <tr><td>6</td><td>Acceptance criteria ban product/domain labels</td><td>Conflicts with the chosen topology</td><td>Rewritten around the tri-axis spine</td></tr>
+              <tr><td>7</td><td>Treats the relationship endpoint as mandatory</td><td>Same as #1 — it is master-config</td><td>Causal layer built <b>from evidence</b>, from scratch</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout good" style="margin-top:14px">
+          <strong>One Codex idea kept —</strong> the evidence-scoring <b>Beta fold</b> (<code>confidence = α/(α+β)</code>, <code>evidence_mass = α+β</code>). Edge confidence is derived, never typed in. The ledger itself is V2.
+        </div>
+        <div class="grid" style="margin-top:14px">
+          <div class="box red"><h3>Also fixed from the Claude draft</h3><p>Product-first spine → FRD-aligned tri-axis spine; no <code>Business</code> root → single root; two-tier role gates → seniority + branch + org engine.</p></div>
+          <div class="box green"><h3>Vindicated</h3><p>The Claude draft's "build the causal layer from scratch" is now also <em>required</em>, because the only relationship source (the relationship endpoint) is master-config.</p></div>
+        </div>
+        <div class="callout" style="margin-top:14px"><strong>Cross-pollinated from the parallel <code>final-schema-codex.md</code> —</strong> this revision adopts Codex's stronger ideas: the <code>Platform</code> 3rd axis (thin/lazy), richer <code>Business</code> decision-context, governance-shaped <code>Policy</code> (<code>policy_type</code>/<code>applies_to_kind</code>/<code>effect_json</code>), edge &amp; ingestion provenance (<code>source_kind</code>/proposal payload/source-priority table), and the <code>review_state</code>/<code>last_verified_at</code> data discipline. <strong>This revision additionally adopts (⊕):</strong> <strong>multi-axis cardinality</strong> — <code>Metric.product_ids[]</code>/<code>domain_ids[]</code> and <code>Dashboard.domain_ids[]</code> are <strong>arrays, not scalars</strong> (a canonical metric sits on several products/domains); identity (<code>display_name</code>/<code>description</code>/<code>aliases[]</code>), surface caches (<code>dashboard_ids[]</code>/<code>component_ids[]</code>); richer domain edges <code>CONTEXTUALIZES</code>/<code>GOVERNS</code>; <code>Domain.decision_scope_summary</code>; <code>IntelligenceProduct.owner_role_id</code>; <code>Policy.severity:blocking</code>; <code>Threshold.explanation</code>. <em>Still not adopted:</em> Codex's per-action permission labels, its <code>CONTAINS_COMPONENT</code> edge, and its "rank-never-sufficient" RBAC — Claude keeps generic <code>CAN_VIEW</code>, the <code>dashboard_id</code> FK, and clearance+branch.</div>
+      </section>
+
+      <!-- GRAPH SHAPE -->
+      <section id="shape">
+        <div class="section-head">
+          <div>
+            <h2>V1 Graph Shape</h2>
+            <p class="subtle">A single <code>Business</code> root; an equal tri-axis spine (<code>Domain</code> ∥ <code>IntelligenceProduct</code> ∥ <code>Platform</code>); a temporal causal DAG on the metric hub; governance and RBAC as overlays.</p>
+          </div>
+          <span class="badge">10 labels · tri-axis</span>
+        </div>
+        <div class="svgwrap" style="min-height:620">
+          <svg viewBox="0 0 1180 700" role="img" aria-label="Final V1 graph shape — all edges" width="100%" height="660">
+            <defs>
+              <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#627086"></path></marker>
+              <marker id="green-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#1f7a5c"></path></marker>
+              <marker id="gold-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#9b640f"></path></marker>
+              <marker id="purple-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#6d55a8"></path></marker>
+              <marker id="cyan-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7.5" markerHeight="7.5" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#267389"></path></marker>
+            </defs>
+            <rect x="20" y="16" width="1140" height="668" rx="12" fill="#ffffff" stroke="#e4eaf2"></rect>
+
+            <!-- ===================== EDGES (drawn first, under nodes) ===================== -->
+            <!-- spine: Business -> Domain / Platform / Product -->
+            <line x1="512" y1="82" x2="216" y2="146" stroke="#627086" stroke-width="2.1" marker-end="url(#arrow)"></line>
+            <text x="346" y="108" text-anchor="middle" font-size="11.5" fill="#627086">HAS_DOMAIN</text>
+            <line x1="590" y1="82" x2="590" y2="146" stroke="#267389" stroke-width="2.1" marker-end="url(#cyan-arrow)"></line>
+            <text x="598" y="116" text-anchor="start" font-size="11.5" fill="#267389">USES_PLATFORM</text>
+            <line x1="668" y1="82" x2="964" y2="146" stroke="#627086" stroke-width="2.1" marker-end="url(#arrow)"></line>
+            <text x="832" y="108" text-anchor="middle" font-size="11.5" fill="#627086">HAS_PRODUCT</text>
+
+            <!-- axes -> Metric -->
+            <line x1="210" y1="202" x2="484" y2="320" stroke="#627086" stroke-width="2.1" marker-end="url(#arrow)"></line>
+            <text x="300" y="256" text-anchor="middle" font-size="11.5" fill="#627086">BELONGS_TO_DOMAIN</text>
+            <line x1="590" y1="202" x2="590" y2="300" stroke="#267389" stroke-width="2.1" marker-end="url(#cyan-arrow)"></line>
+            <text x="598" y="238" text-anchor="start" font-size="11.5" fill="#267389">SOURCES</text>
+            <text x="598" y="253" text-anchor="start" font-size="9.5" fill="#267389">· ACTIVATES (future)</text>
+            <line x1="970" y1="202" x2="700" y2="320" stroke="#627086" stroke-width="2.1" marker-end="url(#arrow)"></line>
+            <text x="858" y="256" text-anchor="middle" font-size="11.5" fill="#627086">PART_OF_PRODUCT</text>
+
+            <!-- surface: VISUALIZES (UIComponent->Metric), SHOWN_ON (Metric->Dashboard). No RENDERS edge — composition is the UIComponent.dashboard_id field -->
+            <line x1="318" y1="440" x2="498" y2="380" stroke="#267389" stroke-width="2.1" marker-end="url(#cyan-arrow)"></line>
+            <text x="352" y="414" text-anchor="end" font-size="11.5" fill="#267389">VISUALIZES</text>
+            <line x1="476" y1="330" x2="258" y2="328" stroke="#267389" stroke-width="2.1" marker-end="url(#cyan-arrow)"></line>
+            <text x="362" y="320" text-anchor="middle" font-size="11.5" fill="#267389">SHOWN_ON</text>
+
+            <!-- governance (dashed): GOVERNED_BY, HAS_THRESHOLD, ENFORCES_THRESHOLD -->
+            <line x1="704" y1="320" x2="886" y2="320" stroke="#9b640f" stroke-width="1.9" stroke-dasharray="5 3" marker-end="url(#gold-arrow)"></line>
+            <text x="794" y="310" text-anchor="middle" font-size="11.5" fill="#9b640f">GOVERNED_BY</text>
+            <line x1="704" y1="352" x2="886" y2="446" stroke="#9b640f" stroke-width="1.9" stroke-dasharray="5 3" marker-end="url(#gold-arrow)"></line>
+            <text x="744" y="424" text-anchor="middle" font-size="11.5" fill="#9b640f">HAS_THRESHOLD</text>
+            <line x1="983" y1="350" x2="983" y2="424" stroke="#9b640f" stroke-width="1.9" stroke-dasharray="5 3" marker-end="url(#gold-arrow)"></line>
+            <text x="991" y="392" text-anchor="start" font-size="11" fill="#9b640f">ENFORCES_THRESHOLD</text>
+
+            <!-- causal self-loop on Metric (under the hub, between VISUALIZES and CAN_VIEW landings) -->
+            <path d="M518 378 C518 412, 578 412, 578 378" fill="none" stroke="#1f7a5c" stroke-width="2.3" marker-end="url(#green-arrow)"></path>
+            <text x="548" y="430" text-anchor="middle" font-size="10.5" fill="#1f7a5c">↻ CAUSES · INFLUENCES · CORRELATES_WITH (lag)</text>
+            <text x="548" y="445" text-anchor="middle" font-size="9.5" fill="#1f7a5c">ROLLS_UP_TO · DECOMPOSES_INTO</text>
+
+            <!-- RBAC: Role -> Metric (CAN_VIEW), Role self social edges -->
+            <line x1="612" y1="470" x2="612" y2="380" stroke="#6d55a8" stroke-width="2" marker-end="url(#purple-arrow)"></line>
+            <text x="620" y="436" text-anchor="start" font-size="11" fill="#6d55a8">CAN_VIEW (clearance + branch)</text>
+            <path d="M700 484 C748 478, 748 506, 700 500" fill="none" stroke="#6d55a8" stroke-width="1.8" marker-end="url(#purple-arrow)"></path>
+            <text x="716" y="476" text-anchor="start" font-size="9.5" fill="#6d55a8">REPORTS_TO · ESCALATES_TO ·</text>
+            <text x="716" y="490" text-anchor="start" font-size="9.5" fill="#6d55a8">CAN_DELEGATE_TO · INHERITS_FROM</text>
+
+            <!-- ===================== NODES ===================== -->
+            <!-- business root -->
+            <rect x="486" y="30" width="208" height="52" rx="8" fill="#eef2f9" stroke="#c9d4e6"></rect>
+            <text x="590" y="55" text-anchor="middle" font-size="15.5" font-weight="780">Business</text>
+            <text x="590" y="72" text-anchor="middle" font-size="11" fill="#637086">single root · one per tenant DB</text>
+
+            <!-- tri-axis spine -->
+            <rect x="96" y="146" width="196" height="56" rx="8" fill="#f3f6fb" stroke="#cdd8e8"></rect>
+            <text x="194" y="172" text-anchor="middle" font-size="15" font-weight="750">Domain</text>
+            <text x="194" y="190" text-anchor="middle" font-size="11" fill="#637086">finance · marketing · ops · …</text>
+
+            <rect x="492" y="146" width="196" height="56" rx="8" fill="#e8f4f7" stroke="#b4d4dd"></rect>
+            <text x="590" y="169" text-anchor="middle" font-size="15" font-weight="750">Platform ☆</text>
+            <text x="590" y="187" text-anchor="middle" font-size="10.5" fill="#267389">thin · lazy · ga4·google_ads·meta·…</text>
+
+            <rect x="888" y="146" width="204" height="56" rx="8" fill="#f3f6fb" stroke="#cdd8e8"></rect>
+            <text x="990" y="169" text-anchor="middle" font-size="14" font-weight="750">IntelligenceProduct</text>
+            <text x="990" y="187" text-anchor="middle" font-size="10.5" fill="#637086">miq·ciq·piq·dc·creative_iq</text>
+
+            <!-- metric hub -->
+            <rect x="476" y="300" width="228" height="80" rx="9" fill="#edf8f4" stroke="#9fd9c1" stroke-width="1.6"></rect>
+            <text x="590" y="330" text-anchor="middle" font-size="17" font-weight="800">Metric</text>
+            <text x="590" y="352" text-anchor="middle" font-size="10.5" fill="#637086">hub · denormalizes</text>
+            <text x="590" y="366" text-anchor="middle" font-size="10.5" fill="#637086">domain + product + platform</text>
+
+            <!-- surfaces -->
+            <rect x="96" y="300" width="162" height="54" rx="8" fill="#edf3ff" stroke="#c8d9fb"></rect>
+            <text x="177" y="324" text-anchor="middle" font-size="14" font-weight="740">Dashboard</text>
+            <text x="177" y="342" text-anchor="middle" font-size="10.5" fill="#637086">surface / access</text>
+            <rect x="150" y="440" width="182" height="54" rx="8" fill="#edf3ff" stroke="#c8d9fb"></rect>
+            <text x="241" y="464" text-anchor="middle" font-size="14" font-weight="740">UIComponent</text>
+            <text x="241" y="482" text-anchor="middle" font-size="10" fill="#637086">646 registry · dashboard_id (FK)</text>
+
+            <!-- governance (dashed = defined/empty in V1) -->
+            <rect x="888" y="296" width="190" height="54" rx="8" fill="#fff6df" stroke="#efd7a4" stroke-dasharray="5 3"></rect>
+            <text x="983" y="320" text-anchor="middle" font-size="14" font-weight="740">Policy</text>
+            <text x="983" y="338" text-anchor="middle" font-size="10.5" fill="#9b640f">defined ▸ later</text>
+            <rect x="888" y="424" width="190" height="54" rx="8" fill="#fff6df" stroke="#efd7a4" stroke-dasharray="5 3"></rect>
+            <text x="983" y="448" text-anchor="middle" font-size="14" font-weight="740">Threshold</text>
+            <text x="983" y="466" text-anchor="middle" font-size="10.5" fill="#9b640f">defined ▸ later</text>
+
+            <!-- role -->
+            <rect x="480" y="470" width="220" height="52" rx="8" fill="#f3f0ff" stroke="#d8cff7"></rect>
+            <text x="590" y="494" text-anchor="middle" font-size="14" font-weight="740">Role</text>
+            <text x="590" y="512" text-anchor="middle" font-size="10.5" fill="#6d55a8">seniority_rank + social graph</text>
+          </svg>
+        </div>
+        <div class="grid" style="grid-template-columns:repeat(5,minmax(0,1fr)); margin-top:12px">
+          <div class="legend-item"><strong><span class="legend-line"></span>Spine (tri-axis)</strong><span class="subtle">Business → Domain ∥ Product ∥ Platform → Metric. Platform feeds Metric via <code>SOURCES</code> (thin/lazy, cyan).</span></div>
+          <div class="legend-item"><strong><span class="legend-line" style="background:#267389"></span>Surface</strong><span class="subtle">VISUALIZES (UIComponent → Metric) · SHOWN_ON (Metric → Dashboard). Composition = <code>UIComponent.dashboard_id</code> (FK), no RENDERS edge.</span></div>
+          <div class="legend-item"><strong><span class="legend-line gold"></span>Governance (dashed)</strong><span class="subtle">GOVERNED_BY · HAS_THRESHOLD · ENFORCES — defined, populated later.</span></div>
+          <div class="legend-item"><strong><span class="legend-line green"></span>Causal</strong><span class="subtle">CAUSES · INFLUENCES · CORRELATES_WITH · ROLLS_UP_TO, with lag.</span></div>
+          <div class="legend-item"><strong><span class="legend-line violet"></span>RBAC</strong><span class="subtle">CAN_VIEW (clearance + branch); REPORTS_TO · INHERITS_FROM on roles.</span></div>
+        </div>
+        <div class="grid three" style="margin-top:16px">
+          <div class="box"><h3>FRD says domain</h3><p>"Columns as silos: Sales, Marketing, Finance, Operations…" Approvals derive by domain owner. The FRD never names the IQ products — so Domain is a first-class spine.</p></div>
+          <div class="box"><h3>Edges are the project</h3><p>rare_seeds has 355 nodes and only 4 edges (all correlation, one spurious). Nodes are solved; trustworthy causal edges are the whole job.</p></div>
+          <div class="box"><h3>Confidence is derived</h3><p>Edge confidence comes from the evidence Beta fold; the append-only ledger that stores records is V2.</p></div>
+        </div>
+      </section>
+
+      <!-- METRIC HUB -->
+      <section id="metric">
+        <div class="section-head">
+          <div>
+            <h2>The <code>Metric</code> Hub</h2>
+            <p class="subtle">Identity uses three IDs with <strong>no master-config library</strong>. Per request, domain + product + platform data are denormalized as flat fields (nodes stay source of truth). ★ = corrected type. <strong>⊕ = merged in from <code>final-schema-codex.md</code></strong> because it materially matters — chiefly <strong>multi-axis cardinality</strong> (<code>product_ids[]</code>/<code>domain_ids[]</code> are arrays, not scalars), plus identity (<code>display_name</code>/<code>aliases[]</code>) and surface caches.</p>
+          </div>
+          <span class="badge">central node</span>
+        </div>
+        <article class="node-panel metric">
+          <div class="node-panel-header">
+            <div>
+              <h3><span class="tag">Hub ★</span> Metric</h3>
+              <p>A concrete observable metric in a scope. Absorbs concept, endpoint, vendor-platform, product, and domain data as typed fields. ★ = corrected type vs the raw data.</p>
+            </div>
+            <span class="badge">denormalized · no master-config</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source</th><th>Purpose</th></tr></thead>
+              <tbody>
+                <tr class="subhead"><td colspan="5">Identity &amp; semantics — MetricConcept folded in</td></tr>
+                <tr><td><code>metric_uid</code></td><td>string</td><td><span class="req yes">yes</span></td><td>app</td><td>Neo4j identity, e.g. <code>metric:google-shopping:roas</code></td></tr>
+                <tr><td><code>canonical_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>derived</td><td>cross-source business id, <code>google-shopping-roas</code> (no master-config library)</td></tr>
+                <tr><td><code>metric_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>rare_seeds <code>node_id</code></td><td>API/local slug, <code>roas</code>; dashboard-local <code>&lt;dashboard&gt;-&lt;id&gt;</code> fallback</td></tr>
+                <tr><td><code>display_name</code> ⊕</td><td>string</td><td><span class="req yes">yes</span></td><td>chart registry / endpoint</td><td>human-readable metric name (<code>Blended ROAS</code>) — adopted from Codex</td></tr>
+                <tr><td><code>description</code> ⊕</td><td>string | null</td><td><span class="req rec">rec</span></td><td>manual / endpoint docs</td><td>agent-facing explanation — adopted from Codex</td></tr>
+                <tr><td><code>concept_key</code></td><td>string</td><td><span class="req rec">rec</span></td><td>rare_seeds <code>metric_base</code></td><td>semantic concept group (<code>roas</code>) — replaces MetricConcept</td></tr>
+                <tr><td><code>concept_name</code></td><td>string</td><td><span class="req rec">rec</span></td><td>manual</td><td>"Return on Ad Spend"</td></tr>
+                <tr><td><code>synonyms[]</code></td><td>string[]</td><td><span class="req opt">opt</span></td><td>manual</td><td>resolution aliases</td></tr>
+                <tr><td><code>aliases[]</code> ⊕</td><td>string[]</td><td><span class="req rec">rec</span></td><td>routes, charts, endpoints, review</td><td>raw slugs / old names / UI labels for resolution — adopted from Codex</td></tr>
+                <tr><td><code>unit_family</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>manual</td><td><code>currency·ratio·percent·count·duration·score</code></td></tr>
+                <tr><td><code>default_direction</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>manual</td><td><code>higher_is_better·lower_is_better·target_is_best</code></td></tr>
+
+                <tr class="subhead"><td colspan="5">Classification — domain + product denormalized here</td></tr>
+                <tr><td><code>product_ids[]</code> ★⊕</td><td>string[]</td><td><span class="req yes">yes</span></td><td>rare_seeds <code>product</code> + <code>PART_OF_PRODUCT</code></td><td><strong>array, not scalar</strong> — owning IQ products (denorm; <code>IntelligenceProduct</code> nodes are source of truth). One canonical metric can sit on several products (corrected via Codex).</td></tr>
+                <tr><td><code>product_names[]</code> ⊕</td><td>string[]</td><td><span class="req opt">opt</span></td><td>IntelligenceProduct</td><td>denormalized display names (<code>Marketing IQ</code>)</td></tr>
+                <tr><td><code>domain_ids[]</code> ★⊕</td><td>string[]</td><td><span class="req yes">yes</span></td><td>rare_seeds <code>department</code> + domain edges</td><td><strong>array, not scalar</strong> — business functions (denorm; <code>Domain</code> nodes are source of truth; orthogonal to product). A metric can be contextualized by marketing yet owned by finance (corrected via Codex).</td></tr>
+                <tr><td><code>domain_names[]</code> ⊕</td><td>string[]</td><td><span class="req opt">opt</span></td><td>Domain</td><td>denormalized display names (<code>Marketing</code>)</td></tr>
+                <tr><td><code>domain_owner_role_keys[]</code> ⊕</td><td>string[]</td><td><span class="req opt">opt</span></td><td>domain ownership edges</td><td>cached domain owner roles — adopted from Codex</td></tr>
+                <tr><td><code>scope_key</code></td><td>string</td><td><span class="req yes">yes</span></td><td>rare_seeds <code>scope</code></td><td><code>blended</code> / <code>google-shopping</code></td></tr>
+                <tr><td><code>scope_level</code> ★</td><td>enum</td><td><span class="req rec">rec</span></td><td>derived from <code>scope</code></td><td><code>global·platform·channel·dashboard·campaign·product·customer·model</code></td></tr>
+                <tr><td><code>metric_base</code></td><td>string</td><td><span class="req yes">yes</span></td><td>rare_seeds <code>metric_base</code></td><td>base concept: <code>revenue·orders·roas·cvr</code></td></tr>
+                <tr><td><code>category</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>openapi <code>MetricCategory</code></td><td>14-value category enum</td></tr>
+                <tr><td><code>aggregation</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>rare_seeds <code>aggregation</code></td><td><code>level·sum·avg·rate·ratio·median</code></td></tr>
+                <tr><td><code>value_format</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>openapi <code>ValueFormat</code></td><td><code>number·currency·percentage·decimal</code></td></tr>
+                <tr><td><code>granularity</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>openapi <code>Granularity</code></td><td><code>daily·weekly·monthly·quarterly</code></td></tr>
+                <tr><td><code>measurement_type</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>manual</td><td><code>direct·derived·modeled·forecast·status</code></td></tr>
+
+                <tr class="subhead"><td colspan="5">Platform / source / lineage — vendor <code>Platform</code> as fields + cache of the Platform node (edge wins; rebuild cache). ☆ = platform-cache</td></tr>
+                <tr><td><code>source</code> ★</td><td>enum <code>single·multi</code></td><td><span class="req rec">rec</span></td><td>rare_seeds <code>source</code></td><td>scalar source cardinality</td></tr>
+                <tr><td><code>source_set[]</code> ★</td><td>string[] (split <code>|</code>)</td><td><span class="req rec">rec</span></td><td>rare_seeds <code>source_set</code></td><td>raw vendor-platform slugs (<code>ga4·google_ads·meta_ads·klaviyo·magento·linkedin_ads</code>); free list, broader than 4-value <code>MetricSource</code></td></tr>
+                <tr><td><code>platform_ids[]</code> ☆</td><td>string[]</td><td><span class="req rec">rec</span></td><td>cache from <code>SOURCES</code> edges</td><td>normalized <code>Platform</code> ids (rebuildable)</td></tr>
+                <tr><td><code>platform_names[] · platform_types[]</code> ☆</td><td>string[]</td><td><span class="req opt">opt</span></td><td>cache from <code>Platform</code></td><td>display names + classes (<code>analytics·ads·crm·warehouse·…</code>)</td></tr>
+                <tr><td><code>primary_platform_id</code> ☆</td><td>string | null</td><td><span class="req opt">opt</span></td><td>derived from <code>source_set</code>/<code>SOURCES</code></td><td>dominant source platform (renamed from <code>platform_primary</code>)</td></tr>
+                <tr><td><code>connector_ids[]</code></td><td>string[]</td><td><span class="req opt">opt</span></td><td>resolved from <code>source_set</code></td><td>normalized connector refs</td></tr>
+                <tr><td><code>mart_sources[]</code> ★</td><td>string[] (split <code>|</code>)</td><td><span class="req opt">opt</span></td><td>rare_seeds <code>mart_source</code></td><td>warehouse lineage, <code>DB_RARE_SEEDS.MARTS.*</code></td></tr>
+                <tr><td><code>platform_data_quality_json · data_freshness_by_platform_json</code> ☆</td><td>json</td><td><span class="req opt">opt</span></td><td>ingestion jobs</td><td>per-platform quality + freshness</td></tr>
+                <tr><td><code>primary_grain</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>rare_seeds <code>grain</code></td><td><code>daily·weekly·monthly·campaign·product·customer</code></td></tr>
+                <tr><td><code>grain_source</code></td><td>string</td><td><span class="req opt">opt</span></td><td>rare_seeds <code>grain_source</code></td><td><code>dbt</code></td></tr>
+                <tr><td><code>dimensions[]</code> ★</td><td>string[] | null</td><td><span class="req opt">opt</span></td><td>rare_seeds <code>dimensions</code></td><td>slice axes; <strong>often null</strong></td></tr>
+                <tr><td><code>availability</code></td><td>string | null</td><td><span class="req opt">opt</span></td><td>rare_seeds <code>availability</code></td><td>nullable freshness window</td></tr>
+                <tr><td><code>n_periods</code> ★</td><td>int | null</td><td><span class="req opt">opt</span></td><td>rare_seeds <code>n_periods</code></td><td>nullable integer (history depth)</td></tr>
+
+                <tr class="subhead"><td colspan="5">Causal</td></tr>
+                <tr><td><code>causal_role</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>rare_seeds <code>type</code></td><td><code>outcome·mediator·controllable·constraint·external·ml_output·untyped</code></td></tr>
+                <tr><td><code>causal_role_confidence</code> ★</td><td>enum <code>low·medium·high</code></td><td><span class="req opt">opt</span></td><td>rare_seeds <code>type_confidence</code></td><td>role-classification confidence — <strong>categorical, not a number</strong></td></tr>
+                <tr><td><code>is_model_output</code> ★</td><td>bool</td><td><span class="req rec">rec</span></td><td>rare_seeds (<code>yes/no</code>→bool)</td><td>ML output?</td></tr>
+                <tr><td><code>is_derived</code> ★</td><td>bool</td><td><span class="req yes">yes</span></td><td>rare_seeds (<code>yes/no</code>→bool)</td><td>computed from other metrics?</td></tr>
+                <tr><td><code>formula_status</code></td><td>enum</td><td><span class="req opt">opt</span></td><td>registry/dbt</td><td><code>explicit·parsed·unknown</code></td></tr>
+                <tr><td><code>formula_text</code> ★</td><td>string | null</td><td><span class="req opt">opt</span></td><td>rare_seeds <code>formula</code></td><td>readable formula, e.g. <code>revenue / ad_spend</code>; <strong>often null</strong></td></tr>
+
+                <tr class="subhead"><td colspan="5">Endpoints — non-master-config paths only</td></tr>
+                <tr><td><code>card_endpoint</code></td><td>string</td><td><span class="req rec">rec</span></td><td>rare_seeds <code>card_endpoint</code></td><td>GET current-value path (<code>/{dashboard}/metrics/{id}</code>)</td></tr>
+                <tr><td><code>series_endpoint</code></td><td>string</td><td><span class="req rec">rec</span></td><td>rare_seeds <code>series_endpoint</code></td><td>GET trend path (<code>/{dashboard}/charts/{id}</code>)</td></tr>
+                <tr><td><code>endpoint_paths[]</code></td><td>string[]</td><td><span class="req opt">opt</span></td><td>openapi (business plane)</td><td>all non-master-config endpoints serving this metric</td></tr>
+
+                <tr class="subhead"><td colspan="5">Surfacing · RBAC · lifecycle</td></tr>
+                <tr><td><code>dashboard_ids[]</code> ⊕</td><td>string[]</td><td><span class="req rec">rec</span></td><td>cache from <code>SHOWN_ON</code> / surface edges</td><td>cached dashboards showing this metric (rebuildable) — adopted from Codex</td></tr>
+                <tr><td><code>component_ids[]</code> ⊕</td><td>string[]</td><td><span class="req rec">rec</span></td><td>cache from <code>VISUALIZES</code> edges</td><td>cached UI components visualizing this metric (rebuildable) — adopted from Codex</td></tr>
+                <tr><td><code>source_dashboards[]</code> ★</td><td>string[] (split <code>|</code>)</td><td><span class="req opt">opt</span></td><td>rare_seeds <code>source_dashboards</code></td><td>raw cache of <code>SHOWN_ON</code> dashboards</td></tr>
+                <tr><td><code>data_classification</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>RBAC</td><td><code>public·internal·restricted·executive</code></td></tr>
+                <tr><td><code>min_level</code> ★</td><td>int</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>minimum <code>seniority_rank</code> to view (clearance)</td></tr>
+                <tr><td><code>owner_role_id</code></td><td>string</td><td><span class="req rec">rec</span></td><td>RBAC</td><td>accountable role (drives approval path)</td></tr>
+                <tr><td><code>is_kpi</code></td><td>bool</td><td><span class="req rec">rec</span></td><td>ingestion</td><td>headline metric?</td></tr>
+                <tr><td><code>keep</code> ★</td><td>bool</td><td><span class="req opt">opt</span></td><td>rare_seeds (<code>yes/no</code>→bool)</td><td>curation flag (may collapse into <code>status</code>)</td></tr>
+                <tr><td><code>status</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>ingestion/review</td><td><code>proposed·active·deprecated·blocked</code></td></tr>
+                <tr><td><code>data_quality_status</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>ingestion</td><td>freshness/quality flag</td></tr>
+                <tr><td><code>confidence</code></td><td>number 0–1</td><td><span class="req rec">rec</span></td><td>ingestion/review</td><td>system confidence the metric was classified correctly</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="audit-note">+ audit on every node: <code>created_at</code> · <code>updated_at</code> · <code>status</code> · <code>source_profile_id</code> — and <strong>no</strong> <code>tenant_id</code> (the database is the tenant).</div>
+        </article>
+      </section>
+
+      <!-- CORE NODES -->
+      <section id="nodes">
+        <div class="section-head">
+          <div>
+            <h2>Other Core Nodes</h2>
+            <p class="subtle">Every node carries <code>created_at</code>, <code>updated_at</code>, <code>status</code>, <code>source_profile_id</code> (no <code>tenant_id</code>).</p>
+          </div>
+          <span class="badge">8 + hub</span>
+        </div>
+        <!-- BUSINESS -->
+        <article class="node-panel root">
+          <div class="node-panel-header">
+            <div><h3><span class="tag new">New</span> Business — single root</h3><p>One node per tenant database; the anchor every spine hangs from and the input that parameterizes the Org Graph Engine.</p></div>
+            <span class="badge">root</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>business_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>system</td><td>stable identity (e.g. <code>rare-seeds</code>)</td></tr>
+              <tr><td><code>display_name</code></td><td>string</td><td><span class="req yes">yes</span></td><td>system</td><td>"Rare Seeds"</td></tr>
+              <tr><td><code>tier</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>manual</td><td><code>startup·smb·mid_market·mnc</code> — <strong>drives the org-graph shape</strong> (startup ≈ flat; mnc ≈ full C-suite)</td></tr>
+              <tr><td><code>business_type</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>manual</td><td><code>ecommerce·saas·marketplace·retail·services·other</code> — defaults for domains/metrics/policy</td></tr>
+              <tr><td><code>industry</code></td><td>string</td><td><span class="req opt">opt</span></td><td>manual</td><td>vertical context for the org engine</td></tr>
+              <tr><td><code>primary_currency · timezone</code></td><td>string</td><td><span class="req rec">rec</span></td><td>manual</td><td>defaults for financial metrics + reporting/freshness windows</td></tr>
+              <tr><td><code>fiscal_year_start_month</code></td><td>int | null</td><td><span class="req opt">opt</span></td><td>finance</td><td>fiscal calendar anchor (<code>1</code>–<code>12</code>)</td></tr>
+              <tr><td><code>default_granularity</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>manual</td><td><code>daily·weekly·monthly·quarterly</code> — default analysis grain</td></tr>
+              <tr><td><code>decision_risk_posture</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>leadership</td><td><code>conservative·balanced·aggressive</code> — informs later decision guardrails</td></tr>
+              <tr><td><code>strategic_intent_summary</code></td><td>string</td><td><span class="req rec">rec</span></td><td>leadership</td><td>short agent-readable statement of what the company optimizes for</td></tr>
+              <tr><td><code>north_star_metrics[]</code></td><td>string[]</td><td><span class="req rec">rec</span></td><td>leadership</td><td>company-priority <code>metric_uid</code>s / <code>concept_key</code>s</td></tr>
+              <tr><td><code>operating_constraints[]</code></td><td>string[]</td><td><span class="req rec">rec</span></td><td>leadership</td><td>business-wide constraints: cash, brand, inventory, compliance, service quality</td></tr>
+              <tr><td><code>default_data_classification</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>RBAC</td><td>baseline <code>data_classification</code> for new nodes</td></tr>
+              <tr><td><code>root_seniority_rank</code></td><td>int</td><td><span class="req rec">rec</span></td><td>RBAC</td><td>rank of the top role (e.g. CEO = 100)</td></tr>
+              <tr><td><code>status</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>system</td><td><code>active·paused·archived</code></td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note">+ audit on every node: <code>created_at</code> · <code>updated_at</code> · <code>status</code> · <code>review_state</code> · <code>source_profile_id</code> · <code>last_verified_at</code> — no <code>tenant_id</code>.</div>
+        </article>
+
+        <!-- DOMAIN -->
+        <article class="node-panel spine">
+          <div class="node-panel-header">
+            <div><h3><span class="tag">Spine</span> Domain — FRD functional column</h3><p>The FRD's "columns as silos". Seeds from the FRD silos + <code>rare_seeds.department</code>. Equal partner to IntelligenceProduct.</p></div>
+            <span class="badge">decision-keyed</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>domain_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>rare_seeds <code>department</code></td><td><code>finance·marketing·operations·service·customer·product·supply_chain·hr·data_it</code></td></tr>
+              <tr><td><code>name</code></td><td>string</td><td><span class="req yes">yes</span></td><td>manual</td><td>"Marketing"</td></tr>
+              <tr><td><code>domain_type</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>manual</td><td><code>business·technical·risk·data_quality·ml</code> (<code>data_quality</code> ⊕ from Codex)</td></tr>
+              <tr><td><code>parent_domain_id</code></td><td>string</td><td><span class="req opt">opt</span></td><td>manual</td><td>domain tree (sub-domains)</td></tr>
+              <tr><td><code>owner_role_id</code></td><td>string</td><td><span class="req rec">rec</span></td><td>RBAC</td><td>accountable role (anchors the approval path)</td></tr>
+              <tr><td><code>decision_scope_summary</code> ⊕</td><td>string</td><td><span class="req yes">yes</span></td><td>domain owner</td><td>decisions this domain owns/contextualizes — adopted from Codex (core to the decision graph)</td></tr>
+              <tr><td><code>approval_policy_summary</code> ⊕</td><td>string</td><td><span class="req rec">rec</span></td><td>governance</td><td>human summary of approval expectations; machine rules live in <code>Policy</code> — adopted from Codex</td></tr>
+              <tr><td><code>default_product_ids[] · default_platform_ids[]</code> ⊕</td><td>string[]</td><td><span class="req rec">rec</span></td><td>reviewed mapping</td><td>scope caches: products/platforms commonly used by the domain — adopted from Codex</td></tr>
+              <tr><td><code>min_level</code></td><td>int</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>clearance floor for the domain branch</td></tr>
+              <tr><td><code>data_classification</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>RBAC</td><td><code>public·internal·restricted·executive</code></td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note">+ audit: <code>created_at</code> · <code>updated_at</code> · <code>status</code> · <code>source_profile_id</code> — no <code>tenant_id</code>.</div>
+        </article>
+
+        <!-- INTELLIGENCEPRODUCT -->
+        <article class="node-panel spine">
+          <div class="node-panel-header">
+            <div><h3><span class="tag">Spine</span> IntelligenceProduct — IQ app</h3><p>The IQ products. Equal partner to Domain; every Metric / Dashboard also links here via <code>PART_OF_PRODUCT</code>.</p></div>
+            <span class="badge">5 products</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>product_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>rare_seeds <code>product</code></td><td><code>miq·ciq·piq·dc·creative_iq</code></td></tr>
+              <tr><td><code>display_name</code></td><td>string</td><td><span class="req yes">yes</span></td><td>manual</td><td>"Marketing IQ"</td></tr>
+              <tr><td><code>category</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>manual</td><td><code>analytics·decisioning·creative·external</code></td></tr>
+              <tr><td><code>description</code> ⊕</td><td>string</td><td><span class="req rec">rec</span></td><td>product owner</td><td>agent-facing product purpose — adopted from Codex</td></tr>
+              <tr><td><code>schema_name</code> · <code>schema_status</code></td><td>string · enum</td><td><span class="req opt">opt</span></td><td>manual</td><td>schema name + <code>owned·shared</code> (CIQ/PIQ still on the <code>miq</code> schema)</td></tr>
+              <tr><td><code>route_prefixes[]</code></td><td>string[]</td><td><span class="req opt">opt</span></td><td>openapi</td><td>URL prefixes serving the product</td></tr>
+              <tr><td><code>owner_role_id</code> ⊕</td><td>string</td><td><span class="req yes">yes</span></td><td>role catalog</td><td>accountable product owner / escalation — adopted from Codex</td></tr>
+              <tr><td><code>default_domain_ids[]</code> ⊕</td><td>string[]</td><td><span class="req rec">rec</span></td><td>reviewed mapping</td><td>domains commonly surfaced by this product — adopted from Codex</td></tr>
+              <tr><td><code>default_data_classification</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>RBAC</td><td>baseline classification</td></tr>
+              <tr><td><code>min_level</code></td><td>int</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>clearance floor</td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note">+ audit: <code>created_at</code> · <code>updated_at</code> · <code>status</code> · <code>source_profile_id</code> — no <code>tenant_id</code>.</div>
+        </article>
+
+        <!-- PLATFORM -->
+        <article class="node-panel platform">
+          <div class="node-panel-header">
+            <div><h3><span class="tag" style="background:#e8f4f7;color:#267389;border-color:#b4d4dd">Spine ☆</span> Platform — source/action vendor (thin &amp; lazily materialized)</h3><p>The third axis (adopted from Codex). Thin: schema-defined, platform data denormalized on <code>Metric</code>; the <strong>node is built only when platform-level traversal is needed</strong> — "which metrics depend on GA4?", "who owns Google Ads freshness?", "which dashboards hit by a degraded connector?".</p></div>
+            <span class="badge">thin · lazy</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>platform_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>connector manifest</td><td><code>ga4·google_ads·meta_ads·klaviyo·magento·snowflake·shopify</code></td></tr>
+              <tr><td><code>platform_name</code></td><td>string</td><td><span class="req yes">yes</span></td><td>manifest</td><td>display name (<code>Google Ads</code>)</td></tr>
+              <tr><td><code>platform_type</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>manifest</td><td><code>analytics·ads·crm·ecommerce·warehouse·activation·support·finance·other</code></td></tr>
+              <tr><td><code>connector_id · connector_family</code></td><td>string | null</td><td><span class="req opt">opt</span></td><td>connector manifest</td><td>runtime connector id + group (<code>google·meta·shopify·warehouse</code>)</td></tr>
+              <tr><td><code>owner_role_id</code></td><td>string</td><td><span class="req rec">rec</span></td><td>RBAC</td><td>role accountable for platform quality/ops</td></tr>
+              <tr><td><code>freshness_sla_hours</code></td><td>number | null</td><td><span class="req opt">opt</span></td><td>manifest / ops</td><td>expected data freshness SLA</td></tr>
+              <tr><td><code>supports_actions</code></td><td>bool</td><td><span class="req yes">yes</span></td><td>manifest</td><td>can later execute sanctioned actions (KG flag only; no runtime)</td></tr>
+              <tr><td><code>source_priority</code></td><td>int | null</td><td><span class="req opt">opt</span></td><td>source policy</td><td>tie-breaker when platforms claim the same concept</td></tr>
+              <tr><td><code>api_base_url_ref</code></td><td>string | null</td><td><span class="req opt">opt</span></td><td>manifest</td><td><strong>reference/key only, never a secret</strong></td></tr>
+              <tr><td><code>data_quality_status</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>ingestion</td><td><code>good·warning·degraded·unknown</code></td></tr>
+              <tr><td><code>last_successful_sync_at</code></td><td>datetime | null</td><td><span class="req opt">opt</span></td><td>ingestion</td><td>last known successful sync</td></tr>
+              <tr><td><code>data_classification · min_level</code></td><td>enum · int</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>classification + clearance floor for platform-scoped access</td></tr>
+              <tr><td><code>status</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>arbitration</td><td><code>active·degraded·deprecated·planned</code></td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note"><code>(:Platform)-[:ACTIVATES]->(:Metric)</code> is KG-schema only — records <em>future</em> action eligibility; no execution runtime in V1. + audit: <code>created_at</code> · <code>updated_at</code> · <code>last_verified_at</code> — no <code>tenant_id</code>.</div>
+        </article>
+
+        <!-- DASHBOARD -->
+        <article class="node-panel surface">
+          <div class="node-panel-header">
+            <div><h3><span class="tag">Surface</span> Dashboard — product surface &amp; access boundary</h3><p>Identity derived <strong>entirely from <code>chart-registry.json</code> + per-dashboard endpoints + <code>/admin/dashboards</code></strong>. Master-config is never consulted.</p></div>
+            <span class="badge">no master-config</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>dashboard_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>chart-registry / <code>/admin/dashboards</code></td><td><code>ceo-pulse</code>, <code>website-performance</code></td></tr>
+              <tr><td><code>display_name</code> · <code>route_path</code></td><td>string</td><td><span class="req yes">yes</span> / <span class="req rec">rec</span></td><td>metadata endpoint</td><td>name + where it lives</td></tr>
+              <tr><td><code>product_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>classify</td><td>product ownership / product-level RBAC</td></tr>
+              <tr><td><code>domain_ids[]</code> ⊕</td><td>string[]</td><td><span class="req rec">rec</span></td><td>classify</td><td><strong>array, not scalar</strong> — domains represented by the dashboard (corrected via Codex)</td></tr>
+              <tr><td><code>dashboard_type</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>manual</td><td><code>executive·operational·ml·review</code></td></tr>
+              <tr><td><code>default_endpoint_path</code> · <code>metadata_endpoint_path</code></td><td>string</td><td><span class="req opt">opt</span></td><td>openapi</td><td>non-master-config payload + metadata endpoints</td></tr>
+              <tr><td><code>audience_role_ids[]</code></td><td>string[]</td><td><span class="req opt">opt</span></td><td>RBAC</td><td>default audience (access stays edge-driven)</td></tr>
+              <tr><td><code>data_classification</code> · <code>min_level</code></td><td>enum · int</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>classification + clearance floor</td></tr>
+              <tr><td><code>status</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>ingestion</td><td><code>active·hidden·deprecated·proposed</code></td></tr>
+              <tr><td><code>source_registry</code></td><td>string</td><td><span class="req opt">opt</span></td><td>ingestion</td><td>chart-registry / business endpoint that discovered it</td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note">+ audit: <code>created_at</code> · <code>updated_at</code> · <code>source_profile_id</code> — no <code>tenant_id</code>.</div>
+        </article>
+
+        <!-- UICOMPONENT -->
+        <article class="node-panel surface">
+          <div class="node-panel-header">
+            <div><h3><span class="tag">Surface</span> UIComponent — chart / KPI card / table (646 registry)</h3><p><strong>No <code>RENDERS</code> edge</strong> — dashboard composition is the <code>dashboard_id</code> FK plus <code>section_id</code> / <code>display_order</code> / <code>visibility</code> fields.</p></div>
+            <span class="badge">composition = FK</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>component_id</code> · <code>canonical_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>chart-registry</td><td><code>alerts-config:active_rules</code></td></tr>
+              <tr><td><code>dashboard_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>chart-registry</td><td>parent dashboard — <strong>composition link (FK), not a RENDERS edge</strong></td></tr>
+              <tr><td><code>chart_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>chart-registry</td><td>registry identity (100%)</td></tr>
+              <tr><td><code>section_id</code></td><td>string</td><td><span class="req opt">opt</span></td><td>dashboard meta</td><td>placement section (migrated from <code>RENDERS</code>)</td></tr>
+              <tr><td><code>display_order</code></td><td>int</td><td><span class="req opt">opt</span></td><td>dashboard meta</td><td>order within the dashboard (migrated from <code>RENDERS</code>)</td></tr>
+              <tr><td><code>visibility</code></td><td>enum</td><td><span class="req opt">opt</span></td><td>dashboard meta</td><td><code>visible·hidden·collapsed</code> (migrated from <code>RENDERS</code>)</td></tr>
+              <tr><td><code>component_kind</code> · <code>chart_type</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>chart-registry</td><td><code>chart·kpi_card·table·alert_panel</code>; 15-value <code>ChartType</code></td></tr>
+              <tr><td><code>title</code></td><td>string</td><td><span class="req yes">yes</span></td><td>chart-registry</td><td>rendered text (100%)</td></tr>
+              <tr><td><code>query_endpoint_path</code></td><td>string</td><td><span class="req opt">opt</span></td><td>openapi</td><td>non-master-config GET endpoint the component uses</td></tr>
+              <tr><td><code>metric_keys[]</code></td><td>string[]</td><td><span class="req rec">rec</span></td><td>classify</td><td>metrics visualized (<code>VISUALIZES</code> edges stay source of truth)</td></tr>
+              <tr><td><code>formula</code> · <code>formula_explanation</code></td><td>string</td><td><span class="req rec">rec</span></td><td>chart-registry</td><td>from the registry (100% present)</td></tr>
+              <tr><td><code>how_to_read[]</code> · <code>decisions_answered[]</code></td><td>string[]</td><td><span class="req rec">rec</span></td><td>chart-registry</td><td>reader guidance + questions answered (100%)</td></tr>
+              <tr><td><code>narration_text</code></td><td>string</td><td><span class="req opt">opt</span></td><td>chart-registry</td><td>narration <strong>(558/646 — not all)</strong></td></tr>
+              <tr><td><code>audio_file</code></td><td>string</td><td><span class="req opt">opt</span></td><td>chart-registry</td><td>audio path (100%)</td></tr>
+              <tr><td><code>data_classification</code> · <code>min_level</code></td><td>enum · int</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>can be stricter than the parent dashboard</td></tr>
+              <tr><td><code>status</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>ingestion</td><td><code>active·hidden·deprecated·proposed</code></td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note">+ audit: <code>created_at</code> · <code>updated_at</code> · <code>source_profile_id</code> — no <code>tenant_id</code>.</div>
+        </article>
+
+        <!-- POLICY -->
+        <article class="node-panel governance">
+          <div class="node-panel-header">
+            <div><h3><span class="tag defer">Defined ▸ later</span> Policy — blended governance + OpenAPI shape</h3><p>Blends Claude's OpenAPI condition fields with Codex's governance fields, so a Policy can govern <strong>access / interpretation / escalation / approval / action-guardrail</strong> — not only metric breaches. <strong>No instances in V1</strong> (the only policy data is under master-config). <code>population_status = 'defined'</code>.</p></div>
+            <span class="badge">PolicyCreate + governance</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>OpenAPI alignment</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>policy_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>required in KG</td><td>stable identity (nullable in API)</td></tr>
+              <tr><td><code>policy_name</code> · <code>description</code> · <code>metric_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td><code>PolicyCreate</code></td><td>human-readable + governed metric</td></tr>
+              <tr><td><code>policy_type</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>KG ext (Codex)</td><td><code>access·interpretation·alerting·escalation·approval·action_guardrail·data_quality</code></td></tr>
+              <tr><td><code>applies_to_kind</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>KG ext (Codex)</td><td>node kind governed: <code>Business·Product·Domain·Platform·Metric·Dashboard·UIComponent·Threshold·Role</code></td></tr>
+              <tr><td><code>condition_type</code></td><td>enum</td><td><span class="req yes">yes</span></td><td><code>ConditionType</code></td><td><code>threshold·anomaly·trend·missing_data</code></td></tr>
+              <tr><td><code>condition_operator</code></td><td>enum | null</td><td><span class="req rec">rec</span></td><td><code>ConditionOperator</code></td><td><code>lt·lte·gt·gte·eq·neq·between·outside</code></td></tr>
+              <tr><td><code>condition_value</code> · <code>condition_value_high</code></td><td>number | null</td><td><span class="req opt">opt</span></td><td><code>PolicyCreate</code></td><td>boundary values (<code>between</code>/<code>outside</code>)</td></tr>
+              <tr><td><code>condition_expression</code></td><td>string | null</td><td><span class="req opt">opt</span></td><td><code>PolicyCreate</code></td><td>complex expression</td></tr>
+              <tr><td><code>evaluation_window</code> · <code>evaluation_frequency</code></td><td>string</td><td><span class="req rec">rec</span></td><td>defaults <code>24h</code>/<code>1h</code></td><td>window + cadence</td></tr>
+              <tr><td><code>cooldown_hours</code> · <code>escalate_after_hours</code></td><td>number</td><td><span class="req rec">rec</span></td><td>defaults <code>4</code>/<code>24</code></td><td>re-alert suppression + escalation timer</td></tr>
+              <tr><td><code>severity</code></td><td>enum</td><td><span class="req yes">yes</span></td><td><code>Severity</code> (+KG-ext ⊕)</td><td><code>critical·high·medium·low·info·blocking</code> (<code>blocking</code> ⊕ from Codex)</td></tr>
+              <tr><td><code>auto_investigate</code> · <code>notify_channels[]</code></td><td>bool · string[]</td><td><span class="req rec">rec</span></td><td><code>PolicyCreate</code></td><td>wake investigation on breach; alert routing</td></tr>
+              <tr><td><code>effect_json</code></td><td>json</td><td><span class="req rec">rec</span></td><td>KG ext (Codex)</td><td>machine-readable effect: <code>mask·deny·escalate·require_approval</code></td></tr>
+              <tr><td><code>owner_role_id</code> · <code>approval_required</code> · <code>approval_role_ids[]</code> · <code>priority</code></td><td>mixed</td><td><span class="req rec">rec</span></td><td>KG ext</td><td>ownership, edit gating, conflict resolution</td></tr>
+              <tr><td><code>effective_from/to</code> · <code>is_active</code> · <code>status</code> · <code>source</code></td><td>mixed</td><td><span class="req rec">rec</span></td><td>KG ext</td><td>lifecycle + provenance (<code>source</code> excludes <code>master_config</code>)</td></tr>
+              <tr><td><code>review_state</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>KG ext (Codex)</td><td><code>draft·active·needs_review·retired</code> — review pipeline (distinct from <code>status</code>)</td></tr>
+              <tr><td><code>population_status</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>KG ext</td><td><code>defined·populated</code> — <strong><code>defined</code> in V1</strong></td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note">+ audit: <code>created_at</code> · <code>updated_at</code> · <code>source_profile_id</code> — no <code>tenant_id</code>.</div>
+        </article>
+
+        <!-- THRESHOLD -->
+        <article class="node-panel governance">
+          <div class="node-panel-header">
+            <div><h3><span class="tag defer">Defined ▸ later</span> Threshold — numeric / statistical boundary</h3><p>Shape stores raw <code>ThresholdConfig</code> bands + normalized numerics + <code>StatisticalThreshold</code> 2σ. <strong>No instances in V1.</strong></p></div>
+            <span class="badge">raw + 2σ</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>OpenAPI alignment</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>threshold_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td><code>ThresholdConfig.id</code></td><td>identity</td></tr>
+              <tr><td><code>metric_id</code> · <code>metric_name</code></td><td>string</td><td><span class="req yes">yes</span></td><td><code>ThresholdConfig</code></td><td>governed metric</td></tr>
+              <tr><td><code>threshold_type</code></td><td>enum</td><td><span class="req yes">yes</span></td><td><code>ThresholdType</code> + KG ext</td><td>OpenAPI <code>static·percentile·seasonal</code>; KG-ext (Codex) <code>warning·critical·target·anomaly·sla·budget</code></td></tr>
+              <tr><td><code>operator</code></td><td>enum</td><td><span class="req yes">yes</span></td><td><code>ComparisonOperator</code> + KG ext</td><td><code>lt·lte·gt·gte·eq·neq·between·outside</code>; KG-ext <code>percent_change·z_score</code></td></tr>
+              <tr><td><code>direction</code></td><td>enum</td><td><span class="req rec">rec</span></td><td><code>ThresholdDirection</code></td><td><code>higher_is_better·lower_is_better·target_is_best</code></td></tr>
+              <tr><td><code>green_value</code> · <code>yellow_value</code> · <code>red_value</code></td><td>string</td><td><span class="req rec">rec</span></td><td><code>ThresholdConfig</code></td><td><strong>raw</strong> config bands (as strings)</td></tr>
+              <tr><td><code>warning_value_num</code> · <code>critical_value_num</code> · <code>target_value_num</code></td><td>number | null</td><td><span class="req rec">rec</span></td><td>parser/review</td><td><strong>normalized</strong> numeric boundaries</td></tr>
+              <tr><td><code>avg_val</code> · <code>stddev_val</code> · <code>lower_2sigma</code> · <code>upper_2sigma</code> · <code>min_val</code> · <code>max_val</code></td><td>number</td><td><span class="req opt">opt</span></td><td><code>StatisticalThreshold</code></td><td>percentile/seasonal baseline</td></tr>
+              <tr><td><code>category</code> · <code>unit</code> · <code>grain</code> · <code>evaluation_window</code> · <code>segment_filter_json</code></td><td>mixed</td><td><span class="req rec">rec</span></td><td>—</td><td>grouping + scope (platform/region/cohort/SKU)</td></tr>
+              <tr><td><code>explanation</code> ⊕</td><td>string | null</td><td><span class="req rec">rec</span></td><td>KG ext (Codex)</td><td>human reason for the boundary — adopted from Codex</td></tr>
+              <tr><td><code>owner_role_id</code> · <code>source</code> · <code>status</code></td><td>mixed</td><td><span class="req rec">rec</span></td><td>RBAC</td><td>ownership + lifecycle (<code>source</code> excludes <code>master_config</code>)</td></tr>
+              <tr><td><code>review_state</code></td><td>enum</td><td><span class="req rec">rec</span></td><td>KG ext (Codex)</td><td><code>draft·active·needs_review·retired</code> — review pipeline (distinct from <code>status</code>)</td></tr>
+              <tr><td><code>population_status</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>KG ext</td><td><code>defined·populated</code> — <strong><code>defined</code> in V1</strong></td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note">+ audit: <code>created_at</code> · <code>updated_at</code> · <code>source_profile_id</code> — no <code>tenant_id</code>.</div>
+        </article>
+
+        <!-- ROLE -->
+        <article class="node-panel role">
+          <div class="node-panel-header">
+            <div><h3><span class="tag">RBAC</span> Role — subject + seniority + social-graph anchor</h3><p>External auth maps a principal to a <code>Role</code> via <code>role_key</code>. Role nodes, <code>seniority_rank</code>, and the <code>REPORTS_TO</code> graph are created &amp; maintained by the Org Graph Engine, and are editable.</p></div>
+            <span class="badge">org-generated · editable</span>
+          </div>
+          <div class="table-wrap"><table>
+            <thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source</th><th>Purpose</th></tr></thead>
+            <tbody>
+              <tr><td><code>role_id</code></td><td>string</td><td><span class="req yes">yes</span></td><td>RBAC</td><td><code>ceo</code>, <code>cmo</code>, <code>general_manager</code>, <code>marketing_manager</code></td></tr>
+              <tr><td><code>role_key</code></td><td>string</td><td><span class="req yes">yes</span></td><td>auth</td><td>claim from JWT/session — the principal→role mapping</td></tr>
+              <tr><td><code>display_name</code></td><td>string</td><td><span class="req yes">yes</span></td><td>manual</td><td>readable</td></tr>
+              <tr><td><code>role_type</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>manual</td><td><code>executive·department_lead·operator·analyst·viewer·system_agent·approver</code></td></tr>
+              <tr><td><code>seniority_rank</code> ★</td><td>int</td><td><span class="req yes">yes</span></td><td>org engine</td><td><strong>clearance level</strong> — higher = more senior (CEO 100 … viewer 10); the number compared in the VIEW gate</td></tr>
+              <tr><td><code>auth_role</code></td><td>enum</td><td><span class="req opt">opt</span></td><td>openapi <code>UserRole</code></td><td>maps to OpenAPI <code>UserRole</code> where available</td></tr>
+              <tr><td><code>domain_id</code></td><td>string</td><td><span class="req rec">rec</span></td><td>org engine</td><td>the role's <strong>home domain</strong> (anchors its branch)</td></tr>
+              <tr><td><code>domain_scope_ids[] · platform_scope_ids[]</code> ★</td><td>string[]</td><td><span class="req opt">opt</span></td><td>RBAC</td><td>additional domains / platforms the role governs (cross-grants)</td></tr>
+              <tr><td><code>default_product_ids[] · default_platform_ids[]</code></td><td>string[]</td><td><span class="req opt">opt</span></td><td>RBAC</td><td>convenience scope cache; permission edges remain source of truth</td></tr>
+              <tr><td><code>max_data_classification</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>highest <code>data_classification</code> accessible by default</td></tr>
+              <tr><td><code>can_manage_rbac</code></td><td>bool</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>only admin roles may alter permission edges / the org graph</td></tr>
+              <tr><td><code>can_create_policy</code> · <code>can_create_threshold</code> · <code>can_edit_endpoint</code></td><td>bool</td><td><span class="req yes">yes</span></td><td>RBAC</td><td>global capabilities; still constrained by scoped edges</td></tr>
+              <tr><td><code>agent_context_limit</code></td><td>int</td><td><span class="req opt">opt</span></td><td>RBAC</td><td>max graph facts exposed to an agent for this role</td></tr>
+              <tr><td><code>redaction_policy_json</code></td><td>json</td><td><span class="req opt">opt</span></td><td>RBAC</td><td>default masking for fields/values/sources/causal paths</td></tr>
+              <tr><td><code>is_engine_generated</code> ★</td><td>bool</td><td><span class="req rec">rec</span></td><td>org engine</td><td><code>true</code> if created by the engine; <code>false</code>/edited if human-overridden (sticky on re-run)</td></tr>
+              <tr><td><code>status</code></td><td>enum</td><td><span class="req yes">yes</span></td><td>system</td><td><code>active·disabled·deprecated</code></td></tr>
+            </tbody>
+          </table></div>
+          <div class="audit-note">+ audit: <code>created_at</code> · <code>updated_at</code> · <code>source_profile_id</code> — no <code>tenant_id</code>.</div>
+        </article>
+      </section>
+
+      <!-- RBAC -->
+      <section id="rbac">
+        <div class="section-head">
+          <div>
+            <h2>RBAC — seniority clearance + domain branch + adaptive Org Graph Engine</h2>
+            <p class="subtle">Build the allowed context first, then answer from it. VIEW is gated by clearance + branch; EDIT/APPROVE is a separate FRD owner/approval gate.</p>
+          </div>
+          <span class="badge">graph-native</span>
+        </div>
+
+        <div class="callout"><strong>VIEW gate</strong> — a role may view a resource iff <b>both</b>:
+          <br>(1) <b>Clearance</b> &nbsp;<code>role.seniority_rank ≥ resource.min_level</code>
+          <br>(2) <b>Branch</b> &nbsp;resource's domain ∈ the role's domain branch (home <code>domain_id</code> ∪ <code>domain_scope_ids[]</code> ∪ domains reachable down <code>REPORTS_TO</code>) <b>or</b> an explicit <code>CAN_VIEW {allow}</code> cross-grant — and no higher-priority <code>CAN_VIEW {deny}</code>.</div>
+        <div class="callout warning"><strong>EDIT / APPROVE is separate.</strong> Seeing a metric never implies editing its threshold. Edit/approve follow explicit <code>CAN_EDIT</code>/<code>CAN_APPROVE</code> edges, <code>approval_required</code>, and the approval path derived from <code>owner_role_id</code>s (e.g. Marketing Director → Creative Lead → Finance → Execution Owner).</div>
+
+        <div class="grid three" style="margin-top:14px">
+          <div class="box violet"><h3>Subordinate blocked</h3><p>A GM-level feature has <code>min_level = 70</code>. A Manager (<code>rank 50</code>) under the GM fails clearance → can't see it.</p></div>
+          <div class="box violet"><h3>Manager capped</h3><p>A board-only metric has <code>min_level = 95</code>. The GM (<code>rank 70</code>) fails clearance → masked even in-branch.</p></div>
+          <div class="box violet"><h3>Sees level &amp; below</h3><p>A VP of Marketing (<code>rank 80</code>, branch marketing) sees marketing resources ≤ 80 — but not Finance internals without a cross-grant.</p></div>
+        </div>
+
+        <h3 style="margin-top:18px">Org Graph Ingestion Engine — adaptive &amp; editable</h3>
+        <p class="subtle">The API has no org-hierarchy data, and org shape varies (a startup has no CFO/CMO; an MNC has a full C-suite). A separate LLM service produces the social graph as proposals — never a direct write.</p>
+        <div class="flow">
+          <div class="flow-step"><b>1 · Input</b><span><code>Business.tier</code> + org description (free text / HR export / titles / headcount)</span></div>
+          <div class="flow-step"><b>2 · Propose</b><span>LLM digests, scaled to tier → <code>Role</code> nodes + <code>REPORTS_TO</code> + <code>seniority_rank</code> + domain ownership</span></div>
+          <div class="flow-step"><b>3 · Arbitrate</b><span>one writer dedupes/validates → writes Role subgraph (<code>is_engine_generated = true</code>)</span></div>
+          <div class="flow-step"><b>4 · Edit</b><span>humans add/remove/re-rank as the org grows; edits are sticky and survive re-runs</span></div>
+        </div>
+        <div class="callout good" style="margin-top:12px"><code>REPORTS_TO</code> (org/social tree — branch test + escalation) and <code>INHERITS_FROM</code> (permission inheritance) are kept <strong>distinct</strong>. A role may inherit permissions it does not socially report through, and vice versa.</div>
+
+        <h3 style="margin-top:18px">Allowed-metrics query (clearance + branch baked in)</h3>
+        <pre><code>MATCH (r:Role {role_key: $role_key, status: 'active'})
+OPTIONAL MATCH (r)-[:REPORTS_TO*0..6]->(:Role)-[:OWNS|OWNED_BY]->(:Domain)   // branch via org tree
+WITH r, collect(DISTINCT r.domain_id) + r.domain_scope_ids AS branch_domains
+MATCH (m:Metric {status: 'active'})
+WHERE r.seniority_rank >= m.min_level                                        // (1) clearance
+  AND ( ANY(d IN m.domain_ids WHERE d IN branch_domains)                   // (2a) branch — m.domain_ids is an array
+        OR EXISTS { MATCH (r)-[:CAN_VIEW {effect:'allow'}]->(m) } )         // (2b) cross-grant
+  AND NOT EXISTS { MATCH (r)-[:CAN_VIEW {effect:'deny'}]->(m) }
+RETURN DISTINCT m.metric_uid, m.concept_name, m.product_ids, m.domain_ids, m.min_level;</code></pre>
+
+        <h3 style="margin-top:18px">Seed roles (illustrative ranks)</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Role</th><th>seniority_rank</th><th>Home domain</th><th>Typical edit power</th></tr></thead>
+            <tbody>
+              <tr><td><code>ceo</code></td><td>100</td><td>(all)</td><td>approve high-impact policy/action changes</td></tr>
+              <tr><td><code>cfo</code> / <code>cmo</code></td><td>90</td><td>finance / marketing</td><td>edit domain thresholds, approve domain policies</td></tr>
+              <tr><td><code>general_manager</code></td><td>70</td><td>(branch)</td><td>approve within branch; subordinates can't see GM-level features</td></tr>
+              <tr><td><code>marketing_manager</code></td><td>50</td><td>marketing</td><td>edit selected thresholds with approval</td></tr>
+              <tr><td><code>analyst</code></td><td>30</td><td>assigned</td><td>none (propose, not apply)</td></tr>
+              <tr><td><code>viewer</code></td><td>10</td><td>assigned</td><td>none</td></tr>
+              <tr><td><code>system_agent</code></td><td>(acting)</td><td>(acting)</td><td>inherits the acting user's rank + reason; never above it</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- EDGES -->
+      <section id="edges">
+        <div class="section-head">
+          <div>
+            <h2>V1 Edge Catalog</h2>
+            <p class="subtle">Boring, explicit edge names. Provenance props on every important edge (from Codex): <code>source_kind</code> · <code>source_ref</code> · <code>source_confidence</code> · <code>created_by</code> · <code>review_state</code> · <code>valid_from/to</code> · <code>confidence</code>.</p>
+          </div>
+          <span class="badge">spine · platform · causal · rbac</span>
+        </div>
+        <div class="edge-list">
+          <div class="edge-card spine"><code>HAS_DOMAIN · HAS_PRODUCT · USES_PLATFORM</code><div class="subtle">Business → Domain / IntelligenceProduct / Platform. Root to the tri-axis spine.</div></div>
+          <div class="edge-card spine"><code>BELONGS_TO_DOMAIN · PART_OF_PRODUCT</code><div class="subtle">Metric/Dashboard → spine nodes. Every Metric links across all three axes.</div></div>
+          <div class="edge-card spine"><code>CONTEXTUALIZES · GOVERNS</code> ⊕<div class="subtle">Domain → Metric (adopted from Codex): domain gives business context (<code>CONTEXTUALIZES</code>) vs governs interpretation/action (<code>GOVERNS</code>) — distinct from the <code>BELONGS_TO_DOMAIN</code> spine, needed for FRD domain-owner decision flow.</div></div>
+          <div class="edge-card" style="border-color:#b4d4dd;background:var(--soft-cyan)"><code>SOURCES · ACTIVATES</code><div class="subtle">Platform → Metric: provides source data (<code>SOURCES</code>, props <code>lineage_ref·freshness_sla_hours</code>) / future action eligibility (<code>ACTIVATES</code>, KG-only — no runtime).</div></div>
+          <div class="edge-card spine"><code>ROLLS_UP_TO · DECOMPOSES_INTO</code><div class="subtle">Metric → Metric aggregation / formula composition.</div></div>
+          <div class="edge-card spine"><code>VISUALIZES · SHOWN_ON</code><div class="subtle">Component → metric; metric → surface. Dashboard composition is <code>UIComponent.dashboard_id</code> (FK) — no RENDERS edge.</div></div>
+          <div class="edge-card"><code>HAS_THRESHOLD · GOVERNED_BY · ENFORCES_THRESHOLD</code><div class="subtle">Governance overlay (instances V1.x+).</div></div>
+          <div class="edge-card"><code>OWNS / OWNED_BY</code><div class="subtle">Role ↔ resource accountable owner — anchors the approval path.</div></div>
+          <div class="edge-card causal"><code>INFLUENCES · CORRELATES_WITH · CAUSES</code><div class="subtle">Built from evidence (Beta fold). Correlation never auto-promotes; CAUSES carries <code>confidence·evidence_mass·lag·mechanism·review_state</code>.</div></div>
+          <div class="edge-card rbac"><code>CAN_ACCESS_PRODUCT · CAN_ACCESS_PLATFORM · CAN_VIEW · CAN_EDIT · CAN_APPROVE</code><div class="subtle">Generic labels + <code>permission</code> prop. Product/platform gates; view grants/cross-grants; edit &amp; approval. Access edges carry <code>min_authority_rank·classification_ceiling</code>.</div></div>
+          <div class="edge-card rbac"><code>REPORTS_TO · ESCALATES_TO · CAN_DELEGATE_TO</code><div class="subtle">Org/social tree + explicit escalation (<code>sla_hours</code>) + scoped, time-boxed delegation. Branch test + escalation; distinct from inheritance.</div></div>
+          <div class="edge-card rbac"><code>INHERITS_FROM</code><div class="subtle">Permission inheritance — separate from <code>REPORTS_TO</code>.</div></div>
+        </div>
+        <div class="callout" style="margin-top:14px"><strong>Domain-edge write convention ⊕ —</strong> every metric/dashboard gets exactly one <strong>spine</strong> edge <code>BELONGS_TO_DOMAIN</code> to its home column (the first/primary id in <code>domain_ids[]</code>). <code>CONTEXTUALIZES</code> (business context, no authority) and <code>GOVERNS</code> (governs interpretation/action) are <strong>additive overlays</strong>, written only when a second domain reasons about the metric without owning it; accountability is the separate <code>OWNS</code>/<code>OWNED_BY</code> edge. Example — a metric owned by finance but shown under marketing: <code>BELONGS_TO_DOMAIN→marketing</code> + <code>GOVERNS</code>/<code>OWNS</code>←<code>finance</code> + <code>domain_ids:["marketing","finance"]</code>. The edge is truth; the cache is rebuilt from it.</div>
+      </section>
+
+      <!-- ENUMS & INGESTION -->
+      <section id="sources">
+        <div class="section-head">
+          <div>
+            <h2>Live Enums &amp; Master-config-free Ingestion</h2>
+            <p class="subtle">Enums are the API's global component schemas (general type system) — <strong>not</strong> master-config data. Ingestion drops <code>master-config/**</code> first.</p>
+          </div>
+          <span class="badge">verified</span>
+        </div>
+        <div class="grid three">
+          <div class="box green">
+            <h3>Authoritative enums (from openapi.json)</h3>
+            <p style="margin:0"><code>ValueFormat</code>(4) · <code>Granularity</code>(4) · <code>ChartType</code>(15) · <code>ThresholdType</code>(3) · <code>ThresholdDirection</code>(3) · <code>ConditionType</code>(4) · <code>ConditionOperator</code>=<code>ComparisonOperator</code>(8) · <code>Severity</code>(5) · <code>MetricCategory</code>(14) · <code>MetricSource</code>(4, but <code>source_set[]</code> is a free list incl. magento/linkedin_ads) · <code>UserRole</code>(7).</p>
+          </div>
+          <div class="box" style="background:var(--soft-cyan);border-color:#b4d4dd">
+            <h3>KG-extension vocab (from Codex — not OpenAPI)</h3>
+            <p style="margin:0"><code>platform_type</code> <code>analytics·ads·crm·ecommerce·warehouse·activation·support·finance·other</code> · <code>policy_type</code> <code>access·interpretation·alerting·escalation·approval·action_guardrail·data_quality</code> · <code>Threshold</code> KG-ext <code>warning·critical·target·anomaly·sla·budget</code> + <code>percent_change·z_score</code> · <code>review_state</code> · <code>business_type</code>.</p>
+          </div>
+          <div class="box gold">
+            <h3>Type corrections carried</h3>
+            <p style="margin:0">causal_role_confidence → enum <code>low·medium·high</code>; yes/no → bool; pipe-delimited → <code>string[]</code>; add scalar <code>source</code> <code>single·multi</code>; nullable <code>availability/n_periods/formula_text/dimensions</code>; bands are strings (keep raw + <code>*_num</code>); narration 558/646.</p>
+          </div>
+        </div>
+        <div class="table-wrap" style="margin-top:14px">
+          <table>
+            <thead><tr><th>Pattern</th><th>Action</th><th>Why</th></tr></thead>
+            <tbody>
+              <tr><td><code>GET /{dash}/metrics/{id}</code></td><td>promote metric</td><td>card / current-value surface</td></tr>
+              <tr><td><code>GET /{dash}/charts/{id}</code></td><td>promote UI / series</td><td>chart / time-series</td></tr>
+              <tr><td><code>/{dash}/</code> · <code>/metadata</code> · <code>/admin/dashboards</code></td><td>promote dashboard</td><td>surface (no master-config)</td></tr>
+              <tr><td>chart-registry.json (646)</td><td>promote <code>UIComponent</code></td><td>resolve VISUALIZES after review</td></tr>
+              <tr style="background:#fff6f5"><td><code>master-config/**</code> · <code>master/**</code></td><td><b>EXCLUDE ENTIRELY</b></td><td>stale; never node, edge, identity, or governance source</td></tr>
+              <tr><td><code>POST/PUT/PATCH/DELETE</code> (46)</td><td>exclude from harvest</td><td>later governed Tool/Action (V2)</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <pre style="margin-top:14px"><code>// Beta fold (kept from Codex) — confidence is derived, never typed in
+α = β = 0.5
+for each supporting evidence record:  α += weight
+for each refuting evidence record:    β += weight
+confidence    = α / (α + β)
+evidence_mass = α + β        // expose BOTH: 0.80 from one weak prior ≠ 0.80 from many outcomes</code></pre>
+        <div class="callout danger" style="margin-top:12px">Governance instances are <strong>not ingested in V1</strong> — their only API source is master-config. Node shapes exist; instances arrive later from human/statistical/<code>alerts-config</code> sources. The causal layer starts empty; rare_seeds correlations enter as <code>CORRELATES_WITH</code> and never auto-promote to <code>CAUSES</code>.</div>
+
+        <h3 style="margin-top:18px">Source priority (per entity) — <span class="subtle" style="font-weight:400">adopted from Codex; <code>master-config</code> is never-use for every entity</span></h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Entity</th><th>Preferred</th><th>Fallback</th><th>Never (auto)</th></tr></thead>
+            <tbody>
+              <tr><td><code>Business</code></td><td>reviewed business profile</td><td>manual bootstrap</td><td>master-config</td></tr>
+              <tr><td><code>IntelligenceProduct</code> · <code>Domain</code></td><td>product catalog / reviewed taxonomy, live route metadata</td><td>owner input</td><td>master-config</td></tr>
+              <tr><td><code>Platform</code></td><td>connector/platform manifests</td><td>reviewed catalog</td><td>master-config</td></tr>
+              <tr><td><code>Dashboard</code> · <code>UIComponent</code></td><td>live route metadata, non-master endpoints, chart-registry</td><td>reviewed manual</td><td>master-config dashboards/endpoints</td></tr>
+              <tr><td><code>Metric</code></td><td>canonical review, endpoint schemas, chart formulas, connector manifests</td><td>statistical/LLM <em>after review</em></td><td>master-config metrics/relationships</td></tr>
+              <tr><td><code>Policy</code> · <code>Threshold</code></td><td>governance review, domain-owner input</td><td>observed suggestions after review</td><td>master-config thresholds/policies</td></tr>
+              <tr><td><code>Role</code></td><td>auth/session map + Org Graph Engine</td><td>reviewed manual</td><td>inferred hierarchy without review</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 style="margin-top:18px">Proposal payload — <span class="subtle" style="font-weight:400">harvester emits proposals only; arbitration is the only writer</span></h3>
+        <pre><code>{
+  "proposal_id": "kgp_2026_001", "operation": "upsert",
+  "target_label": "Metric", "target_id": "metric:blended:revenue",
+  "source_kind": "chart_registry", "source_confidence": 0.82, "review_state": "proposed",
+  "payload": { "canonical_id": "blended-revenue", "concept_key": "revenue",
+    "product_ids": ["miq","piq"], "domain_ids": ["marketing","finance"], "platform_ids": ["shopify","google_ads"] },
+  "relationship_payloads": [
+    { "type": "PART_OF_PRODUCT", "from_id": "metric:blended:revenue", "to_id": "miq" },
+    { "type": "SOURCES", "from_label": "Platform", "from_id": "shopify",
+      "to_id": "metric:blended:revenue", "properties": { "source_metric_name": "gross_sales" } }
+  ]
+}</code></pre>
+      </section>
+
+      <!-- DEFERRED -->
+      <section id="deferred">
+        <div class="section-head">
+          <div>
+            <h2>Deferred to V2 (named, not specified)</h2>
+            <p class="subtle">FRD Layers 2–6 + the Layer-1 entities both drafts omitted + populate-later governance instances. Listed so nothing is lost.</p>
+          </div>
+          <span class="badge">FRD-aware</span>
+        </div>
+        <div class="grid">
+          <div class="box gold"><h3>Populate-later governance</h3><p><code>Policy</code> / <code>Threshold</code> instances, once a trusted non-master-config source exists.</p></div>
+          <div class="box"><h3>Layer-1 causal entities</h3><p><code>Outcome</code>, <code>Tool</code>/<code>Action</code> (<code>CONTROLLED_BY</code>), <code>Investigation_Rule</code>, <code>Approval_Rule</code>.</p></div>
+          <div class="box"><h3>Memory / learning (Layers 2–6)</h3><p><code>Thoughtlet</code>, <code>DecisionCapsule</code>, <code>MonitoringContract</code>+<code>WakeCondition</code>, <code>EvidenceEvent</code>+<code>CausalRelation</code> (Beta-fold source), <code>LearningCandidate</code>→<code>PromotedMemory</code>, <code>GraphChangeProposal</code>, <code>GraphVersion</code>, <code>SourceProfile</code>/<code>Endpoint_Family</code>/<code>IngestionRun</code>.</p></div>
+          <div class="box violet"><h3>People</h3><p><code>Person</code> — real auth/HR users, attached to <code>Role</code>s by the Org Graph Engine once they exist.</p></div>
+        </div>
+      </section>
+
+      <!-- COMPARISON -->
+      <section id="compare">
+        <div class="section-head">
+          <div>
+            <h2>This doc vs the parallel <code>final-schema-codex</code></h2>
+            <p class="subtle">After cross-pollination the two designs converge on most structure; the remaining differences are deliberate.</p>
+          </div>
+          <span class="badge">✅ converged · ⟂ differ</span>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>Dimension</th><th><code>final-schema-codex</code></th><th><b>final-schema-claude (this doc)</b></th><th>Status</th></tr></thead>
+            <tbody>
+              <tr><td>Root node</td><td>Business</td><td>Business</td><td>✅ agree</td></tr>
+              <tr><td>Axes</td><td>tri-axis Product ∥ Domain ∥ Platform</td><td><b>tri-axis Product ∥ Domain ∥ Platform</b></td><td>✅ agree (Platform adopted)</td></tr>
+              <tr><td><code>Platform</code> node</td><td>thin, lazily materialized</td><td><b>thin, lazily materialized</b></td><td>✅ agree (adopted)</td></tr>
+              <tr><td>Rich <code>Business</code> context</td><td>strategic intent, north-star, constraints</td><td><b>adopted</b> + Claude's <code>tier</code>/<code>root_seniority_rank</code></td><td>✅ agree (+ org-engine driver)</td></tr>
+              <tr><td>Master-config</td><td>excluded/stale</td><td><b>eliminated entirely</b></td><td>✅ agree</td></tr>
+              <tr><td><b>Metric product/domain cardinality</b></td><td><code>product_ids[]</code>/<code>domain_ids[]</code> arrays</td><td><b>arrays</b> (adopted ⊕ — was scalar)</td><td>✅ agree (Codex's, corrected here)</td></tr>
+              <tr><td>Domain → Metric edges</td><td><code>CONTEXTUALIZES</code>/<code>GOVERNS</code>/<code>OWNS</code></td><td><b><code>BELONGS_TO_DOMAIN</code> spine + <code>CONTEXTUALIZES</code>/<code>GOVERNS</code> ⊕</b></td><td>✅ agree (enriched here)</td></tr>
+              <tr><td>Policy shape</td><td>general governance</td><td><b>blended</b>: governance + OpenAPI condition fields</td><td>✅ agree (blend)</td></tr>
+              <tr><td>Edge/ingestion provenance</td><td><code>source_kind</code>/proposal payload</td><td><b>adopted</b></td><td>✅ agree</td></tr>
+              <tr><td>Causal confidence</td><td>evidence Beta fold</td><td><b>Beta fold</b></td><td>✅ agree</td></tr>
+              <tr><td><b>RBAC visibility</b></td><td>rank necessary, never sufficient</td><td><b>clearance + branch auto-visibility</b></td><td>⟂ differ (Claude's, by choice)</td></tr>
+              <tr><td><b>Permission edges</b></td><td>per-action labels</td><td><b>generic <code>CAN_VIEW</code> + <code>permission</code></b></td><td>⟂ differ (Claude's)</td></tr>
+              <tr><td><b>Dashboard→UIComponent</b></td><td><code>CONTAINS_COMPONENT</code> edge</td><td><b><code>dashboard_id</code> FK</b> (no edge)</td><td>⟂ differ (Claude's)</td></tr>
+              <tr><td>Org/social graph</td><td>reviewed role/org map</td><td><b>adaptive LLM Org Graph Engine</b> (tier-scaled, editable)</td><td>＋ Claude adds</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="callout" style="margin-top:14px">Companion: <code>final-schema-claude.md</code> — same schema, full property tables, Cypher, source-priority table, and proposal payload.</div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

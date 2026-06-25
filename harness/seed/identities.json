@@ -1,0 +1,20 @@
+{
+  "source_profile_id": "rare_seeds",
+  "description": "Canonical metric identities. Used by identity_edges() as a DECOMPOSES_INTO {relation: identity} fallback ONLY when a metric has no formula_text. Each identity names a derived metric base and the component concepts it decomposes into. Operands are resolved SAME-SCOPE against each Metric's metric_base / concept_key / aliases (via ConceptIndex.resolve(prefer_scope=...)); an operand that resolves to no same-scope live Metric is logged to unresolved_operands and skipped. Identity edges are confidence 1.0 but REVIEW-ONLY (they are inferred, not parsed from a real formula). Numerator/denominator give ordered candidate concepts; the first that resolves wins.",
+  "identities": [
+    {"base": "roas", "operator": "divide", "numerator": ["conversion_value", "conversions_value", "revenue"], "denominator": ["spend", "ad_spend", "cost"], "note": "Return on ad spend = conversion value / spend"},
+    {"base": "poas", "operator": "divide", "numerator": ["profit", "gross_profit"], "denominator": ["spend", "ad_spend"], "note": "Profit on ad spend = profit / spend"},
+    {"base": "cpc", "operator": "divide", "numerator": ["spend", "cost"], "denominator": ["clicks"], "note": "Cost per click = spend / clicks"},
+    {"base": "cpa", "operator": "divide", "numerator": ["spend", "cost"], "denominator": ["conversions", "acquisitions"], "note": "Cost per acquisition = spend / conversions"},
+    {"base": "cpm", "operator": "divide", "numerator": ["spend", "cost"], "denominator": ["impressions"], "note": "Cost per mille = spend / impressions * 1000 (constant folded)"},
+    {"base": "ctr", "operator": "divide", "numerator": ["clicks"], "denominator": ["impressions"], "note": "Click-through rate = clicks / impressions"},
+    {"base": "cvr", "operator": "divide", "numerator": ["conversions"], "denominator": ["clicks", "sessions", "visits"], "note": "Conversion rate = conversions / clicks"},
+    {"base": "conversion_rate", "operator": "divide", "numerator": ["conversions", "orders"], "denominator": ["sessions", "visits", "clicks"], "note": "Site conversion rate = conversions / sessions"},
+    {"base": "aov", "operator": "divide", "numerator": ["revenue", "order_value"], "denominator": ["orders"], "note": "Average order value = revenue / orders"},
+    {"base": "frequency", "operator": "divide", "numerator": ["impressions"], "denominator": ["reach"], "note": "Frequency = impressions / reach"},
+    {"base": "mer", "operator": "divide", "numerator": ["revenue"], "denominator": ["marketing_spend", "total_marketing_spend", "spend"], "note": "Marketing efficiency ratio = revenue / marketing spend"},
+    {"base": "cac", "operator": "divide", "numerator": ["spend", "marketing_spend"], "denominator": ["new_customers"], "note": "Customer acquisition cost = spend / new customers"},
+    {"base": "ecpc", "operator": "divide", "numerator": ["spend", "cost"], "denominator": ["interactions", "engagements"], "note": "Effective CPC = spend / interactions"},
+    {"base": "cost_per_purchase", "operator": "divide", "numerator": ["spend", "cost"], "denominator": ["purchases", "orders"], "note": "Cost per purchase = spend / purchases"}
+  ]
+}

@@ -1,0 +1,74 @@
+[project]
+name = "dc-kg"
+version = "0.1.0"
+description = "ThoughtWire Causal Knowledge Graph — AI-first ingestion engine + Neo4j + live canvas"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+authors = [{ name = "Rare Seeds" }]
+dependencies = [
+    # --- Graph DB (driver + Rust PackStream accelerator; versions must match) ---
+    "neo4j==6.2.0",
+    "neo4j-rust-ext==6.2.0.0",
+    # --- Models / config ---
+    "pydantic==2.13.4",
+    "pydantic-settings==2.14.1",
+    "python-dotenv==1.2.2",
+    # --- Agent + MCP ---
+    "mcp==1.27.2",
+    "claude-agent-sdk==0.2.101",
+    # --- API + live canvas transport (M2) ---
+    "fastapi==0.137.0",
+    "uvicorn[standard]==0.49.0",
+    "sse-starlette==3.4.4",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff==0.15.17",
+    "pytest==9.1.0",
+    "pytest-asyncio==1.4.0",
+]
+# M2 retrieval shortlist (heavy: pulls torch). Install on demand: uv sync --extra ml
+ml = [
+    "sentence-transformers>=3,<6",
+]
+# Causal relationship-discovery engine (harness.discovery). Heavy scientific
+# stack — NOT a core dep. Install on demand: uv sync --extra discovery
+discovery = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "statsmodels>=0.14",
+    "tigramite>=5.2",
+]
+# discovery + the GPU CMIknn variant (torch/CUDA). Install: uv sync --extra discovery-gpu
+discovery-gpu = [
+    "numpy>=1.24",
+    "pandas>=2.0",
+    "scikit-learn>=1.3",
+    "statsmodels>=0.14",
+    "tigramite>=5.2",
+    "torch>=2.0",
+]
+
+[project.scripts]
+kg = "harness.cli.kg:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["harness"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["harness/tests"]

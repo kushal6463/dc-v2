@@ -1,0 +1,216 @@
+{
+  "source_profile_id": "rare_seeds",
+  "description": "Causal PRIORS from the rare_seeds pilot profile (decision-canvas-os graph_cache.json). Used ONLY to surface candidate metric pairs for the M3 LLM judge (the structural+rare_seeds hybrid gate, implementation-kg-plan.md \u00a75e). A prior is NOT evidence: each resolved pair is still judged + refuted + self-consistency-scored, and lands in the review queue as a proposed INFLUENCES edge -- never auto-committed, never auto-promoted to CAUSES. Endpoints are concept slugs resolved against Metric.concept_key/metric_base/metric_id at run time; a prior that resolves to no live Metric is skipped.",
+  "priors": [
+    {
+      "cause": "marketing-spend",
+      "effect": "impressions",
+      "mechanism_hint": "Budget wins ad auctions"
+    },
+    {
+      "cause": "impressions",
+      "effect": "clicks",
+      "mechanism_hint": "Impressions create click opportunities"
+    },
+    {
+      "cause": "clicks",
+      "effect": "sessions",
+      "mechanism_hint": "Clicks drive website visits"
+    },
+    {
+      "cause": "sessions",
+      "effect": "conversions",
+      "mechanism_hint": "Sessions create conversion opportunities"
+    },
+    {
+      "cause": "conversions",
+      "effect": "revenue",
+      "mechanism_hint": "Conversions generate revenue"
+    },
+    {
+      "cause": "conversions",
+      "effect": "new-customers",
+      "mechanism_hint": "Conversions acquire customers"
+    },
+    {
+      "cause": "new-customers",
+      "effect": "ltv",
+      "mechanism_hint": "Customers generate lifetime value"
+    },
+    {
+      "cause": "new-customers",
+      "effect": "repeat-customers",
+      "mechanism_hint": "New customers may return"
+    },
+    {
+      "cause": "repeat-customers",
+      "effect": "ltv",
+      "mechanism_hint": "Repeat purchases increase LTV"
+    },
+    {
+      "cause": "customer-count",
+      "effect": "churn-rate",
+      "mechanism_hint": "Base for churn calculation"
+    },
+    {
+      "cause": "order-frequency",
+      "effect": "ltv",
+      "mechanism_hint": "Higher frequency increases lifetime value"
+    },
+    {
+      "cause": "aov",
+      "effect": "revenue",
+      "mechanism_hint": "Higher order values increase revenue"
+    },
+    {
+      "cause": "content-quality-score",
+      "effect": "ai-visibility-score",
+      "mechanism_hint": "Better content quality (schema, structure, clarity) increases AI engine visibility"
+    },
+    {
+      "cause": "ai-visibility-score",
+      "effect": "sessions",
+      "mechanism_hint": "AI visibility drives organic referral traffic from AI engine answers"
+    },
+    {
+      "cause": "creative-performance-score",
+      "effect": "ctr",
+      "mechanism_hint": "Higher creative performance (better imagery, copy, brand consistency) directly increases click-through rates"
+    },
+    {
+      "cause": "competitor-traffic",
+      "effect": "sessions",
+      "mechanism_hint": "Higher competitor traffic in the market often correlates with overall market demand, influencing our sessions."
+    },
+    {
+      "cause": "industry-ctr-benchmark",
+      "effect": "ctr",
+      "mechanism_hint": "Industry CTR benchmarks provide context for our own CTR. Falling below benchmark signals ad quality issues."
+    },
+    {
+      "cause": "competitor-ad-pressure",
+      "effect": "cpc",
+      "mechanism_hint": "Increased competitor ad spending drives up auction CPCs through higher competition in ad auctions."
+    },
+    {
+      "cause": "competitor-ad-pressure",
+      "effect": "ctr",
+      "mechanism_hint": "More competitor ads in search results reduces our ad CTR through increased competition for clicks."
+    },
+    {
+      "cause": "audience-overlap-index",
+      "effect": "sessions",
+      "mechanism_hint": "High audience overlap with growing competitors means shared users may shift traffic to competitor sites."
+    },
+    {
+      "cause": "channel-mix-shift",
+      "effect": "sessions",
+      "mechanism_hint": "Shifts in competitor channel strategy can redistribute market traffic, affecting our organic/paid sessions."
+    },
+    {
+      "cause": "category-rank",
+      "effect": "sessions",
+      "mechanism_hint": "Improving category rank correlates with increased visibility and organic traffic."
+    },
+    {
+      "cause": "competitor-ad-pressure",
+      "effect": "spend",
+      "mechanism_hint": "Higher competitor ad pressure forces us to increase spend to maintain ad share of voice."
+    },
+    {
+      "cause": "competitor-content-strength",
+      "effect": "conversions",
+      "mechanism_hint": "Competitors with strong content strategies capture top-of-funnel traffic. Matching their content depth improves our conversion funnel."
+    },
+    {
+      "cause": "market-share-position",
+      "effect": "revenue",
+      "mechanism_hint": "Market share directly correlates with revenue potential. Losing share means losing addressable market."
+    },
+    {
+      "cause": "competitor-creative-strategy",
+      "effect": "ctr",
+      "mechanism_hint": "Understanding competitor creative strategy enables differentiated ad creatives, improving click-through rates."
+    },
+    {
+      "cause": "brand-dna-score",
+      "effect": "creative-performance-score",
+      "mechanism_hint": "Stronger brand DNA extraction produces more on-brand creatives, improving performance"
+    },
+    {
+      "cause": "creative-performance-score",
+      "effect": "conversion-rate",
+      "mechanism_hint": "Higher performing ad creatives drive more clicks that convert"
+    },
+    {
+      "cause": "creative-performance-score",
+      "effect": "roas",
+      "mechanism_hint": "Better ad creative improves CTR and conversion, increasing revenue per ad dollar"
+    },
+    {
+      "cause": "creative-fatigue-index",
+      "effect": "ctr",
+      "mechanism_hint": "Creative fatigue leads to ad blindness, directly reducing CTR"
+    },
+    {
+      "cause": "creative-fatigue-index",
+      "effect": "cpc",
+      "mechanism_hint": "Low CTR from fatigued creatives lowers quality score, increasing CPC"
+    },
+    {
+      "cause": "creative-fatigue-index",
+      "effect": "creative-performance-score",
+      "mechanism_hint": "Fatigued creatives directly degrade creative performance"
+    },
+    {
+      "cause": "ai-visibility-score",
+      "effect": "conversion-rate",
+      "mechanism_hint": "AI visibility brings higher-intent organic traffic, improving conversion rate"
+    },
+    {
+      "cause": "ai-visibility-score",
+      "effect": "revenue",
+      "mechanism_hint": "AI visibility drives organic sessions that convert to revenue without ad spend"
+    },
+    {
+      "cause": "content-quality-score",
+      "effect": "landing-page-conversion-rate",
+      "mechanism_hint": "Higher content quality improves landing page trust and conversion"
+    },
+    {
+      "cause": "landing-page-conversion-rate",
+      "effect": "conversion-rate",
+      "mechanism_hint": "Landing page conversion rate is a key component of overall conversion rate"
+    },
+    {
+      "cause": "landing-page-conversion-rate",
+      "effect": "revenue",
+      "mechanism_hint": "Better landing page conversion directly increases revenue"
+    },
+    {
+      "cause": "brand-dna-score",
+      "effect": "landing-page-conversion-rate",
+      "mechanism_hint": "Consistent brand identity on landing pages builds trust and improves conversion"
+    },
+    {
+      "cause": "ai-organic-referral-rate",
+      "effect": "sessions",
+      "mechanism_hint": "AI referrals contribute a growing share of organic sessions"
+    },
+    {
+      "cause": "ai-visibility-score",
+      "effect": "ai-organic-referral-rate",
+      "mechanism_hint": "Higher AI visibility means more AI engines mention and link to the site"
+    },
+    {
+      "cause": "content-quality-score",
+      "effect": "conversion-rate",
+      "mechanism_hint": "Better content quality builds user trust, improving conversion"
+    },
+    {
+      "cause": "competitor-creative-strategy",
+      "effect": "creative-fatigue-index",
+      "mechanism_hint": "Competitor innovation raises the bar, accelerating creative fatigue"
+    }
+  ]
+}

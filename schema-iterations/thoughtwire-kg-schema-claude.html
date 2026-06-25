@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>ThoughtWire Causal Knowledge Graph — V1 Node Blueprint</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#f5f1e8; --card:#fffdf9; --ink:#1f1d18; --ink-soft:#46423a; --muted:#857f70;
+    --rule:#e7e0d1; --rule-soft:#f0ebdf;
+    --A:#2f4bd6; --A-bg:#edf0ff; --A-line:#cdd6ff;
+    --B:#0b8f80; --B-bg:#e3f5f1; --B-line:#bfe9e1;
+    --C:#b4690e; --C-bg:#f8efda; --C-line:#ecdcb9;
+    --D:#7b3fe4; --D-bg:#f1e9fd; --D-line:#ddccf7;
+    --good:#1f9d57; --warn:#b4690e; --bad:#c0392b;
+    --code-bg:#211f1a; --code-ink:#e9e4d6;
+    --serif:'Fraunces',Georgia,serif;
+    --sans:'Hanken Grotesk',system-ui,-apple-system,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,Menlo,monospace;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.7;
+    -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+  body::before{content:"";position:fixed;top:0;left:0;right:0;height:4px;z-index:60;
+    background:linear-gradient(90deg,var(--A) 0 25%,var(--B) 25% 50%,var(--C) 50% 75%,var(--D) 75% 100%)}
+
+  /* layout: sidebar + main */
+  .app{display:grid;grid-template-columns:264px minmax(0,1fr);gap:0;max-width:1680px;margin:0 auto}
+  aside.side{position:sticky;top:4px;align-self:start;height:calc(100vh - 4px);overflow-y:auto;
+    padding:26px 18px 40px 26px;border-right:1px solid var(--rule)}
+  aside .brand{font-family:var(--serif);font-weight:600;font-size:19px;line-height:1.15;margin-bottom:4px}
+  aside .brand small{display:block;font-family:var(--mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:400;margin-top:6px}
+  aside .navgroup{margin-top:22px}
+  aside .navgroup .gh{font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:7px}
+  aside .navgroup .gh .sw{width:9px;height:9px;border-radius:50%}
+  aside a{display:block;color:var(--ink-soft);text-decoration:none;font-size:13.5px;padding:3px 0 3px 16px;border-left:2px solid transparent;line-height:1.45}
+  aside a:hover{color:var(--ink);border-left-color:var(--muted)}
+  aside a.fam-A:hover{border-left-color:var(--A)} aside a.fam-B:hover{border-left-color:var(--B)}
+  aside a.fam-C:hover{border-left-color:var(--C)} aside a.fam-D:hover{border-left-color:var(--D)}
+  aside .toplink{font-weight:600;color:var(--ink);padding-left:0;border-left:none;font-size:14px;margin:3px 0}
+  aside .parthead{font-family:var(--serif);font-weight:600;font-size:13px;color:var(--ink);margin:18px 0 2px}
+
+  /* collapsible sidebar */
+  .sidehead{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+  .collapse-btn,.reopen-btn{cursor:pointer;border:1px solid var(--rule);background:var(--card);color:var(--ink-soft);
+    border-radius:8px;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:17px;line-height:1;flex:none;padding:0}
+  .collapse-btn:hover,.reopen-btn:hover{border-color:var(--muted);color:var(--ink)}
+  .reopen-btn{display:none;position:fixed;top:12px;left:12px;z-index:80;box-shadow:0 3px 10px -5px rgba(40,30,10,.5)}
+  .app.collapsed{grid-template-columns:minmax(0,1fr)}
+  .app.collapsed aside.side{display:none}
+  .app.collapsed .reopen-btn{display:flex}
+
+  main{padding:0 56px 120px;max-width:none;width:100%}
+  .mobilebar{display:none}
+
+  /* hero */
+  header.hero{padding:54px 0 24px}
+  .eyebrow{font-family:var(--mono);font-size:11.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:16px}
+  header.hero h1{font-family:var(--serif);font-weight:600;font-size:clamp(34px,5vw,56px);line-height:1.04;letter-spacing:-.015em;margin:0 0 16px}
+  header.hero h1 em{font-style:italic;color:var(--A)}
+  header.hero .lede{font-size:18px;line-height:1.6;color:var(--ink-soft);max-width:640px;margin:0}
+  .statbar{display:flex;flex-wrap:wrap;gap:9px;margin-top:26px}
+  .stat{background:var(--card);border:1px solid var(--rule);border-radius:999px;padding:6px 14px;font-size:12.5px;color:var(--muted)}
+  .stat b{font-family:var(--serif);font-weight:600;color:var(--ink);font-size:14px;margin-right:3px}
+
+  section{padding-top:50px}
+  h2{font-family:var(--serif);font-weight:600;font-size:29px;letter-spacing:-.01em;margin:0 0 6px;display:flex;align-items:baseline;gap:13px;scroll-margin-top:20px}
+  h2 .num{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--A);background:var(--A-bg);border-radius:7px;padding:3px 9px}
+  h2 + .sub{color:var(--muted);font-size:15.5px;margin:0 0 18px;max-width:680px}
+  h3.famhead{font-family:var(--serif);font-weight:600;font-size:22px;margin:38px 0 4px;display:flex;align-items:center;gap:11px;scroll-margin-top:20px}
+  h3.famhead .sw{width:13px;height:13px;border-radius:4px}
+  h3.famhead + .fsub{color:var(--muted);font-size:14.5px;margin:0 0 16px}
+  .partbanner{margin:18px 0 6px;padding:12px 18px;border-radius:12px;background:var(--ink);color:var(--card);font-family:var(--serif);font-weight:600;font-size:17px;display:flex;align-items:baseline;gap:12px}
+  .partbanner small{font-family:var(--mono);font-weight:400;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#cbb9a0}
+  .partbanner.v2{background:#3a342b}
+  p{color:var(--ink-soft);margin:0 0 15px}
+  strong{color:var(--ink);font-weight:600}
+  code{font-family:var(--mono);background:#efe9dc;border-radius:5px;padding:1px 6px;color:#5a3d12;font-size:12.5px;overflow-wrap:break-word}
+
+  .principles{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:20px 0}
+  .principle{background:var(--card);border:1px solid var(--rule);border-radius:15px;padding:20px;position:relative}
+  .principle .big{font-family:var(--serif);font-size:30px;color:var(--A);opacity:.22;position:absolute;top:9px;right:16px;font-weight:700}
+  .principle h4{font-family:var(--serif);font-size:17px;margin:0 0 7px;font-weight:600;max-width:82%}
+  .principle p{font-size:14px;margin:0}
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:13px;margin:22px 0}
+  .kpi{background:var(--card);border:1px solid var(--rule);border-radius:13px;padding:16px 18px}
+  .kpi .v{font-family:var(--serif);font-size:31px;font-weight:600;line-height:1}.kpi .v .bad{color:var(--bad)}
+  .kpi .l{color:var(--muted);font-size:12.5px;margin-top:7px;line-height:1.4}
+
+  .callout{background:var(--card);border:1px solid var(--rule);border-left:4px solid var(--muted);border-radius:0 13px 13px 0;padding:16px 20px;margin:20px 0}
+  .callout.verify{border-left-color:var(--B)} .callout.view{border-left-color:var(--C);background:var(--C-bg)}
+  .callout.crit{border-left-color:var(--bad);background:#fbf0ee}
+  .callout .lab{font-family:var(--mono);font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;margin-bottom:5px}
+  .callout.verify .lab{color:var(--B)} .callout.view .lab{color:var(--C)} .callout.crit .lab{color:var(--bad)}
+  .callout p:last-child{margin:0;font-size:14.5px}
+
+  /* graph shape svg */
+  .svgwrap{border:1px solid var(--rule);border-radius:15px;overflow:hidden;background:var(--card);margin:18px 0}
+  svg text{font-family:var(--sans);fill:var(--ink)}
+  .merge-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:18px 0}
+  .merge{background:var(--card);border:1px solid var(--rule);border-radius:13px;padding:15px 17px}
+  .merge h4{font-family:var(--serif);font-size:15px;margin:0 0 6px;font-weight:600}
+  .merge h4 .x{color:var(--bad);font-family:var(--mono);font-size:12px;margin-right:6px}
+  .merge p{font-size:13px;margin:0;color:var(--muted)}
+
+  /* flow */
+  .flow{display:flex;flex-direction:column;gap:12px;margin:20px 0}
+  .plane{background:var(--card);border:1px solid var(--rule);border-radius:15px;padding:15px 17px}
+  .plane.A{border-left:4px solid var(--A)} .plane.B{border-left:4px solid var(--B)} .plane.C{border-left:4px solid var(--D)}
+  .plane .ptitle{display:flex;align-items:baseline;gap:10px;margin-bottom:11px;flex-wrap:wrap}
+  .plane .ptitle .name{font-family:var(--serif);font-weight:600;font-size:15.5px}
+  .plane .ptitle .kind{font-family:var(--mono);font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em}
+  .row{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+  .gnode{font-family:var(--mono);font-size:12.5px;background:var(--paper);border:1px solid var(--rule);border-radius:8px;padding:5px 11px}
+  .gnode.hl{border-color:var(--A);background:var(--A-bg)} .gnode.tealhl{border-color:var(--B);background:var(--B-bg)}
+  .arrow{color:var(--muted)}
+  .note-edge{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:9px;line-height:1.6}
+  .note-edge b{color:var(--ink)}
+
+  /* node cards + property tables */
+  .node{background:var(--card);border:1px solid var(--rule);border-radius:14px;padding:20px 22px;margin:14px 0;scroll-margin-top:16px;border-left:4px solid var(--rule);overflow-x:auto}
+  .node.A{border-left-color:var(--A)} .node.B{border-left-color:var(--B)} .node.C{border-left-color:var(--C)} .node.D{border-left-color:var(--D)}
+  .node .nhead{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+  .node .nhead h4{font-family:var(--serif);font-weight:600;font-size:20px;margin:0}
+  .chip{font-family:var(--mono);font-size:10.5px;font-weight:500;border-radius:999px;padding:2px 9px;letter-spacing:.02em}
+  .chip.core{background:var(--ink);color:var(--card)}
+  .chip.sup{background:var(--rule);color:var(--ink-soft)}
+  .chip.merged{background:var(--B-bg);color:var(--B);border:1px solid var(--B-line)}
+  .chip.A{background:var(--A-bg);color:var(--A);border:1px solid var(--A-line)}
+  .chip.B{background:var(--B-bg);color:var(--B);border:1px solid var(--B-line)}
+  .chip.C{background:var(--C-bg);color:var(--C);border:1px solid var(--C-line)}
+  .chip.D{background:var(--D-bg);color:var(--D);border:1px solid var(--D-line)}
+  .node .ndesc{font-size:14.5px;color:var(--ink-soft);margin:0 0 12px}
+  .grouplab{font-family:var(--mono);font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--B);margin:14px 0 2px}
+  .ptable{width:100%;border-collapse:collapse;font-size:13px}
+  .ptable thead th{font-family:var(--mono);font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);
+    text-align:left;padding:7px 10px;border-bottom:1px solid var(--rule)}
+  .ptable tbody td{padding:7px 10px;border-bottom:1px solid var(--rule-soft);vertical-align:top;color:var(--ink-soft);line-height:1.5;overflow-wrap:anywhere}
+  .ptable tbody tr:last-child td{border-bottom:none}
+  .ptable tbody tr:hover{background:#fbf8f1}
+  .ptable tbody tr.fix{background:#fbf3ec}
+  .ptable tbody tr.fix:hover{background:#f8ecdf}
+  .ptable td.p{font-family:var(--mono);color:var(--A);overflow-wrap:anywhere}
+  .ptable td.ty{font-family:var(--mono);color:var(--muted);font-size:12px;overflow-wrap:anywhere}
+  .ptable td.ty b{color:var(--bad)}
+  .req{font-family:var(--mono);font-size:10.5px;padding:1px 6px;border-radius:5px}
+  .req.y{background:#e3f3e9;color:var(--good)} .req.r{background:#fdf3e0;color:var(--warn)} .req.o{background:var(--rule);color:var(--muted)}
+  .ptable td.src{font-size:12px;color:var(--muted);font-family:var(--mono);overflow-wrap:anywhere}
+  .star{color:var(--bad);font-weight:700}
+  /* horizontal-scroll wrapper (keeps the wide Metric tables readable instead of squished) */
+  .tscroll{overflow-x:auto;overflow-y:hidden;margin-top:4px;border-radius:8px}
+  .tscroll .ptable{min-width:720px}
+  .tscroll .ptable td.p,.tscroll .ptable td.ty{white-space:nowrap}
+  .tscroll::-webkit-scrollbar{height:10px}
+  .tscroll::-webkit-scrollbar-track{background:var(--rule-soft);border-radius:6px}
+  .tscroll::-webkit-scrollbar-thumb{background:var(--rule);border-radius:6px}
+  .tscroll::-webkit-scrollbar-thumb:hover{background:var(--muted)}
+  .scrollhint{font-family:var(--mono);font-size:10px;letter-spacing:.06em;color:var(--muted);margin:2px 0 0}
+
+  /* generic tablecard */
+  .tablecard{border:1px solid var(--rule);border-radius:13px;overflow-x:auto;margin:16px 0;background:var(--card)}
+  table.gen{width:100%;border-collapse:collapse;font-size:14px}
+  table.gen thead th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);
+    text-align:left;padding:12px 15px;background:var(--rule-soft);border-bottom:1px solid var(--rule)}
+  table.gen tbody td{padding:11px 15px;border-bottom:1px solid var(--rule-soft);vertical-align:top;color:var(--ink-soft);overflow-wrap:anywhere}
+  table.gen tbody tr:last-child td{border-bottom:none}
+  table.gen tbody tr:hover{background:#fbf8f1}
+  table.gen .mono{font-family:var(--mono);font-size:12.5px;color:var(--A)}
+  .ok{color:var(--good);font-weight:600}.warn{color:var(--warn);font-weight:600}.bad{color:var(--bad);font-weight:600}
+
+  pre{background:var(--code-bg);color:var(--code-ink);border-radius:13px;padding:18px 20px;overflow:auto;
+    font-family:var(--mono);font-size:12.5px;line-height:1.6;margin:16px 0}
+  pre .c{color:#9a937f} pre .k{color:#9ec1ff} pre .t{color:#86e6d3}
+
+  .answer{background:var(--card);border:1px solid var(--rule);border-radius:15px;padding:20px 22px;margin:16px 0;box-shadow:0 14px 34px -28px rgba(40,30,10,.4)}
+  .answer .q{font-family:var(--mono);font-size:12.5px;color:var(--A);margin-bottom:11px;padding-bottom:11px;border-bottom:1px dashed var(--rule)}
+  .answer p{font-size:15px;margin:0}
+  ol.views{counter-reset:v;list-style:none;padding:0;margin:16px 0}
+  ol.views li{counter-increment:v;position:relative;padding:12px 0 12px 50px;border-bottom:1px solid var(--rule-soft);font-size:15px}
+  ol.views li:last-child{border-bottom:none}
+  ol.views li::before{content:counter(v);position:absolute;left:0;top:11px;font-family:var(--serif);font-weight:600;width:32px;height:32px;border-radius:50%;background:var(--C-bg);color:var(--C);display:flex;align-items:center;justify-content:center}
+  .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(245px,1fr));gap:13px;margin:16px 0}
+  .step{background:var(--card);border:1px solid var(--rule);border-radius:13px;padding:16px}
+  .step .sn{font-family:var(--mono);font-size:11px;color:var(--muted)}
+  .step h4{font-family:var(--serif);font-size:16px;margin:5px 0;font-weight:600}
+  .step p{font-size:13.5px;margin:0;color:var(--muted)}
+  .step.point{border-color:var(--B)} .step.v2{opacity:.74}
+  footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--rule);color:var(--muted);font-size:12.5px}
+
+  @media(max-width:920px){
+    .app{grid-template-columns:1fr}
+    aside.side{display:none}
+    main{padding:0 22px 90px}
+    .mobilebar{display:flex;gap:6px;flex-wrap:wrap;position:sticky;top:4px;z-index:40;background:rgba(245,241,232,.92);
+      backdrop-filter:blur(8px);padding:10px 22px;margin:0 -22px;border-bottom:1px solid var(--rule)}
+    .mobilebar a{font-family:var(--mono);font-size:11.5px;color:var(--muted);text-decoration:none;padding:3px 8px;border:1px solid var(--rule);border-radius:6px}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <button class="reopen-btn" onclick="toggleSidebar()" aria-label="Open sidebar" title="Open sidebar">☰</button>
+
+  <!-- SIDEBAR -->
+  <aside class="side">
+    <div class="sidehead">
+      <div class="brand">ThoughtWire<br>Knowledge Graph<small>V1 Node Blueprint</small></div>
+      <button class="collapse-btn" onclick="toggleSidebar()" aria-label="Collapse sidebar" title="Collapse sidebar">‹</button>
+    </div>
+    <div class="navgroup">
+      <div class="parthead">Part I · V1</div>
+      <a class="toplink" href="#verdict">Verdict &amp; stance</a>
+      <a class="toplink" href="#shape">V1 graph shape</a>
+    </div>
+    <div class="navgroup">
+      <div class="gh"><span class="sw" style="background:var(--A)"></span>Core nodes</div>
+      <a class="fam-A" href="#Metric">Metric ★ (merged)</a>
+      <a class="fam-C" href="#Policy">Policy</a>
+      <a class="fam-C" href="#Threshold">Threshold</a>
+      <a class="fam-B" href="#Dashboard">Dashboard</a>
+      <a class="fam-B" href="#UIComponent">UIComponent</a>
+      <a class="fam-D" href="#Role">Role (+ Principal)</a>
+      <a class="fam-A" href="#supporting">IntelligenceProduct · Domain</a>
+    </div>
+    <div class="navgroup">
+      <a class="toplink" href="#rbac">RBAC</a>
+      <a class="toplink" href="#edges">Edge catalog</a>
+      <a class="toplink" href="#enums">Enums &amp; type audit</a>
+      <a class="toplink" href="#removed">What the merges removed</a>
+      <a class="toplink" href="#ingest">Ingestion</a>
+      <a class="toplink" href="#constraints">Constraints</a>
+      <a class="toplink" href="#build">Build order</a>
+    </div>
+    <div class="navgroup">
+      <div class="parthead">Part II · V2+</div>
+      <a class="fam-D" href="#memory">Memory &amp; learning</a>
+      <a class="fam-D" href="#confidence">Confidence ledger</a>
+      <a class="toplink" href="#codex">Converge / diverge</a>
+      <a class="toplink" href="#repromote">Re-promotion</a>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <main>
+    <div class="mobilebar">
+      <a href="#verdict">Verdict</a><a href="#shape">Shape</a><a href="#Metric">Metric</a><a href="#rbac">RBAC</a><a href="#edges">Edges</a><a href="#enums">Types</a><a href="#build">Build</a><a href="#memory">V2</a>
+    </div>
+
+    <header class="hero">
+      <div class="eyebrow">ThoughtWire · Neo4j · one DB per tenant · 2026-06-13</div>
+      <h1>The business body an <em>agent</em> wakes into.</h1>
+      <p class="lede">A causal knowledge graph — the stable map of what a business measures, what moves it, who may act, and what it has learned. This revision <strong>combines</strong> the full Claude blueprint with the lean Codex V1 node-details and applies five data-grounded merges. <strong>Part I</strong> ships first; <strong>Part II</strong> is the full vision.</p>
+      <div class="statbar">
+        <span class="stat"><b>6</b>V1 core nodes</span>
+        <span class="stat"><b>5</b>merges applied</span>
+        <span class="stat"><b>0</b>Tenant nodes</span>
+        <span class="stat"><b>902</b>API paths</span>
+        <span class="stat"><b>646</b>charts</span>
+        <span class="stat"><b>5</b>connectors</span>
+      </div>
+    </header>
+
+    <div class="partbanner"><span>Part I — V1</span><small>what ships first</small></div>
+
+    <!-- VERDICT -->
+    <section id="verdict">
+      <h2><span class="num">01</span> Verdict &amp; V1 stance</h2>
+      <p class="sub">The idea is right; three things must hold, and V1 is deliberately lean.</p>
+      <div class="principles">
+        <div class="principle"><span class="big">01</span><h4>Not a tree, not one flat graph</h4><p>A tree-like <strong>spine</strong> (<code>Product → Domain → Metric</code>) for orientation; a <strong>temporal DAG</strong> for causality; governance as <strong>overlay</strong>.</p></div>
+        <div class="principle"><span class="big">02</span><h4>The hard part is edges</h4><p><code>rare_seeds</code> has <strong>355 nodes, 4 edges</strong> (correlation, one spurious). Nodes are solved; <strong>trustworthy causal edges are the whole project.</strong></p></div>
+        <div class="principle"><span class="big">03</span><h4>Confidence is derived</h4><p>Edge strength folds from an append-only <strong>evidence ledger</strong> (V2), never typed in; writes go through <strong>governed proposals</strong>.</p></div>
+      </div>
+      <div class="callout crit"><div class="lab">Tenancy · no Tenant node</div>
+      <p><strong>Each tenant gets its own Neo4j database.</strong> Tenant identity is database/runtime context — there is <strong>no <code>Tenant</code> node and no <code>tenant_id</code> field</strong>. This matches the per-tenant Snowflake <code>USR_/RL_/WH_&lt;SLUG&gt;</code> users/roles/warehouses and per-tenant databases (e.g. <code>DB_RARE_SEEDS</code>). If one-DB-multi-tenant is ever forced, reintroduce <code>Tenant</code> with composite constraints.</p></div>
+      <p class="sub" style="margin-top:24px">The five V1 merges — all validated against <code>chart-registry.json</code>, <code>openapi.json</code>, and the real <code>rare_seeds</code> shape:</p>
+      <div class="merge-grid">
+        <div class="merge"><h4><span class="x">−</span>Tenant</h4><p>Per-tenant DBs ⇒ tenant = runtime context, not a graph entity. Drops <code>tenant_id</code> everywhere.</p></div>
+        <div class="merge"><h4><span class="x">→</span>MetricConcept into Metric</h4><p>No concept entity in the data; concept ≈ <code>metric_base</code>. Folded to <code>concept_key</code>/<code>concept_name</code>; cross-scope via <code>ROLLS_UP_TO</code>.</p></div>
+        <div class="merge"><h4><span class="x">→</span>Endpoint + Connector into Metric</h4><p><code>rare_seeds</code> already stores them flat: <code>card_endpoint</code>, <code>series_endpoint</code>, <code>source_set</code>, <code>mart_source</code>.</p></div>
+        <div class="merge"><h4><span class="x">→</span>Principal into Role</h4><p>No principal in the data — only <code>User {role}</code>. App authenticates; graph needs only the <strong>Role</strong> (<code>role_key</code> claim).</p></div>
+        <div class="merge"><h4><span class="x">±</span>Type audit</h4><p>Real values disagree with old types — <code>type_confidence: high</code> is categorical, booleans are <code>yes/no</code>, lists are <code>|</code>-delimited (§07).</p></div>
+      </div>
+    </section>
+
+    <!-- SHAPE -->
+    <section id="shape">
+      <h2><span class="num">02</span> V1 graph shape</h2>
+      <p class="sub">Each tenant DB holds only that tenant's product, metric, dashboard, policy, threshold, and RBAC graph. <strong>MetricConcept, Endpoint, Connector are fields on Metric; Tenant and Principal do not exist.</strong></p>
+      <div class="svgwrap">
+        <svg viewBox="0 0 900 470" role="img" aria-label="ThoughtWire KG V1 node graph (Tenant-less, merged)" width="100%" height="470">
+          <defs>
+            <marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#857f70"></path></marker>
+            <marker id="arP" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#7b3fe4"></path></marker>
+          </defs>
+
+          <rect x="30" y="40" width="180" height="50" rx="9" fill="#edf0ff" stroke="#cdd6ff"></rect>
+          <text x="120" y="70" text-anchor="middle" font-weight="700" font-size="14">IntelligenceProduct</text>
+
+          <rect x="30" y="150" width="180" height="50" rx="9" fill="#fffdf9" stroke="#e7e0d1"></rect>
+          <text x="120" y="180" text-anchor="middle" font-weight="700" font-size="14">Domain</text>
+
+          <rect x="290" y="138" width="200" height="74" rx="10" fill="#edf0ff" stroke="#2f4bd6" stroke-width="2"></rect>
+          <text x="390" y="166" text-anchor="middle" font-weight="700" font-size="15">Metric ★</text>
+          <text x="390" y="190" text-anchor="middle" font-size="10.5" fill="#857f70" font-family="ui-monospace,Menlo,monospace">concept · endpoints · source</text>
+          <text x="390" y="204" text-anchor="middle" font-size="10.5" fill="#857f70" font-family="ui-monospace,Menlo,monospace">folded in</text>
+
+          <rect x="300" y="330" width="180" height="50" rx="9" fill="#f8efda" stroke="#ecdcb9"></rect>
+          <text x="390" y="360" text-anchor="middle" font-weight="700" font-size="14">Threshold</text>
+
+          <rect x="560" y="40" width="180" height="50" rx="9" fill="#f8efda" stroke="#ecdcb9"></rect>
+          <text x="650" y="70" text-anchor="middle" font-weight="700" font-size="14">Policy</text>
+
+          <rect x="560" y="150" width="180" height="50" rx="9" fill="#e3f5f1" stroke="#bfe9e1"></rect>
+          <text x="650" y="180" text-anchor="middle" font-weight="700" font-size="14">Dashboard</text>
+
+          <rect x="560" y="260" width="180" height="50" rx="9" fill="#e3f5f1" stroke="#bfe9e1"></rect>
+          <text x="650" y="290" text-anchor="middle" font-weight="700" font-size="14">UIComponent</text>
+
+          <rect x="710" y="370" width="160" height="50" rx="9" fill="#f1e9fd" stroke="#7b3fe4" stroke-width="1.5"></rect>
+          <text x="790" y="394" text-anchor="middle" font-weight="700" font-size="14">Role</text>
+          <text x="790" y="410" text-anchor="middle" font-size="9.5" fill="#7b3fe4" font-family="ui-monospace,Menlo,monospace">+ Principal</text>
+
+          <!-- grey structural edges -->
+          <line x1="120" y1="90" x2="120" y2="150" stroke="#857f70" marker-end="url(#ar)"></line>
+          <line x1="210" y1="175" x2="290" y2="175" stroke="#857f70" marker-end="url(#ar)"></line>
+          <line x1="390" y1="212" x2="390" y2="330" stroke="#857f70" marker-end="url(#ar)"></line>
+          <line x1="490" y1="165" x2="560" y2="70" stroke="#857f70" marker-end="url(#ar)"></line>
+          <line x1="490" y1="175" x2="560" y2="175" stroke="#857f70" marker-end="url(#ar)"></line>
+          <line x1="650" y1="200" x2="650" y2="260" stroke="#857f70" marker-end="url(#ar)"></line>
+          <line x1="560" y1="285" x2="490" y2="190" stroke="#857f70" marker-end="url(#ar)"></line>
+          <line x1="560" y1="62" x2="480" y2="345" stroke="#857f70" marker-end="url(#ar)"></line>
+
+          <!-- purple RBAC grants -->
+          <line x1="760" y1="370" x2="660" y2="90" stroke="#7b3fe4" marker-end="url(#arP)"></line>
+          <line x1="730" y1="370" x2="660" y2="200" stroke="#7b3fe4" marker-end="url(#arP)"></line>
+          <line x1="710" y1="375" x2="492" y2="185" stroke="#7b3fe4" marker-end="url(#arP)"></line>
+
+          <text x="450" y="448" text-anchor="middle" font-size="12.5" fill="#857f70">Purple = RBAC grants (Role→Product/Dashboard/Metric). Grey = product, metric, governance, surface structure.</text>
+        </svg>
+      </div>
+      <div class="flow">
+        <div class="plane A"><div class="ptitle"><span class="name">Navigation spine</span><span class="kind">tree · orientation</span></div>
+          <div class="row"><span class="gnode">IntelligenceProduct</span><span class="arrow">→</span><span class="gnode">Domain</span><span class="arrow">→</span><span class="gnode hl">Metric</span></div></div>
+        <div class="plane B"><div class="ptitle"><span class="name">Causal fabric</span><span class="kind">temporal DAG · the truth agents traverse</span></div>
+          <div class="row"><span class="gnode">bid_strategy</span><span class="arrow">→</span><span class="gnode">cpc</span><span class="arrow">→</span><span class="gnode tealhl">roas</span><span class="arrow">⟵</span><span class="gnode">revenue</span><span class="gnode">spend</span></div>
+          <div class="note-edge"><b>cpc → roas</b> CAUSES·2d &nbsp;·&nbsp; <b>revenue, spend → roas</b> DECOMPOSES_INTO (pinned 1.0) &nbsp;·&nbsp; cross-scope grouped by <b>concept_key</b> + ROLLS_UP_TO</div></div>
+        <div class="plane C"><div class="ptitle"><span class="name">Governance overlay</span><span class="kind">overlay · RBAC-gated reads, governed writes</span></div>
+          <div class="row"><span class="gnode">Threshold</span><span class="gnode">Policy</span><span class="gnode">Role</span><span class="gnode">Dashboard</span><span class="gnode">UIComponent</span></div>
+          <div class="note-edge"><b>Metric</b> GOVERNED_BY → Policy · HAS_THRESHOLD → Threshold &nbsp;·&nbsp; <b>Role</b> CAN_ACCESS_PRODUCT / CAN_VIEW / CAN_EDIT</div></div>
+      </div>
+    </section>
+
+    <!-- METRIC -->
+    <section id="nodes">
+      <h2><span class="num">03</span> The merged <code>Metric</code> node</h2>
+      <p class="sub">The hub. Three-ID identity, plus the concept / endpoint / source data folded in from former nodes. Flat indexable fields; JSON only for cached summaries. <strong>Source field</strong> maps each to its origin; <span class="star">★</span> = corrected type (§07). No <code>tenant_id</code>.</p>
+
+      <div class="node A" id="Metric"><div class="nhead"><h4>Metric ★</h4><span class="chip A">spine</span><span class="chip core">core</span><span class="chip merged">+ Concept · Endpoint · Connector</span></div>
+        <p class="ndesc">A concrete observable metric in a scope. The same concept across surfaces is grouped by shared <code>concept_key</code> and aggregated via <code>ROLLS_UP_TO</code> — no separate <code>MetricConcept</code> node. The API path lives in <code>card_endpoint</code>/<code>series_endpoint</code>, never in the identity.</p>
+        <p class="scrollhint">↔ scroll horizontally to see all columns</p>
+
+        <div class="tscroll" tabindex="0" aria-label="Metric properties — scroll horizontally">
+        <div class="grouplab">Identity &amp; semantics — MetricConcept folded in</div>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source field</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">metric_uid</td><td class="ty">string</td><td><span class="req y">yes</span></td><td class="src">app</td><td><code>metric:google-shopping:roas</code> — Neo4j identity.</td></tr>
+          <tr><td class="p">canonical_id</td><td class="ty">string</td><td><span class="req y">yes</span></td><td class="src">catalog</td><td>cross-source business id, <code>google-shopping-roas</code>.</td></tr>
+          <tr><td class="p">metric_id</td><td class="ty">string</td><td><span class="req y">yes</span></td><td class="src">node_id / path</td><td>API/local slug, <code>roas</code>.</td></tr>
+          <tr><td class="p">concept_key</td><td class="ty">string</td><td><span class="req r">rec</span></td><td class="src">metric_base</td><td><strong>replaces MetricConcept</strong> — semantic group, <code>roas</code>.</td></tr>
+          <tr><td class="p">concept_name · synonyms[]</td><td class="ty">string·string[]</td><td><span class="req r">rec</span></td><td class="src">catalog</td><td>"Return on Ad Spend" + resolution aliases.</td></tr>
+          <tr><td class="p">unit_family · default_direction</td><td class="ty">enum</td><td><span class="req r">rec</span></td><td class="src">manual</td><td><code>currency·ratio·percent</code>; <code>higher_is_better…</code>.</td></tr>
+        </tbody></table>
+
+        <div class="grouplab">Classification</div>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source field</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">product_id</td><td class="ty">string</td><td><span class="req y">yes</span></td><td class="src">product</td><td>owning IQ product (<code>miq</code>…).</td></tr>
+          <tr><td class="p">domain_id</td><td class="ty">string</td><td><span class="req y">yes</span></td><td class="src">department</td><td>business function (Finance/Exec) — orthogonal to product.</td></tr>
+          <tr><td class="p">scope_key</td><td class="ty">string</td><td><span class="req y">yes</span></td><td class="src">scope</td><td><code>blended</code> / <code>google-shopping</code>.</td></tr>
+          <tr class="fix"><td class="p">scope_level <span class="star">★</span></td><td class="ty">enum</td><td><span class="req r">rec</span></td><td class="src"><b>derived</b></td><td>derived from scope: <code>channel·blended…</code>.</td></tr>
+          <tr><td class="p">metric_base</td><td class="ty">string</td><td><span class="req y">yes</span></td><td class="src">metric_base</td><td><code>revenue·orders·roas</code>.</td></tr>
+          <tr><td class="p">category · aggregation</td><td class="ty">enum</td><td><span class="req r">rec</span></td><td class="src">API · aggregation</td><td>14-value MetricCategory; <code>level·sum·avg·rate·ratio</code>.</td></tr>
+          <tr><td class="p">measurement_type</td><td class="ty">enum</td><td><span class="req r">rec</span></td><td class="src">manual</td><td><code>direct·derived·modeled·forecast·status</code>.</td></tr>
+        </tbody></table>
+
+        <div class="grouplab">Causal</div>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source field</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">causal_role</td><td class="ty">enum</td><td><span class="req r">rec</span></td><td class="src">type</td><td><code>outcome·mediator·controllable·constraint·external·ml_output·untyped</code>.</td></tr>
+          <tr class="fix"><td class="p">causal_role_confidence <span class="star">★</span></td><td class="ty"><b>enum low·med·high</b></td><td><span class="req o">opt</span></td><td class="src">type_confidence</td><td><strong>was wrongly <code>number</code></strong> — categorical. Numeric edge <code>confidence</code> is on CausalRelation (V2).</td></tr>
+          <tr class="fix"><td class="p">is_model_output · is_derived <span class="star">★</span></td><td class="ty">bool</td><td><span class="req r">rec</span></td><td class="src">is_model_output · is_derived</td><td>source <code>yes/no</code> → real bool at ingestion.</td></tr>
+          <tr class="fix"><td class="p">formula_status · formula_text <span class="star">★</span></td><td class="ty">enum · string|null</td><td><span class="req o">opt</span></td><td class="src">formula</td><td><code>explicit·parsed·unknown</code>; readable formula, often null.</td></tr>
+        </tbody></table>
+
+        <div class="grouplab">Endpoints — Endpoint node folded in</div>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source field</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">card_endpoint</td><td class="ty">string</td><td><span class="req r">rec</span></td><td class="src">card_endpoint</td><td>GET current value, <code>/api/v1/ceo-pulse/metrics/revenue</code>.</td></tr>
+          <tr><td class="p">series_endpoint</td><td class="ty">string</td><td><span class="req r">rec</span></td><td class="src">series_endpoint</td><td>GET trend, <code>/api/v1/annual-planning/charts/channel_revenue</code>.</td></tr>
+          <tr><td class="p">endpoint_paths[]</td><td class="ty">string[]</td><td><span class="req o">opt</span></td><td class="src">openapi</td><td>all endpoints serving this metric.</td></tr>
+        </tbody></table>
+
+        <div class="grouplab">Source / lineage — Connector node folded in</div>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source field</th><th>Purpose</th></tr></thead><tbody>
+          <tr class="fix"><td class="p">source <span class="star">★</span></td><td class="ty"><b>enum single·multi</b></td><td><span class="req r">rec</span></td><td class="src">source</td><td><strong>was missing</strong> — scalar cardinality, distinct from <code>source_set[]</code>.</td></tr>
+          <tr class="fix"><td class="p">source_set[] <span class="star">★</span></td><td class="ty">string[] (split |)</td><td><span class="req r">rec</span></td><td class="src">source_set</td><td><code>ga4·google_ads·linkedin_ads·meta_ads·klaviyo</code> — <strong>free list, broader than the 4-value MetricSource enum</strong>.</td></tr>
+          <tr><td class="p">connector_ids[]</td><td class="ty">string[]</td><td><span class="req o">opt</span></td><td class="src">resolved</td><td>normalized connector refs.</td></tr>
+          <tr class="fix"><td class="p">mart_sources[] <span class="star">★</span></td><td class="ty">string[] (split |)</td><td><span class="req o">opt</span></td><td class="src">mart_source</td><td><code>DB_RARE_SEEDS.MARTS.mart_ceo_daily_pulse</code>.</td></tr>
+          <tr><td class="p">primary_grain · grain_source</td><td class="ty">enum · string</td><td><span class="req r">rec</span></td><td class="src">grain · grain_source</td><td><code>daily·weekly·monthly</code>; <code>dbt</code>.</td></tr>
+          <tr class="fix"><td class="p">dimensions[] <span class="star">★</span></td><td class="ty">string[]|null (split |)</td><td><span class="req o">opt</span></td><td class="src">dimensions</td><td>slice axes, often null.</td></tr>
+          <tr class="fix"><td class="p">availability · n_periods <span class="star">★</span></td><td class="ty">string|null · int|null</td><td><span class="req o">opt</span></td><td class="src">availability · n_periods</td><td>nullable; n_periods is int-or-null.</td></tr>
+        </tbody></table>
+
+        <div class="grouplab">Surfacing + governance caches · RBAC &amp; lifecycle</div>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Source field</th><th>Purpose</th></tr></thead><tbody>
+          <tr class="fix"><td class="p">source_dashboards[] <span class="star">★</span></td><td class="ty">string[] (split |)</td><td><span class="req o">opt</span></td><td class="src">source_dashboards</td><td>cache of SHOWN_ON, <code>ceo_pulse|annual_planning…</code>.</td></tr>
+          <tr><td class="p">active_threshold_summary_json · active_policy_summary_json</td><td class="ty">json</td><td><span class="req o">opt</span></td><td class="src">Threshold/Policy</td><td>fast-read cache; truth stays on the nodes.</td></tr>
+          <tr><td class="p">data_classification · owner_role_id</td><td class="ty">enum · string</td><td><span class="req y">yes</span></td><td class="src">RBAC</td><td><code>public·internal·restricted·executive</code> + accountable role.</td></tr>
+          <tr class="fix"><td class="p">is_kpi · keep <span class="star">★</span></td><td class="ty">bool</td><td><span class="req r">rec</span></td><td class="src">ingestion · keep</td><td>headline? curation flag (<code>yes/no</code>→bool; may fold into status).</td></tr>
+          <tr><td class="p">status · data_quality_status · confidence</td><td class="ty">enum · enum · num</td><td><span class="req y">yes</span></td><td class="src">ingestion</td><td><code>proposed·active·deprecated·blocked</code>; classify-confidence 0–1.</td></tr>
+          <tr><td class="p">created_at · updated_at</td><td class="ty">datetime</td><td><span class="req y">yes</span></td><td class="src">system</td><td>audit — <strong>no tenant_id</strong>.</td></tr>
+        </tbody></table>
+        </div><!-- /.tscroll -->
+      </div>
+
+      <!-- OTHER CORE NODES -->
+      <h3 class="famhead" style="font-size:18px"><span class="sw" style="background:var(--C)"></span>Other V1 core nodes</h3>
+
+      <div class="node C" id="Policy"><div class="nhead"><h4>Policy</h4><span class="chip C">governance</span><span class="chip core">core</span></div>
+        <p class="ndesc">The rule that explains / evaluates / escalates / constrains. Structured fields, not just prose. <strong>Separate from Threshold</strong> — Policy explains what to do; Threshold stores the number.</p>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">policy_id · policy_name</td><td class="ty">string</td><td><span class="req y">yes</span></td><td><code>miq-roas-investigation-policy</code>.</td></tr>
+          <tr><td class="p">policy_type · applies_to_kind</td><td class="ty">enum</td><td><span class="req y">yes</span></td><td><code>monitoring·access·alerting·action·escalation</code>; Metric/Dashboard/Threshold/Domain.</td></tr>
+          <tr><td class="p">description · rule_json</td><td class="ty">string · json</td><td><span class="req y">yes</span></td><td>quotable rule + evaluable condition/action.</td></tr>
+          <tr><td class="p">severity · priority</td><td class="ty">enum · int</td><td><span class="req r">rec</span></td><td><code>info·warning·critical·blocking</code>; conflict resolution.</td></tr>
+          <tr><td class="p">owner_role_id · approval_required · approval_role_ids[]</td><td class="ty">string · bool · string[]</td><td><span class="req r">rec</span></td><td>accountability + who can approve edits.</td></tr>
+          <tr><td class="p">effective_from/to · status · source</td><td class="ty">datetime · enum</td><td><span class="req y">yes</span></td><td><code>draft·active·retired·superseded</code>; <code>manual·master_config_evidence·inferred</code>.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="node C" id="Threshold"><div class="nhead"><h4>Threshold</h4><span class="chip C">governance</span><span class="chip core">core</span></div>
+        <p class="ndesc">The numeric / statistical boundary. Stores bands; Policy explains what to do when approached or breached.</p>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">threshold_id · name</td><td class="ty">string</td><td><span class="req y">yes</span></td><td><code>google-shopping-roas-default-band</code>.</td></tr>
+          <tr><td class="p">threshold_type · operator</td><td class="ty">enum</td><td><span class="req y">yes</span></td><td>live <code>static·percentile·seasonal</code>; <code>&lt;·between·outside_band</code>.</td></tr>
+          <tr><td class="p">warning/critical/target_value · green/yellow/red_value</td><td class="ty">number</td><td><span class="req o">opt</span></td><td>band boundaries.</td></tr>
+          <tr><td class="p">percentile_baseline_json · seasonality_adjustment_json · segment_filter_json</td><td class="ty">json</td><td><span class="req o">opt</span></td><td>P10–P90 / seasonal / segment scope.</td></tr>
+          <tr><td class="p">unit · grain · directionality · evaluation_window</td><td class="ty">enum · string</td><td><span class="req r">rec</span></td><td>match the governed metric; <code>last_7_days</code>.</td></tr>
+          <tr><td class="p">owner_role_id · source · status</td><td class="ty">string · enum</td><td><span class="req y">yes</span></td><td><code>api·seed·human·statistical·learning_projection</code>; lifecycle.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="node B" id="Dashboard"><div class="nhead"><h4>Dashboard</h4><span class="chip B">surface</span><span class="chip core">core</span></div>
+        <p class="ndesc">A product surface and access boundary; groups UI components, maps to a route.</p>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">dashboard_id · display_name · route_path</td><td class="ty">string</td><td><span class="req y">yes</span></td><td><code>ceo-pulse</code> + where it lives.</td></tr>
+          <tr><td class="p">product_id · domain_id</td><td class="ty">string</td><td><span class="req y">yes</span></td><td>ownership + grouping for access/search.</td></tr>
+          <tr><td class="p">dashboard_type · audience_role_ids[] · refresh_frequency</td><td class="ty">enum · string[] · string</td><td><span class="req r">rec</span></td><td><code>executive·operational·ml·review</code>; default audience.</td></tr>
+          <tr><td class="p">data_classification · status · source_registry</td><td class="ty">enum · string</td><td><span class="req y">yes</span></td><td>role filtering; <code>active·hidden·deprecated·proposed</code>.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="node B" id="UIComponent"><div class="nhead"><h4>UIComponent</h4><span class="chip B">surface</span><span class="chip core">core</span></div>
+        <p class="ndesc">A chart / KPI card / table from the chart registry (646 entries). Holds chart content so the metric stays small. <strong>Endpoint folded to a string field here too</strong> (<code>query_endpoint_path</code>).</p>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">component_id · canonical_id</td><td class="ty">string</td><td><span class="req y">yes</span></td><td><code>google-shopping:shopping_roas_metric</code>.</td></tr>
+          <tr><td class="p">component_kind · chart_type · title</td><td class="ty">enum · string</td><td><span class="req r">rec</span></td><td><code>chart·kpi_card·table</code>; 15-value ChartType.</td></tr>
+          <tr><td class="p">product_id · dashboard_id · section_id · chart_registry_key</td><td class="ty">string</td><td><span class="req r">rec</span></td><td>ownership + placement + round-trip key.</td></tr>
+          <tr><td class="p">query_endpoint_path · metric_keys[]</td><td class="ty">string · string[]</td><td><span class="req r">rec</span></td><td>endpoint-as-field; metrics visualized (edges stay truth).</td></tr>
+          <tr><td class="p">formula_text · how_to_read[] · decisions_answered[] · narration_text · audio_file</td><td class="ty">string · string[]</td><td><span class="req r">rec</span></td><td>the 646 charts carry all of these.</td></tr>
+          <tr><td class="p">visual_encoding_json · data_classification · status</td><td class="ty">json · enum</td><td><span class="req y">yes</span></td><td>axes/series/colors; can be stricter than the dashboard.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="node D" id="Role"><div class="nhead"><h4>Role</h4><span class="chip D">RBAC</span><span class="chip core">core</span><span class="chip merged">+ Principal</span></div>
+        <p class="ndesc">The RBAC brain — decides what an agent may retrieve, which paths to traverse, what to mask, who can edit. <strong>No Principal node</strong>: external auth gives a user id + role claims; the app maps the authenticated principal directly to a Role via <code>role_key</code>. Attach <code>Person</code> later.</p>
+        <table class="ptable"><thead><tr><th>Property</th><th>Type</th><th>Req</th><th>Purpose</th></tr></thead><tbody>
+          <tr><td class="p">role_id · role_key · display_name</td><td class="ty">string</td><td><span class="req y">yes</span></td><td><code>cmo</code>; <code>role_key</code> = the JWT/session claim — <strong>the principal→role mapping</strong>.</td></tr>
+          <tr><td class="p">role_type · department_id · seniority_rank</td><td class="ty">enum · string · int</td><td><span class="req r">rec</span></td><td><code>executive·department_lead·analyst·system_agent·approver</code>.</td></tr>
+          <tr><td class="p">default_product_ids[] · default_domain_ids[]</td><td class="ty">string[]</td><td><span class="req o">opt</span></td><td>convenience cache; permission edges remain source of truth.</td></tr>
+          <tr><td class="p">max_sensitivity_level · can_manage_rbac</td><td class="ty">enum · bool</td><td><span class="req y">yes</span></td><td>default access ceiling; only admins alter permission edges.</td></tr>
+          <tr><td class="p">can_create_policy · can_create_threshold · can_edit_endpoint</td><td class="ty">bool</td><td><span class="req y">yes</span></td><td>global capabilities; still constrained by scoped edges.</td></tr>
+          <tr><td class="p">agent_context_limit · redaction_policy_json · status</td><td class="ty">int · json · enum</td><td><span class="req o">opt</span></td><td>max facts per agent; masking defaults; <code>active·disabled·deprecated</code>.</td></tr>
+        </tbody></table>
+      </div>
+
+      <div class="node A" id="supporting"><div class="nhead"><h4>Supporting · IntelligenceProduct &amp; Domain</h4><span class="chip A">spine</span><span class="chip sup">small</span></div>
+        <p class="ndesc">Kept small. The top visible layer in the tenant DB + the business grouping for discovery and role scoping. <code>Platform</code> is optional in V1 (the <code>source_set[]</code> field is sufficient lineage).</p>
+        <table class="ptable"><thead><tr><th>Node</th><th>Key properties</th></tr></thead><tbody>
+          <tr><td class="p">IntelligenceProduct</td><td class="src">product_id (miq·ciq·piq·dc·creative_iq) · display_name · category(analytics·decisioning·creative·external) · schema_name+schema_status(owned/shared) · route_prefixes[] · product_gate_id · default_sensitivity_level</td></tr>
+          <tr><td class="p">Domain</td><td class="src">domain_id · name · domain_type(business·technical·risk·ml) · parent_domain_id · product_id · data_classification · owner_role_id</td></tr>
+        </tbody></table>
+      </div>
+    </section>
+
+    <!-- RBAC -->
+    <section id="rbac">
+      <h2><span class="num">04</span> RBAC</h2>
+      <p class="sub">Graph-native, role-first. The app authenticates; the KG decides what facts the role may retrieve. Build the allowed context first, then answer from it — never traverse unrestricted and filter after.</p>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Tier</th><th>Mechanism</th><th>Example</th></tr></thead><tbody>
+        <tr><td><b>1 · product gate</b></td><td class="mono">Role -CAN_ACCESS_PRODUCT→ Product</td><td>no MIQ entitlement ⇒ marketing metrics invisible</td></tr>
+        <tr><td><b>2 · domain/metric</b></td><td class="mono">Role -CAN_VIEW {can_see_value, can_see_thought}→ Domain/Metric</td><td>ops metrics masked for a marketing role, not leaked</td></tr>
+      </tbody></table></div>
+
+      <h3 class="famhead" style="font-size:18px"><span class="sw" style="background:var(--D)"></span>Permission-edge properties</h3>
+      <p class="fsub">Most access logic lives on the Role permission edges, not the node.</p>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Property</th><th>Type</th><th>Applies to</th><th>Purpose</th></tr></thead><tbody>
+        <tr><td class="mono">effect</td><td>allow · deny</td><td>all</td><td>explicit deny at higher priority blocks inherited access</td></tr>
+        <tr><td class="mono">permission</td><td>string</td><td>all</td><td>view · explain · traverse · edit · approve · execute · manage</td></tr>
+        <tr><td class="mono">priority</td><td>int</td><td>all</td><td>higher wins on conflict</td></tr>
+        <tr><td class="mono">scope_depth</td><td>int</td><td>product/domain</td><td>how far the grant flows down (product→all = depth 2)</td></tr>
+        <tr><td class="mono">allowed_fields[] · masked_fields[]</td><td>string[]</td><td>view edges</td><td>expose / hide specific fields even when the node is visible</td></tr>
+        <tr><td class="mono">max_grain · row_filter_json</td><td>string · json</td><td>metric/dashboard</td><td>restrict detail (weekly-only); segment filters</td></tr>
+        <tr><td class="mono">condition_json · valid_from/to · approval_required · source</td><td>json · datetime · bool · string</td><td>all</td><td>conditional / temporary access; request-not-apply; provenance</td></tr>
+      </tbody></table></div>
+
+      <h3 class="famhead" style="font-size:18px"><span class="sw" style="background:var(--D)"></span>Recommended role types (seed now)</h3>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Role</th><th>Typical access</th><th>Typical edit power</th></tr></thead><tbody>
+        <tr><td class="mono">ceo</td><td>all products, executive dashboards, cross-domain causal paths</td><td>approve high-impact policy/action changes</td></tr>
+        <tr><td class="mono">cfo</td><td>finance, revenue, margin, spend, forecast, exec dashboards</td><td>edit finance thresholds, approve spend policies</td></tr>
+        <tr><td class="mono">cmo</td><td>Marketing IQ, acquisition, retention, campaign perf, blended ROAS</td><td>edit marketing thresholds/policies, approve campaign actions</td></tr>
+        <tr><td class="mono">marketing_manager</td><td>marketing dashboards + assigned platform/campaign metrics</td><td>edit selected thresholds with approval</td></tr>
+        <tr><td class="mono">customer_success_lead</td><td>Customer IQ, cohorts, churn, retention, lifecycle</td><td>edit customer monitoring thresholds</td></tr>
+        <tr><td class="mono">product_manager</td><td>Product IQ, SKU, inventory, catalog, conversion impact</td><td>edit product/inventory policies with approval</td></tr>
+        <tr><td class="mono">analyst</td><td>read-only to assigned products/domains</td><td>none — can propose, not apply</td></tr>
+        <tr><td class="mono">system_agent</td><td>role-scoped read on behalf of a user/task</td><td>none unless granted; always carries an acting role + reason</td></tr>
+      </tbody></table></div>
+
+      <h3 class="famhead" style="font-size:18px"><span class="sw" style="background:var(--D)"></span>Query patterns</h3>
+<pre><span class="c">// 1 · Role closure — assigned + inherited</span>
+<span class="k">MATCH</span> (r:Role {role_key:$role_key, status:'active'})
+<span class="k">OPTIONAL MATCH</span> (r)-[:INHERITS_FROM*0..4]->(p:Role {status:'active'})
+<span class="k">RETURN</span> collect(<span class="k">DISTINCT</span> r)+collect(<span class="k">DISTINCT</span> p) <span class="k">AS</span> role_scope;
+
+<span class="c">// 2 · Allowed metrics — product/domain grants flow down; explicit deny wins in app logic</span>
+<span class="k">MATCH</span> (r:Role {role_key:$role_key, status:'active'})
+<span class="k">OPTIONAL MATCH</span> (r)-[pm:CAN_VIEW|CAN_ACCESS_DOMAIN|CAN_ACCESS_PRODUCT]->(t) <span class="k">WHERE</span> pm.effect='allow'
+<span class="k">WITH</span> collect({target:t, grant:pm}) <span class="k">AS</span> grants
+<span class="k">MATCH</span> (m:Metric {status:'active'})
+<span class="k">WHERE</span> any(g <span class="k">IN</span> grants <span class="k">WHERE</span>
+  (g.target:Metric <span class="k">AND</span> id(g.target)=id(m)) <span class="k">OR</span>
+  (g.target:Domain <span class="k">AND</span> (m)-[:BELONGS_TO]->(g.target)) <span class="k">OR</span>
+  (g.target:IntelligenceProduct <span class="k">AND</span> (m)-[:PART_OF_PRODUCT]->(g.target)))
+<span class="k">RETURN DISTINCT</span> m.metric_uid, m.concept_name, m.product_id, m.data_classification;
+
+<span class="c">// 3 · Agent answer context for one metric — only allowed facts before the LLM sees context</span>
+<span class="k">MATCH</span> (r:Role {role_key:$role_key, status:'active'}),
+      (m:Metric {metric_uid:$metric_uid, status:'active'})
+<span class="k">WHERE EXISTS</span> { <span class="k">MATCH</span> (r)-[g:CAN_VIEW]->(m) <span class="k">WHERE</span> g.effect='allow' }
+<span class="k">OPTIONAL MATCH</span> (m)-[:HAS_THRESHOLD]->(t:Threshold), (m)-[:GOVERNED_BY]->(p:Policy)
+<span class="k">OPTIONAL MATCH</span> (c:UIComponent)-[:VISUALIZES]->(m), (up:Metric)-[:CAUSES]->(m)
+<span class="k">RETURN</span> m, collect(<span class="k">DISTINCT</span> t), collect(<span class="k">DISTINCT</span> p),
+       collect(<span class="k">DISTINCT</span> c), collect(<span class="k">DISTINCT</span> up.metric_uid) <span class="k">AS</span> upstream;
+
+<span class="c">// 4 · Safe edit check — require explicit edit permission before any mutation</span>
+<span class="k">MATCH</span> (r:Role {role_key:$role_key})-[g:CAN_EDIT]->(t:Threshold {threshold_id:$tid})
+<span class="k">WHERE</span> g.effect='allow'
+<span class="k">RETURN</span> t.threshold_id, g.approval_required;</pre>
+
+      <h3 class="famhead" style="font-size:18px"><span class="sw" style="background:var(--D)"></span>Example role scenarios</h3>
+      <div class="answer"><div class="q">→ what do you know about metric:blended:roas?  ·  caller: cmo</div>
+      <p>A <strong>Marketing-IQ</strong> outcome (concept: ROAS, <code>concept_key=roas</code>), blended over GA4 + Google Ads + Meta Ads. Shown on <code>ceo-pulse</code> &amp; <code>weekly-exec</code>; rendered by <code>ceo-pulse:blended_roas</code>; read live from <code>card_endpoint /api/v1/ceo-pulse/metrics/roas</code> (trend <code>/charts/blended-roas</code>). Governed by <code>roas_critical</code> (static, red &lt; 2.0). <strong>Upstream:</strong> spend, CPC, conversion. You can see values and reasoning.</p></div>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Question</th><th>Caller</th><th>Expected KG behavior</th></tr></thead><tbody>
+        <tr><td>Why did contribution margin drop?</td><td class="mono">marketing_manager</td><td>marketing-visible context only; if finance margin is restricted, say a restricted finance dependency exists without exposing hidden fields</td></tr>
+        <tr><td>Edit the critical threshold for Google Ads ROAS</td><td class="mono">analyst</td><td>deny direct mutation; report missing edit permission (V1)</td></tr>
+        <tr><td>Show Product IQ inventory metrics affected by ad spend</td><td class="mono">cmo</td><td>traverse cross-product paths only where the role has Product IQ access or an approved edge</td></tr>
+        <tr><td>Who can approve a reorder-threshold change?</td><td class="mono">product_manager</td><td>follow CAN_APPROVE / OWNED_BY / REPORTS_TO and return permitted approver roles</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <!-- EDGES -->
+    <section id="edges">
+      <h2><span class="num">05</span> V1 edge catalog</h2>
+      <p class="sub">Boring, explicit names. The causal family is the core value — the legacy graph had only four. Edges removed by the merges are in §06.</p>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Edge</th><th>From → To</th><th>Meaning</th></tr></thead><tbody>
+        <tr><td class="mono">HAS_DOMAIN / PARENT_OF</td><td class="mono">Product → Domain → Domain</td><td>product/domain tree spine</td></tr>
+        <tr><td class="mono">PART_OF_PRODUCT / BELONGS_TO</td><td class="mono">Metric/Dashboard/UIComponent → Product/Domain</td><td>ownership + grouping</td></tr>
+        <tr><td class="mono">ROLLS_UP_TO</td><td class="mono">Metric → Metric</td><td>channel→platform→blended (recovers cross-scope grouping)</td></tr>
+        <tr><td class="mono">DECOMPOSES_INTO</td><td class="mono">Metric → Metric</td><td>formula component (confidence = 1.0)</td></tr>
+        <tr><td class="mono">HAS_THRESHOLD / GOVERNED_BY / ENFORCES_THRESHOLD</td><td class="mono">Metric → Threshold/Policy; Policy → Threshold</td><td>governance</td></tr>
+        <tr><td class="mono">OWNED_BY</td><td class="mono">Metric/Domain/Policy → Role</td><td>accountable owner</td></tr>
+        <tr><td class="mono">RENDERS / VISUALIZES / SHOWN_ON</td><td class="mono">Dashboard ↔ UIComponent ↔ Metric</td><td>where a metric appears</td></tr>
+        <tr><td class="mono">SOURCED_FROM</td><td class="mono">Metric → Platform <i>(optional)</i></td><td>underlying source platform</td></tr>
+        <tr><td class="mono">INFLUENCES / CORRELATES_WITH / CAUSES</td><td class="mono">Metric ↔ Metric</td><td>weak driver / association (not causal) / approved causal (V2 ledger)</td></tr>
+        <tr><td class="mono">CAN_ACCESS_PRODUCT / CAN_VIEW / CAN_EDIT / CAN_APPROVE</td><td class="mono">Role → Product/Domain/Metric/Policy/Threshold</td><td>RBAC grants</td></tr>
+        <tr><td class="mono">INHERITS_FROM / REPORTS_TO</td><td class="mono">Role → Role</td><td>permission inheritance / org escalation (kept separate)</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <!-- ENUMS + TYPE AUDIT -->
+    <section id="enums">
+      <h2><span class="num">06</span> Enums &amp; type audit</h2>
+      <p class="sub">Live enums verbatim; plus the type fixes the merged data forced.</p>
+      <div class="tablecard"><table class="gen"><tbody>
+        <tr><td class="mono">ValueFormat</td><td>number · currency · percentage · decimal</td></tr>
+        <tr><td class="mono">ChartType (15)</td><td>line · area · bar · horizontal_bar · grouped_bar · pie · donut · sankey · heatmap · table · sparkline · scatter · treemap · gauge · funnel</td></tr>
+        <tr><td class="mono">ThresholdType</td><td>static · percentile · seasonal &nbsp;<span class="warn">(dynamic/model_based = proposed, not live)</span></td></tr>
+        <tr><td class="mono">MetricCategory (14)</td><td>advertising · revenue · traffic · email · customer · sms · google_ads · meta_ads · efficiency · comparison · financial · marketing · product · operational</td></tr>
+        <tr><td class="mono">MetricSource (4)</td><td>ga4 · google_ads · meta_ads · klaviyo &nbsp;<span class="warn">(source_set[] is a free list — Magento, linkedin_ads also appear)</span></td></tr>
+        <tr><td class="mono">causal_role</td><td>outcome · mediator · controllable · constraint · external · ml_output · untyped</td></tr>
+      </tbody></table></div>
+      <h3 class="famhead" style="font-size:18px"><span class="sw" style="background:var(--bad)"></span>Type corrections (★ in the Metric table)</h3>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>#</th><th>Field(s)</th><th>Fix</th></tr></thead><tbody>
+        <tr><td>1</td><td class="mono">causal_role_confidence</td><td><span class="bad">number → enum low·medium·high</span> (source <code>type_confidence</code> is categorical). Numeric edge <code>confidence</code> is separate (V2).</td></tr>
+        <tr><td>2</td><td class="mono">is_model_output · is_derived · keep</td><td>source <code>yes</code>/<code>no</code> strings → real <b>bool</b> at ingestion</td></tr>
+        <tr><td>3</td><td class="mono">source_set · mart_sources · source_dashboards · dimensions</td><td>single <code>|</code>-delimited string → <b>string[]</b> (split at ingestion)</td></tr>
+        <tr><td>4</td><td class="mono">source</td><td>add scalar <b>enum single·multi</b> (was missing; distinct from <code>source_set[]</code>)</td></tr>
+        <tr><td>5</td><td class="mono">availability · n_periods · formula_text · dimensions</td><td>nullable; <code>n_periods</code> is <b>int-or-null</b></td></tr>
+        <tr><td>6</td><td class="mono">source_set</td><td>exceeds the MetricSource enum (e.g. <code>linkedin_ads</code>) → keep a free <b>string[]</b></td></tr>
+        <tr><td>7</td><td class="mono">scope</td><td>one source value → <code>scope_key</code>; derive <code>scope_level</code></td></tr>
+      </tbody></table></div>
+    </section>
+
+    <!-- REMOVED -->
+    <section id="removed">
+      <h2><span class="num">07</span> What the merges removed</h2>
+      <p class="sub">Reversible by design (see Re-promotion, Part II).</p>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Removed</th><th>Was</th><th>Now lives as</th></tr></thead><tbody>
+        <tr><td class="mono">Tenant + tenant_id</td><td>isolation root</td><td>the Neo4j <b>database</b> is the tenant</td></tr>
+        <tr><td class="mono">MetricConcept</td><td>semantic concept</td><td><code>Metric.concept_key/concept_name/synonyms[]/unit_family/default_direction</code>; grouped via ROLLS_UP_TO</td></tr>
+        <tr><td class="mono">Endpoint</td><td>API binding</td><td><code>Metric.card_endpoint/series_endpoint/endpoint_paths[]</code>; <code>UIComponent.query_endpoint_path</code></td></tr>
+        <tr><td class="mono">Connector</td><td>data source</td><td><code>Metric.source/source_set[]/connector_ids[]/mart_sources[]</code></td></tr>
+        <tr><td class="mono">Principal</td><td>external user</td><td><code>Role.role_key</code> (app maps the authed principal → role)</td></tr>
+      </tbody></table></div>
+      <p><strong>Edges removed:</strong> <code>ENTITLED_TO</code>, <code>HAS_DOMAIN</code>(from Tenant), <code>INSTANCE_OF</code>, <code>ASSIGNED_ROLE</code>, <code>USES_ENDPOINT</code>/<code>CURRENT_VALUE_ENDPOINT</code>/<code>SERIES_ENDPOINT</code>/<code>CHART_DATA_ENDPOINT</code>, <code>SOURCED_FROM</code>(→Connector)/<code>PROVIDED_BY</code>/<code>CONNECTS_TO</code>.</p>
+    </section>
+
+    <!-- INGESTION -->
+    <section id="ingest">
+      <h2><span class="num">08</span> Ingestion — control vs business plane</h2>
+      <p class="sub">Of 877 GET ops, only the business plane becomes graph nodes. Edges are built by us, not imported.</p>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Pattern</th><th>Action</th><th>Why</th></tr></thead><tbody>
+        <tr><td class="mono">GET /{dash}/metrics/{id}</td><td><span class="ok">promote metric</span></td><td>card / current-value surface</td></tr>
+        <tr><td class="mono">GET /{dash}/charts/{id}</td><td><span class="ok">promote UI / series</span></td><td>chart / time-series</td></tr>
+        <tr><td class="mono">/master-config/** · /master/**</td><td><span class="warn">config evidence only</span></td><td>control-plane; may seed Policy/Threshold, never a metric</td></tr>
+        <tr><td class="mono">/auth/** · /admin/** · /settings/**</td><td><span class="bad">exclude</span></td><td>access / admin control plane</td></tr>
+        <tr><td class="mono">/health · /docs · /redoc · /openapi.json</td><td><span class="bad">exclude / metadata</span></td><td>observability &amp; review surfaces</td></tr>
+        <tr><td class="mono">POST / PUT / PATCH / DELETE</td><td><span class="bad">exclude</span></td><td>may later become a governed Tool / Action</td></tr>
+      </tbody></table></div>
+      <p><strong>Pipeline:</strong> acquire spec → deterministic exclusion → endpoint families → classify per spec-hash → human review → harvest → <strong>proposals only</strong> → arbitration writes → completeness report → incremental (deprecate, never delete). <strong>Missing formulas are fine</strong> — keep endpoints/charts, set <code>formula_status=unknown</code>.</p>
+    </section>
+
+    <!-- CONSTRAINTS -->
+    <section id="constraints">
+      <h2><span class="num">09</span> Neo4j constraints (V1)</h2>
+      <p class="sub">Per-tenant DB ⇒ no composite tenant keys. Dropped vs the old target: <code>tenant_id</code>, <code>metric_concept</code>, <code>endpoint_id</code>.</p>
+<pre><span class="k">CREATE CONSTRAINT</span> metric_uid      <span class="k">IF NOT EXISTS FOR</span> (n:Metric)             <span class="k">REQUIRE</span> n.metric_uid   <span class="k">IS UNIQUE</span>;
+<span class="k">CREATE CONSTRAINT</span> product_id      <span class="k">IF NOT EXISTS FOR</span> (n:IntelligenceProduct) <span class="k">REQUIRE</span> n.product_id <span class="k">IS UNIQUE</span>;
+<span class="k">CREATE CONSTRAINT</span> dashboard_id    <span class="k">IF NOT EXISTS FOR</span> (n:Dashboard)          <span class="k">REQUIRE</span> n.dashboard_id <span class="k">IS UNIQUE</span>;
+<span class="k">CREATE CONSTRAINT</span> ui_component_id <span class="k">IF NOT EXISTS FOR</span> (n:UIComponent)        <span class="k">REQUIRE</span> n.component_id <span class="k">IS UNIQUE</span>;
+<span class="k">CREATE CONSTRAINT</span> policy_id       <span class="k">IF NOT EXISTS FOR</span> (n:Policy)             <span class="k">REQUIRE</span> n.policy_id    <span class="k">IS UNIQUE</span>;
+<span class="k">CREATE CONSTRAINT</span> threshold_id    <span class="k">IF NOT EXISTS FOR</span> (n:Threshold)          <span class="k">REQUIRE</span> n.threshold_id <span class="k">IS UNIQUE</span>;
+<span class="k">CREATE CONSTRAINT</span> role_id         <span class="k">IF NOT EXISTS FOR</span> (n:Role)               <span class="k">REQUIRE</span> n.role_id      <span class="k">IS UNIQUE</span>;
+<span class="k">CREATE INDEX</span> metric_concept <span class="k">IF NOT EXISTS FOR</span> (n:Metric) <span class="k">ON</span> (n.concept_key);
+<span class="k">CREATE INDEX</span> metric_scope   <span class="k">IF NOT EXISTS FOR</span> (n:Metric) <span class="k">ON</span> (n.scope_key);
+<span class="k">CREATE INDEX</span> metric_role    <span class="k">IF NOT EXISTS FOR</span> (n:Metric) <span class="k">ON</span> (n.causal_role);
+<span class="k">CREATE INDEX</span> role_key       <span class="k">IF NOT EXISTS FOR</span> (n:Role)   <span class="k">ON</span> (n.role_key);</pre>
+    </section>
+
+    <!-- BUILD -->
+    <section id="build">
+      <h2><span class="num">10</span> V1 build order</h2>
+      <p class="sub">Inventory → RBAC → governance → the layer that matters most: edges.</p>
+      <div class="steps">
+        <div class="step"><div class="sn">step 1</div><h4>Inventory</h4><p>IntelligenceProduct, Domain, Metric (merged), Dashboard, UIComponent; product-ownership + dashboard/metric mapping.</p></div>
+        <div class="step"><div class="sn">step 2</div><h4>RBAC</h4><p>Role nodes + product/domain/dashboard/metric grants; role-filtered context-pack query.</p></div>
+        <div class="step"><div class="sn">step 3</div><h4>Governance</h4><p>attach Policy + Threshold to metrics; field-level edit gating.</p></div>
+        <div class="step point"><div class="sn">step 4 · the point</div><h4>Causal layer</h4><p>CAUSES/INFLUENCES/CORRELATES_WITH; import rare_seeds priors (4 correlation edges, never auto-promoted); upstream/downstream queries.</p></div>
+        <div class="step v2"><div class="sn">step 5 · V2</div><h4>Defer</h4><p>memory/learning, the reified evidence ledger, governed-proposal writes at scale (Part II).</p></div>
+      </div>
+    </section>
+
+    <div class="partbanner v2"><span>Part II — Full vision</span><small>V2+ · the layer that makes the graph improve</small></div>
+
+    <!-- MEMORY -->
+    <section id="memory">
+      <h2><span class="num">11</span> Memory &amp; learning families</h2>
+      <p class="sub">Defer until V1's spine, RBAC, governance, and a real causal layer are live — or memory will pollute causal truth.</p>
+      <div class="node D"><div class="nhead"><h4>Deferred nodes</h4><span class="chip D">D</span><span class="chip sup">V2</span></div>
+        <table class="ptable"><thead><tr><th>Node</th><th>Role</th><th>Key properties</th></tr></thead><tbody>
+          <tr><td class="p">Thoughtlet</td><td>atomic observation anchored to a metric</td><td class="src">observed_at · value · delta_pct · severity · status(raw→concern→composed)</td></tr>
+          <tr><td class="p">DecisionCapsule</td><td>a decision's full life (episodic)</td><td class="src">decision_class · status(proposed→executed→reconciled) · expected_upside_json · graph_version_id · packet_uri</td></tr>
+          <tr><td class="p">MonitoringContract</td><td>decision-level monitoring promise</td><td class="src">expected_outcome_json · primary_metrics[] · guardrail_metrics[] · review_at</td></tr>
+          <tr><td class="p">EvidenceEvent ★</td><td><b>append-only — source of confidence</b></td><td class="src">edge_key · tier · direction(supports·refutes) · weight · effect_size · p_value · lag_hours</td></tr>
+          <tr><td class="p">CausalRelation ★</td><td>reified causal edge (rels can't hang off rels)</td><td class="src">edge_key · from/to_metric_uid · lag_hours_min/max · confidence · evidence_mass · alpha · beta · review_status</td></tr>
+          <tr><td class="p">LearningCandidate · PromotedMemory</td><td>governed learning</td><td class="src">origin · classification · projection_type · projection_target_type · valid_from/to</td></tr>
+          <tr><td class="p">GraphChangeProposal ★</td><td><b>write-safety layer — nothing mutates directly</b></td><td class="src">proposal_type · target_label · diff_json · review_status(proposed→approved→applied)</td></tr>
+          <tr><td class="p">GraphVersion · IngestionRun</td><td>time-travel + ingest audit</td><td class="src">node_count · edge_count · change_summary; discovered/promoted/excluded counts</td></tr>
+        </tbody></table>
+      </div>
+      <p>Also deferred: <code>Action</code>/<code>Tool</code>, <code>ApprovalRule</code>, standalone <code>Formula</code>/<code>Dimension</code>, full <code>APISource</code>/<code>SourceProfile</code>/<code>DataAsset</code> lineage, and <code>Person</code> (real auth/HR users).</p>
+    </section>
+
+    <!-- CONFIDENCE -->
+    <section id="confidence">
+      <h2><span class="num">12</span> Confidence — derived, never typed in</h2>
+      <p class="sub">Edge strength folds from an append-only ledger. This numeric <code>confidence</code> is <strong>distinct</strong> from the Metric's categorical <code>causal_role_confidence</code>.</p>
+<pre><span class="c"># Jeffreys prior</span>
+α = 0.5,  β = 0.5
+<span class="k">for</span> supporting EvidenceEvent: α += weight
+<span class="k">for</span> refuting   EvidenceEvent: β += weight
+confidence    = α / (α + β)
+evidence_mass = α + β       <span class="c"># 0.8 from one guess ≠ 0.8 from forty outcomes</span></pre>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Evidence tier</th><th>Weight</th><th>Note</th></tr></thead><tbody>
+        <tr><td class="mono">formula</td><td><b>pinned 1.0</b></td><td>deterministic edges sit outside the fold</td></tr>
+        <tr><td class="mono">prior / llm</td><td>1</td><td>imported / hypothesis — must be reviewed</td></tr>
+        <tr><td class="mono">observational</td><td>2–5</td><td>scaled by effect size, sample, FDR, lag</td></tr>
+        <tr><td class="mono">quasi_experimental</td><td>5</td><td>natural experiment / diff-in-diff</td></tr>
+        <tr><td class="mono">interventional</td><td>8</td><td>an approved action moved a lever, result followed</td></tr>
+        <tr><td class="mono">human · outcome</td><td>10 · 8</td><td>domain-expert confirmation · predicted-vs-actual reconciliation</td></tr>
+      </tbody></table></div>
+      <p>The 4 <code>rare_seeds</code> correlation edges enter as <code>CORRELATES_WITH</code> + an <code>observational</code> event — <strong>never</strong> auto-promoted to <code>CAUSES</code>.</p>
+    </section>
+
+    <!-- CODEX -->
+    <section id="codex">
+      <h2><span class="num">13</span> Where this converges with / diverges from Codex</h2>
+      <p class="sub">This revision adopts Codex's leaner V1 stance; it keeps the Claude-analysis corrections.</p>
+      <div class="callout view"><div class="lab">Converged</div>
+      <p><strong>No Tenant node</strong> (per-tenant DBs); <strong>six-core V1</strong> + small supporting nodes; <strong>Principal collapses into Role</strong> via <code>role_key</code>; rich permission-edge model adopted.</p></div>
+      <ol class="views">
+        <li><strong>Spec-hash corrected</strong> — live and checked-in OpenAPI are structurally identical but not byte-for-byte (Codex said they matched).</li>
+        <li><strong>Enum precision</strong> — live enums verbatim; <code>dynamic</code>/<code>model_based</code> thresholds are proposed, not real.</li>
+        <li><strong>Frame the build around edges</strong> — V1 success = "N evidence-backed edges with <code>evidence_mass &gt; k</code>", not "N nodes."</li>
+        <li><strong>Lazy materialization in V2</strong> — when MetricConcept/CausalRelation return as nodes, create them only when they earn their keep.</li>
+      </ol>
+    </section>
+
+    <!-- RE-PROMOTE -->
+    <section id="repromote">
+      <h2><span class="num">14</span> Re-promotion notes</h2>
+      <p class="sub">The V1 merges are reversible — re-promote when V2 needs cross-metric queries.</p>
+      <div class="tablecard"><table class="gen">
+        <thead><tr><th>Re-promote</th><th>When</th><th>Restore edges</th></tr></thead><tbody>
+        <tr><td class="mono">Connector</td><td>shared connector status / sync freshness queryable across metrics</td><td class="mono">SOURCED_FROM · PROVIDED_BY · CONNECTS_TO</td></tr>
+        <tr><td class="mono">Endpoint</td><td>ingestion needs endpoint_role / harvest_decision / control_plane as graph state</td><td class="mono">CURRENT_VALUE_ENDPOINT · SERIES_ENDPOINT · CHART_DATA_ENDPOINT</td></tr>
+        <tr><td class="mono">MetricConcept</td><td>a concept needs its own facts / versioning / governance</td><td class="mono">INSTANCE_OF</td></tr>
+      </tbody></table></div>
+    </section>
+
+    <footer>
+      Companion: <code>thoughtwire-kg-schema-claude.md</code> — full property tables, all edges, cross-product examples. Source: <code>thoughtwire-kg-v1-node-details-codex.html</code> (combined here). Grounded against live <code>localhost:8005</code> · <code>chart-registry.json</code> · <code>openapi.json</code> · <code>CONNECTORS_OVERVIEW.md</code> · <code>rare_seeds</code>. One Neo4j database per tenant — no Tenant node, no tenant_id.
+    </footer>
+  </main>
+</div>
+<script>
+  function toggleSidebar(){ document.querySelector('.app').classList.toggle('collapsed'); }
+</script>
+</body>
+</html>

@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__graph__lookup_node",
+      "mcp__graph__search_nodes",
+      "mcp__graph__kg_status"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "mcp__graph__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/harness/hooks/pretool_guard.py\"",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

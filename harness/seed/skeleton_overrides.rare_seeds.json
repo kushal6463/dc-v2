@@ -1,0 +1,24 @@
+{
+  "source_profile_id": "rare_seeds",
+  "description": "Tenant skeleton overrides for the KG build. hub_allowlist: metric_uids (or bare bases) that are important cross-dashboard aggregates (CEO/executive) — when a formula references one of these as an operand but no source created it, the builder may create a review-only STUB Metric (status=proposed, formula=null) so top-level metrics always link (plan §11). Everything else self-heals on the next recompute (logged to unresolved_operands), no ghost nodes. scope_map / platform_map / extra_alias_groups let a new tenant remap scopes/platforms and add resolution synonyms without code changes.",
+  "hub_allowlist": [
+    "metric:blended:revenue",
+    "metric:blended:spend",
+    "metric:blended:marketing_spend",
+    "metric:blended:roas",
+    "metric:blended:orders",
+    "metric:blended:conversions",
+    "metric:blended:aov",
+    "metric:executive:revenue",
+    "metric:executive:roas",
+    "metric:customer:ltv",
+    "metric:customer:churn_rate"
+  ],
+  "scope_map": {},
+  "platform_map": {},
+  "extra_alias_groups": [
+    ["conversion_value", "conversions_value", "conv_value"],
+    ["orders", "purchases", "transactions"],
+    ["sessions", "visits", "site_sessions"]
+  ]
+}

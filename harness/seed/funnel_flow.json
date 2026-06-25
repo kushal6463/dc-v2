@@ -1,0 +1,10 @@
+{
+  "source_profile_id": "rare_seeds",
+  "description": "Bounded marketing/commerce funnel stage templates. funnel_edges() draws DECOMPOSES_INTO {relation: funnel} between ADJACENT, SAME-SCOPE stage metrics (confidence 0.85, review-only). A downstream stage decomposes onto the upstream stage that feeds it (e.g. clicks <- impressions). Resolution is same-scope only; an adjacent stage that resolves to no same-scope live Metric is skipped + logged. Funnel edges are templates, NOT asserted causality — they go to the review queue.",
+  "flows": [
+    {"name": "paid_media", "stages": ["reach", "impressions", "clicks", "sessions", "conversions", "revenue"]},
+    {"name": "email", "stages": ["sends", "deliveries", "opens", "clicks", "conversions", "revenue"]},
+    {"name": "commerce", "stages": ["sessions", "product_views", "add_to_carts", "checkouts", "orders", "revenue"]},
+    {"name": "search_ads", "stages": ["impressions", "clicks", "conversions", "conversion_value"]}
+  ]
+}

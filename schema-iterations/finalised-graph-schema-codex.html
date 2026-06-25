@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finalised ThoughtWire Graph Schema - Codex</title>
+  <style>
+    :root {
+      --ink: #18202c;
+      --muted: #637086;
+      --line: #dce3ed;
+      --paper: #f6f8fb;
+      --card: #ffffff;
+      --green: #1f7a5c;
+      --green-soft: #e9f7f1;
+      --blue: #315fbd;
+      --blue-soft: #edf3ff;
+      --amber: #9b6b12;
+      --amber-soft: #fff6df;
+      --violet: #684da6;
+      --violet-soft: #f3f0ff;
+      --red: #a83232;
+      --red-soft: #fff0f0;
+      --code: #243042;
+      --shadow: 0 18px 48px rgba(24, 32, 44, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+      color: var(--code);
+    }
+
+    pre {
+      overflow-x: auto;
+      background: #111827;
+      color: #f9fafb;
+      border-radius: 8px;
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    pre code { color: inherit; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 268px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: #111827;
+      color: #f9fafb;
+      padding: 26px 22px;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .brand {
+      font-weight: 800;
+      font-size: 18px;
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+
+    .brand small {
+      display: block;
+      margin-top: 8px;
+      color: #a9b4c6;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+    }
+
+    nav a {
+      color: #d7deea;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      background: rgba(255, 255, 255, 0.08);
+      text-decoration: none;
+    }
+
+    .sidebar-note {
+      margin-top: 28px;
+      padding: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 8px;
+      color: #d7deea;
+      font-size: 13px;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    main {
+      max-width: 1180px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    section {
+      margin: 26px 0;
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #edf3ff 58%, #e9f7f1 100%);
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.18;
+      margin: 0 0 12px;
+    }
+
+    h1 {
+      max-width: 880px;
+      font-size: clamp(36px, 5vw, 58px);
+      letter-spacing: 0;
+    }
+
+    h2 { font-size: 28px; }
+    h3 { font-size: 19px; margin-top: 20px; }
+
+    p { margin: 0 0 14px; }
+
+    .lede {
+      max-width: 920px;
+      color: #334155;
+      font-size: 18px;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      font-weight: 700;
+      font-size: 13px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 22px;
+    }
+
+    .stat {
+      background: rgba(255, 255, 255, 0.78);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+    }
+
+    .stat strong {
+      display: block;
+      font-size: 26px;
+      line-height: 1;
+    }
+
+    .stat span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      margin-top: 7px;
+    }
+
+    .callout {
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--blue);
+      border-radius: 8px;
+      background: var(--blue-soft);
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .callout.green {
+      border-left-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .callout.amber {
+      border-left-color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .callout.red {
+      border-left-color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #ffffff;
+    }
+
+    .card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .card p {
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 6px;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    th {
+      background: #f8fafc;
+      color: #334155;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .label-grid {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(0, 1fr));
+      gap: 10px;
+      margin: 20px 0;
+    }
+
+    .label {
+      border-radius: 8px;
+      padding: 14px 10px;
+      text-align: center;
+      font-weight: 800;
+      border: 1px solid var(--line);
+    }
+
+    .metric { background: var(--green-soft); border-color: #bfe5d6; }
+    .surface { background: var(--blue-soft); border-color: #c8d9fb; }
+    .gov { background: var(--amber-soft); border-color: #efdcad; }
+    .role { background: var(--violet-soft); border-color: #d8cff7; }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .step {
+      min-height: 120px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #ffffff;
+    }
+
+    .step b {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #ffffff;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .step span {
+      display: block;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    ul, ol { padding-left: 22px; }
+    li { margin: 6px 0; }
+
+    @media (max-width: 980px) {
+      .layout { display: block; }
+      aside { position: static; height: auto; }
+      main { padding: 22px; }
+      .stats, .cards, .label-grid, .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      section { padding: 20px; }
+      .stats, .cards, .label-grid, .flow { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">
+        ThoughtWire KG
+        <small>Finalised Codex Schema</small>
+      </div>
+      <nav aria-label="Document navigation">
+        <a href="#verdict">Verdict</a>
+        <a href="#sources">Source Facts</a>
+        <a href="#missing">What Is Missing</a>
+        <a href="#contract">V1 Contract</a>
+        <a href="#edges">Edges</a>
+        <a href="#ingestion">Ingestion</a>
+        <a href="#scoring">Evidence Scoring</a>
+        <a href="#rbac">RBAC</a>
+        <a href="#build">Build Order</a>
+        <a href="#acceptance">Acceptance</a>
+      </nav>
+      <div class="sidebar-note">
+        Final V1 means six graph labels only. Product, domain, concept, endpoint, connector, and principal stay outside the V1 label set.
+      </div>
+    </aside>
+
+    <main>
+      <section class="hero" id="verdict">
+        <div class="eyebrow">Final V1 direction</div>
+        <h1>Compact six-label Neo4j graph for ThoughtWire</h1>
+        <p class="lede">
+          Build the V1 knowledge graph from the compact Codex model, amended with the FRD's ingestion,
+          relationship-endpoint, RBAC, and evidence-scoring requirements.
+        </p>
+        <div class="pill-row" aria-label="Final V1 labels">
+          <span class="pill">Metric</span>
+          <span class="pill">Dashboard</span>
+          <span class="pill">UIComponent</span>
+          <span class="pill">Policy</span>
+          <span class="pill">Threshold</span>
+          <span class="pill">Role</span>
+        </div>
+        <div class="stats">
+          <div class="stat"><strong>6</strong><span>V1 graph labels</span></div>
+          <div class="stat"><strong>902</strong><span>OpenAPI paths checked</span></div>
+          <div class="stat"><strong>646</strong><span>chart registry entries</span></div>
+          <div class="stat"><strong>0</strong><span>endpoint/product/domain labels in V1</span></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>Document Decision</h2>
+        <table>
+          <thead><tr><th>Document</th><th>Final assessment</th><th>Reason</th></tr></thead>
+          <tbody>
+            <tr><td><code>thoughtwire-kg-schema-codex.md</code></td><td>Best implementation baseline</td><td>Clean six-label model, practical constraints, RBAC, and build checklist.</td></tr>
+            <tr><td><code>thoughtwire-kg-v1-node-details-codex.html</code></td><td>Best visual V1 explanation</td><td>Clearly explains the compact node shape and merged-field strategy.</td></tr>
+            <tr><td><code>thoughtwire-kg-schema-claude.md</code></td><td>Best analytical reference</td><td>Strong on causal edge discipline, evidence scoring, and type corrections, but not the cleanest V1 implementation shape.</td></tr>
+            <tr><td><code>thoughtwire-kg-schema-codex.html</code></td><td>Stale</td><td>Still shows a broad future-state graph and includes an incorrect hash-match claim.</td></tr>
+            <tr><td><code>old implementation/*.md</code></td><td>Historical only</td><td>NetworkX/Snowflake DAG architecture conflicts with the current FRD direction.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="sources">
+        <h2>Source Facts Verified</h2>
+        <table>
+          <thead><tr><th>Source</th><th>Verified fact</th></tr></thead>
+          <tbody>
+            <tr><td><code>openapi.json</code> paths</td><td>902</td></tr>
+            <tr><td>OpenAPI operations</td><td>923 total, 877 GET, 46 non-GET</td></tr>
+            <tr><td>OpenAPI component schemas</td><td>463</td></tr>
+            <tr><td><code>chart-registry.json</code> entries</td><td>646</td></tr>
+            <tr><td>Chart registry entries with narration</td><td>558</td></tr>
+            <tr><td>Chart registry entries with required metadata</td><td>646</td></tr>
+          </tbody>
+        </table>
+        <div class="callout green">
+          <strong>Confirmed edge source:</strong>
+          <code>GET /api/v1/master-config/config/knowledge-graph/relationships</code>
+          must be used as a primary deterministic relationship source.
+        </div>
+      </section>
+
+      <section id="missing">
+        <h2>What Is Missing From The Project</h2>
+        <p>
+          The current workspace contains documentation only. There is no application source code, no Neo4j loader,
+          no ingestion service, and no graph query layer in this folder.
+        </p>
+        <div class="cards">
+          <div class="card"><strong>Missing Markdown</strong><p>No Markdown counterpart exists for the best node-detail HTML file.</p></div>
+          <div class="card"><strong>Doc Drift</strong><p>Existing docs disagree on whether product, domain, endpoint, and concept are labels or fields.</p></div>
+          <div class="card"><strong>Neo4j Implementation</strong><p>Constraints, indexes, load scripts, and query code are absent here.</p></div>
+          <div class="card"><strong>SourceProfile Flow</strong><p>The FRD-required classifier, review, and deterministic harvester are not implemented here.</p></div>
+          <div class="card"><strong>Arbitration Writer</strong><p>No single governed proposal writer exists in this workspace.</p></div>
+          <div class="card"><strong>Evidence Ledger</strong><p>Causal confidence scoring is specified but not implemented here.</p></div>
+        </div>
+      </section>
+
+      <section id="contract">
+        <h2>V1 Implementation Contract</h2>
+        <div class="label-grid">
+          <div class="label metric">Metric</div>
+          <div class="label surface">Dashboard</div>
+          <div class="label surface">UIComponent</div>
+          <div class="label gov">Policy</div>
+          <div class="label gov">Threshold</div>
+          <div class="label role">Role</div>
+        </div>
+        <h3>Non-label concepts</h3>
+        <table>
+          <thead><tr><th>Concept</th><th>V1 treatment</th></tr></thead>
+          <tbody>
+            <tr><td>Tenant</td><td>Runtime/database context; one Neo4j database per tenant.</td></tr>
+            <tr><td>Product and domain</td><td><code>product_id</code>, <code>domain_id</code>, permission edge scopes.</td></tr>
+            <tr><td>Metric concept</td><td><code>concept_key</code>, <code>concept_name</code>, <code>metric_base</code>, <code>aliases</code>.</td></tr>
+            <tr><td>Endpoint</td><td>Fields and <code>EXPOSED_BY</code> edge properties; no endpoint label.</td></tr>
+            <tr><td>Connector</td><td><code>connector_ids</code>, <code>source_platforms</code>, <code>source_set</code>, <code>mart_sources</code>.</td></tr>
+            <tr><td>Principal or person</td><td>External auth resolves one or more <code>role_key</code> values.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>Metric identity:</strong> use canonical central-library metric ids first. If unresolved, namespace
+          dashboard-local metrics as <code>&lt;dashboard&gt;-&lt;id&gt;</code>. Raw API paths are never identities.
+        </div>
+      </section>
+
+      <section id="edges">
+        <h2>V1 Edge Catalog</h2>
+        <table>
+          <thead><tr><th>Edge</th><th>From -> To</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>CONTAINS_COMPONENT</code></td><td><code>Dashboard -> UIComponent</code></td><td>Dashboard composition.</td></tr>
+            <tr><td><code>VISUALIZES</code></td><td><code>UIComponent -> Metric</code></td><td>Component shows a metric.</td></tr>
+            <tr><td><code>SHOWN_ON</code></td><td><code>Metric -> Dashboard</code></td><td>Metric appears on a dashboard.</td></tr>
+            <tr><td><code>EXPOSED_BY</code></td><td><code>Metric -> Dashboard|UIComponent</code></td><td>Surface exposes or fetches the metric; endpoint metadata lives on this edge.</td></tr>
+            <tr><td><code>HAS_THRESHOLD</code></td><td><code>Metric -> Threshold</code></td><td>Metric boundary.</td></tr>
+            <tr><td><code>GOVERNED_BY</code></td><td><code>Metric -> Policy</code></td><td>Policy applies to metric.</td></tr>
+            <tr><td><code>EXPLAINS_THRESHOLD</code></td><td><code>Policy -> Threshold</code></td><td>Policy explains threshold intent.</td></tr>
+            <tr><td><code>OWNS</code></td><td><code>Role -> Metric|Policy|Threshold|Dashboard</code></td><td>Accountable ownership.</td></tr>
+            <tr><td><code>INFLUENCES</code></td><td><code>Metric -> Metric</code></td><td>Plausible driver relationship.</td></tr>
+            <tr><td><code>CAUSES</code></td><td><code>Metric -> Metric</code></td><td>Approved evidence-backed causal relationship.</td></tr>
+            <tr><td><code>CORRELATES_WITH</code></td><td><code>Metric -> Metric</code></td><td>Statistical association only.</td></tr>
+            <tr><td><code>INHERITS_FROM</code></td><td><code>Role -> Role</code></td><td>Permission inheritance.</td></tr>
+            <tr><td><code>CAN_VIEW_*</code></td><td><code>Role -> Metric|Dashboard|UIComponent</code></td><td>Read and traversal permissions.</td></tr>
+            <tr><td><code>CAN_EDIT_*</code></td><td><code>Role -> Policy|Threshold</code></td><td>Edit permissions.</td></tr>
+            <tr><td><code>CAN_APPROVE_CHANGE</code></td><td><code>Role -> Policy|Threshold</code></td><td>Approval authority.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="ingestion">
+        <h2>Ingestion Contract</h2>
+        <ol>
+          <li>Acquire OpenAPI 3.x spec from URL, base URL, or file upload.</li>
+          <li>Hash the spec and group operations into endpoint families.</li>
+          <li>Auto-exclude obvious infrastructure endpoints.</li>
+          <li>Run the Ingestion Brain once per changed spec hash to produce a reviewed SourceProfile.</li>
+          <li>Run deterministic harvest from the approved SourceProfile.</li>
+          <li>Emit proposals only; the harvester must not write directly to Neo4j.</li>
+          <li>Use arbitration as the only graph writer.</li>
+          <li>Emit a completeness coverage report for each ingestion run.</li>
+        </ol>
+        <table>
+          <thead><tr><th>Source family</th><th>V1 treatment</th></tr></thead>
+          <tbody>
+            <tr><td>Dashboard metric endpoints</td><td>Promote/update metrics and <code>SHOWN_ON</code>/<code>EXPOSED_BY</code> edges.</td></tr>
+            <tr><td>Dashboard chart endpoints</td><td>Promote/update components and <code>VISUALIZES</code>/<code>EXPOSED_BY</code> edges.</td></tr>
+            <tr><td>Chart registry</td><td>Primary source for <code>UIComponent</code>.</td></tr>
+            <tr><td>Central metric library</td><td>Primary source for canonical metric identity.</td></tr>
+            <tr><td>Relationship endpoint</td><td>Primary deterministic source for metric relationships.</td></tr>
+            <tr><td>Auth/admin/docs/health/status</td><td>Exclude unless explicitly human-overridden.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="scoring">
+        <h2>Evidence Scoring</h2>
+        <p>
+          Causal edge confidence is required in V1. The evidence records can live outside Neo4j, but the final
+          score must be a deterministic fold over append-only evidence.
+        </p>
+        <pre><code>alpha = 0.5
+beta = 0.5
+for each supporting evidence record: alpha += weight
+for each refuting evidence record: beta += weight
+confidence = alpha / (alpha + beta)
+evidence_mass = alpha + beta</code></pre>
+        <table>
+          <thead><tr><th>Tier</th><th>Weight</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><td><code>prior</code> / <code>llm</code></td><td>1</td><td>Weak hypothesis or imported prior.</td></tr>
+            <tr><td><code>observational</code></td><td>2-5</td><td>Correlation/statistical evidence.</td></tr>
+            <tr><td><code>quasi_experimental</code></td><td>5</td><td>Natural experiment evidence.</td></tr>
+            <tr><td><code>interventional</code></td><td>8</td><td>Approved action moved a lever and result followed.</td></tr>
+            <tr><td><code>human</code></td><td>10</td><td>Domain expert confirmation/refutation.</td></tr>
+            <tr><td><code>outcome</code></td><td>8</td><td>Monitoring contract reconciliation.</td></tr>
+            <tr><td><code>formula</code></td><td>pinned 1.0</td><td>Deterministic math edge, outside the fold.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="rbac">
+        <h2>RBAC Before Context</h2>
+        <p>The application must not run unrestricted graph traversal and filter afterward.</p>
+        <ol>
+          <li>Authenticate user/service outside Neo4j.</li>
+          <li>Resolve one or more <code>role_key</code> values.</li>
+          <li>Resolve inherited roles.</li>
+          <li>Query only allowed graph neighborhoods.</li>
+          <li>Apply field masking, product/domain scopes, and row filters.</li>
+          <li>Send only allowed context to the agent.</li>
+        </ol>
+        <div class="callout amber">
+          If a causal path crosses restricted territory, the agent may say a restricted dependency exists, but it must not reveal hidden names, values, endpoints, policies, or owners.
+        </div>
+      </section>
+
+      <section>
+        <h2>Neo4j Constraints</h2>
+        <pre><code>CREATE CONSTRAINT metric_id IF NOT EXISTS
+FOR (n:Metric) REQUIRE n.metric_id IS UNIQUE;
+
+CREATE CONSTRAINT dashboard_id IF NOT EXISTS
+FOR (n:Dashboard) REQUIRE n.dashboard_id IS UNIQUE;
+
+CREATE CONSTRAINT component_id IF NOT EXISTS
+FOR (n:UIComponent) REQUIRE n.component_id IS UNIQUE;
+
+CREATE CONSTRAINT policy_id IF NOT EXISTS
+FOR (n:Policy) REQUIRE n.policy_id IS UNIQUE;
+
+CREATE CONSTRAINT threshold_id IF NOT EXISTS
+FOR (n:Threshold) REQUIRE n.threshold_id IS UNIQUE;
+
+CREATE CONSTRAINT role_key IF NOT EXISTS
+FOR (n:Role) REQUIRE n.role_key IS UNIQUE;</code></pre>
+      </section>
+
+      <section id="build">
+        <h2>Build Order</h2>
+        <div class="flow">
+          <div class="step"><b>1</b><span>Graph Base</span><p>Create six-label constraints and indexes.</p></div>
+          <div class="step"><b>2</b><span>SourceProfile</span><p>Persist spec-hash classification and human review.</p></div>
+          <div class="step"><b>3</b><span>Harvest</span><p>Emit proposals only from approved mappings.</p></div>
+          <div class="step"><b>4</b><span>Arbitration</span><p>Deduplicate, validate, promote, and deprecate.</p></div>
+          <div class="step"><b>5</b><span>Inventory</span><p>Load Dashboard, UIComponent, Metric, Policy, Threshold, Role.</p></div>
+          <div class="step"><b>6</b><span>Surface Edges</span><p>Create component, visualisation, shown-on, and exposed-by edges.</p></div>
+          <div class="step"><b>7</b><span>RBAC</span><p>Seed roles and enforce context filtering.</p></div>
+          <div class="step"><b>8</b><span>Causal</span><p>Ingest relationship endpoint and evidence-folded causal edges.</p></div>
+          <div class="step"><b>9</b><span>Coverage</span><p>Report promoted, missing, excluded, and deprecated entities.</p></div>
+          <div class="step"><b>10</b><span>Defer V2</span><p>Leave memory, action, monitoring, and approval labels until V1 is trusted.</p></div>
+        </div>
+      </section>
+
+      <section>
+        <h2>V2 Labels Deferred</h2>
+        <table>
+          <thead><tr><th>Concept</th><th>Why deferred</th></tr></thead>
+          <tbody>
+            <tr><td><code>Thoughtlet</code></td><td>Requires the V1 graph to anchor observations first.</td></tr>
+            <tr><td><code>DecisionCapsule</code></td><td>Belongs to the decision ledger layer, not the initial structural KG.</td></tr>
+            <tr><td><code>MonitoringContract</code></td><td>Requires execution and capsule lifecycle.</td></tr>
+            <tr><td><code>LearningCandidate</code> / <code>PromotedMemory</code></td><td>Needs approval and outcome workflows.</td></tr>
+            <tr><td><code>GraphVersion</code></td><td>Add when governed graph mutation starts.</td></tr>
+            <tr><td><code>Action</code> / <code>Tool</code></td><td>Future governed execution layer.</td></tr>
+            <tr><td><code>ApprovalRule</code></td><td>Start with Role permission edges; promote when approval traversal becomes complex.</td></tr>
+            <tr><td><code>EvidenceEvent</code> / <code>CausalRelation</code></td><td>Evidence scoring is required now, but these need not be V1 graph labels.</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section id="acceptance">
+        <h2>Acceptance Criteria</h2>
+        <ul>
+          <li>The V1 graph contains no node labels outside <code>Metric</code>, <code>Dashboard</code>, <code>UIComponent</code>, <code>Policy</code>, <code>Threshold</code>, and <code>Role</code>.</li>
+          <li>Product, domain, endpoint, connector, metric concept, tenant, and principal are not graph labels in V1.</li>
+          <li>Metric identity is canonical-first with dashboard-local namespacing only as fallback.</li>
+          <li>Every endpoint reference is a field or <code>EXPOSED_BY</code> edge property.</li>
+          <li>Every agent context query is role-filtered before context leaves Neo4j/application code.</li>
+          <li>Every causal edge has confidence, evidence mass, temporal lag, mechanism, review state, and source attribution.</li>
+          <li>Correlation never auto-promotes to causality.</li>
+          <li>Every ingestion run emits proposal counts, promotion counts, exclusion counts, and coverage gaps.</li>
+          <li>Disappeared entities are deprecated, not deleted.</li>
+        </ul>
+        <div class="callout green">
+          <strong>Final choice:</strong> build a six-label tenant-isolated Neo4j graph that gives agents role-filtered metric,
+          surface, policy, threshold, and causal context while keeping endpoint/product/domain/concept/user/memory complexity
+          outside the V1 graph until there is real traversal pressure.
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

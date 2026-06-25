@@ -1,0 +1,33 @@
+src,dst,kind,relation,confidence,weight,basis
+ml.acquisition_forecast,blended.new_customers,model,predicts,0.9,,model target
+ml.cart_recovery,web.cart_abandonment,model,predicts,0.9,,model target
+ml.category_buyer_breadth_forecast,store.customers.sum,model,predicts,0.9,,model target
+ml.category_revenue_forecast,blended.revenue,model,predicts,0.9,,model target
+ml.churn,blended.churn,model,predicts,0.9,,model target
+blended.purchase_frequency,ml.churn,model,driver,0.8,0.106,importance:frequency
+blended.aov,ml.churn,model,driver,0.8,0.034,importance:max_order_value_share
+ml.first_repeat,blended.repeat.rate,model,predicts,0.9,,model target
+ml.intervention,blended.churn,model,predicts,0.9,,model target
+blended.purchase_frequency,ml.intervention,model,driver,0.8,0.401,importance:frequency
+ml.marketing_mix,blended.revenue,model,predicts,0.9,,model target
+ml.marketing_mix_campaign,blended.revenue,model,predicts,0.9,,model target
+ml.marketing_mix_forecast,blended.revenue,model,predicts,0.9,,model target
+ml.offer_value_lift,blended.revenue,model,predicts,0.9,,model target
+ml.order_value,blended.aov,model,predicts,0.9,,model target
+blended.aov,ml.order_value,model,driver,0.8,0.485,importance:avg_order_value
+store.units,ml.order_value,model,driver,0.8,0.029,importance:avg_items_per_order
+store.price.avg,ml.order_value,model,driver,0.8,0.009,importance:avg_unit_price_lifetime
+store.price.avg,ml.price_affinity,model,driver,0.8,0.441,importance:avg_unit_price
+blended.revenue,ml.price_affinity,model,driver,0.8,0.026,importance:total_revenue
+blended.aov,ml.price_affinity,model,driver,0.8,0.016,importance:avg_order_value
+store.units,ml.price_affinity,model,driver,0.8,0.013,importance:avg_items_per_order
+blended.revenue,ml.product_affinity,model,driver,0.8,0.141,importance:prod_revenue_lifetime
+store.units,ml.product_affinity,model,driver,0.8,0.071,importance:prod_units_30d
+store.price.avg,ml.product_affinity,model,driver,0.8,0.019,importance:prod_avg_unit_price
+ml.product_demand_forecast,store.units,model,predicts,0.9,,model target
+ml.product_revenue_forecast,blended.revenue,model,predicts,0.9,,model target
+ml.repurchase,blended.repeat.rate,model,predicts,0.9,,model target
+blended.purchase_frequency,ml.repurchase,model,driver,0.8,0.027,importance:frequency
+blended.revenue,ml.repurchase,model,driver,0.8,0.003,importance:revenue_last_90d
+ml.segment_value_trajectory,blended.clv.avg,model,predicts,0.9,,model target
+ml.wallet_share_growth,blended.revenue,model,predicts,0.9,,model target

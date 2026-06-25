@@ -1,0 +1,651 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>How the LLM Builds the Knowledge Graph · dc-kg</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --ink:        #070a0f;
+    --ink-2:      #0b0f16;
+    --panel:      #10151f;
+    --panel-2:    #141a26;
+    --line:       #1f2735;
+    --line-soft:  #19202c;
+    --text:       #e8ecf3;
+    --muted:      #8a93a6;
+    --faint:      #5a6577;
+
+    /* provenance palette — the project's own convention */
+    --code:   #4cc4ff;   /* deterministic / pure code     */
+    --llm:    #b291ff;   /* LLM / agent (proposes)         */
+    --human:  #5fe39a;   /* human review / single writer   */
+    --warn:   #ffb454;
+
+    --code-glow:  rgba(76,196,255,.18);
+    --llm-glow:   rgba(178,145,255,.18);
+    --human-glow: rgba(95,227,154,.18);
+
+    --display: 'Bricolage Grotesque', serif;
+    --body:    'IBM Plex Sans', sans-serif;
+    --mono:    'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--body);
+    background: var(--ink);
+    color: var(--text);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  /* graph-paper background + atmospheric glow */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 46px 46px;
+    -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 25%, transparent 80%);
+            mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 25%, transparent 80%);
+    opacity: .5;
+    z-index: -2;
+  }
+  body::after {
+    content: "";
+    position: fixed; inset: 0;
+    background:
+      radial-gradient(60% 40% at 18% 0%, var(--code-glow), transparent 70%),
+      radial-gradient(50% 45% at 82% 8%, var(--llm-glow), transparent 70%),
+      radial-gradient(55% 50% at 50% 100%, var(--human-glow), transparent 75%);
+    z-index: -3;
+    pointer-events: none;
+  }
+
+  .wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- eyebrow / labels ---------- */
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: .72rem;
+    letter-spacing: .28em;
+    text-transform: uppercase;
+    color: var(--faint);
+    display: inline-flex;
+    align-items: center;
+    gap: .6em;
+  }
+  .eyebrow::before {
+    content: "";
+    width: 22px; height: 1px;
+    background: var(--faint);
+  }
+
+  /* ---------- hero ---------- */
+  header.hero {
+    padding: clamp(80px, 14vh, 160px) 0 70px;
+  }
+  .tag-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 30px; }
+  .tag {
+    font-family: var(--mono);
+    font-size: .7rem;
+    letter-spacing: .06em;
+    padding: 5px 11px;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--muted);
+    background: rgba(255,255,255,.012);
+  }
+  h1 {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: clamp(2.6rem, 7vw, 5.4rem);
+    line-height: .98;
+    letter-spacing: -.02em;
+    margin: 0 0 26px;
+  }
+  h1 .accent {
+    background: linear-gradient(100deg, var(--code), var(--llm) 55%, var(--human));
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .lede {
+    font-size: clamp(1.05rem, 2vw, 1.32rem);
+    color: var(--muted);
+    max-width: 60ch;
+  }
+
+  /* ---------- the core-principle banner ---------- */
+  .principle {
+    margin-top: 52px;
+    border: 1px solid var(--line);
+    border-left: 3px solid var(--human);
+    border-radius: 14px;
+    background: linear-gradient(120deg, rgba(95,227,154,.06), rgba(20,26,38,.5));
+    padding: 28px 32px;
+    display: flex;
+    gap: 22px;
+    align-items: flex-start;
+  }
+  .principle .mark {
+    font-family: var(--display);
+    font-weight: 800;
+    font-size: 2.4rem;
+    line-height: 1;
+    color: var(--human);
+    flex-shrink: 0;
+  }
+  .principle h3 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: 1.35rem;
+    margin-bottom: 6px;
+    letter-spacing: -.01em;
+  }
+  .principle p { color: var(--muted); font-size: .98rem; }
+  .principle code { font-family: var(--mono); color: var(--text); }
+
+  /* ---------- section scaffolding ---------- */
+  section { padding: 64px 0; }
+  .section-head { margin-bottom: 44px; max-width: 64ch; }
+  .section-head h2 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: clamp(1.8rem, 4vw, 2.9rem);
+    letter-spacing: -.02em;
+    margin: 16px 0 14px;
+    line-height: 1.02;
+  }
+  .section-head p { color: var(--muted); font-size: 1.02rem; }
+
+  /* ---------- legend ---------- */
+  .legend { display: flex; gap: 26px; flex-wrap: wrap; margin: 30px 0 6px; }
+  .legend .item { display: flex; align-items: center; gap: 9px; font-size: .86rem; color: var(--muted); }
+  .dot { width: 11px; height: 11px; border-radius: 50%; }
+  .dot.code  { background: var(--code);  box-shadow: 0 0 12px var(--code); }
+  .dot.llm   { background: var(--llm);   box-shadow: 0 0 12px var(--llm); }
+  .dot.human { background: var(--human); box-shadow: 0 0 12px var(--human); }
+
+  /* ---------- pipeline flow diagram ---------- */
+  .flow {
+    display: flex;
+    align-items: stretch;
+    gap: 0;
+    flex-wrap: wrap;
+    border: 1px solid var(--line);
+    border-radius: 18px;
+    background: linear-gradient(180deg, var(--panel), var(--ink-2));
+    padding: 30px 24px;
+    overflow: hidden;
+  }
+  .flow .node {
+    flex: 1 1 150px;
+    min-width: 140px;
+    text-align: center;
+    position: relative;
+    padding: 8px 6px;
+  }
+  .flow .node:not(:last-child)::after {
+    content: "→";
+    position: absolute;
+    right: -8px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--faint);
+    font-size: 1.1rem;
+  }
+  .flow .chip {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 4px 9px;
+    border-radius: 7px;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .chip.code  { color: var(--code);  background: var(--code-glow);  border: 1px solid rgba(76,196,255,.3); }
+  .chip.llm   { color: var(--llm);   background: var(--llm-glow);   border: 1px solid rgba(178,145,255,.3); }
+  .chip.human { color: var(--human); background: var(--human-glow); border: 1px solid rgba(95,227,154,.3); }
+  .flow .node .nm { font-family: var(--display); font-weight: 600; font-size: 1.02rem; }
+  .flow .node .desc { font-size: .76rem; color: var(--faint); margin-top: 4px; }
+
+  /* ---------- stage timeline ---------- */
+  .timeline { position: relative; padding-left: 40px; }
+  .timeline::before {
+    content: "";
+    position: absolute; left: 13px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(180deg, var(--code), var(--llm) 45%, var(--human));
+    opacity: .35;
+  }
+  .stage { position: relative; margin-bottom: 26px; }
+  .stage::before {
+    content: "";
+    position: absolute;
+    left: -33px; top: 28px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--ink);
+    border: 2px solid var(--faint);
+    z-index: 1;
+  }
+  .stage.code::before  { border-color: var(--code);  box-shadow: 0 0 14px var(--code-glow); }
+  .stage.llm::before   { border-color: var(--llm);   box-shadow: 0 0 14px var(--llm-glow); }
+  .stage.human::before { border-color: var(--human); box-shadow: 0 0 14px var(--human-glow); }
+
+  .card {
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    background: linear-gradient(180deg, var(--panel), var(--ink-2));
+    padding: 26px 28px;
+    transition: border-color .35s ease, transform .35s ease;
+  }
+  .stage.code  .card:hover { border-color: rgba(76,196,255,.4); transform: translateY(-2px); }
+  .stage.llm   .card:hover { border-color: rgba(178,145,255,.4); transform: translateY(-2px); }
+  .stage.human .card:hover { border-color: rgba(95,227,154,.4); transform: translateY(-2px); }
+
+  .card .head { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 6px; }
+  .card .step-no {
+    font-family: var(--mono);
+    font-size: .74rem;
+    color: var(--faint);
+    letter-spacing: .14em;
+  }
+  .card h3 {
+    font-family: var(--display);
+    font-weight: 700;
+    font-size: 1.45rem;
+    letter-spacing: -.01em;
+  }
+  .role {
+    font-family: var(--mono);
+    font-size: .64rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    padding: 3px 9px;
+    border-radius: 6px;
+    margin-left: auto;
+  }
+  .role.code  { color: var(--code);  background: var(--code-glow); }
+  .role.llm   { color: var(--llm);   background: var(--llm-glow); }
+  .role.human { color: var(--human); background: var(--human-glow); }
+  .card p.lead { color: var(--muted); margin: 8px 0 16px; font-size: .96rem; }
+  .card ul { list-style: none; margin: 0 0 16px; }
+  .card li { position: relative; padding-left: 20px; color: var(--muted); font-size: .92rem; margin-bottom: 7px; }
+  .card li::before { content: "▸"; position: absolute; left: 0; color: var(--faint); }
+  .card li b { color: var(--text); font-weight: 600; }
+  .file { font-family: var(--mono); font-size: .8rem; color: var(--code); }
+
+  /* code block */
+  pre {
+    font-family: var(--mono);
+    font-size: .82rem;
+    background: #060910;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px 18px;
+    overflow-x: auto;
+    color: #cdd6e6;
+    line-height: 1.7;
+  }
+  pre .c { color: var(--faint); }            /* comment */
+  pre .k { color: var(--code); }             /* kg / command */
+  pre .f { color: var(--llm); }              /* flag */
+
+  /* ---------- command table ---------- */
+  .table-wrap { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+  thead th {
+    font-family: var(--mono);
+    font-size: .68rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--faint);
+    text-align: left;
+    padding: 15px 18px;
+    background: var(--panel-2);
+    border-bottom: 1px solid var(--line);
+  }
+  tbody td { padding: 13px 18px; border-bottom: 1px solid var(--line-soft); color: var(--muted); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: rgba(255,255,255,.018); }
+  td code { font-family: var(--mono); font-size: .82rem; color: var(--text); }
+  .pill { font-family: var(--mono); font-size: .68rem; padding: 2px 8px; border-radius: 5px; white-space: nowrap; }
+  .pill.yes { color: var(--llm); background: var(--llm-glow); }
+  .pill.no  { color: var(--faint); background: rgba(255,255,255,.03); }
+
+  /* ---------- guarantees ---------- */
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+  .gcard { border: 1px solid var(--line); border-radius: 14px; padding: 22px 22px; background: var(--panel); }
+  .gcard h4 { font-family: var(--display); font-weight: 600; font-size: 1.08rem; margin-bottom: 8px; display: flex; align-items: center; gap: 9px; }
+  .gcard p { color: var(--muted); font-size: .88rem; }
+
+  /* ---------- footer ---------- */
+  footer { padding: 70px 0 90px; border-top: 1px solid var(--line-soft); margin-top: 40px; }
+  footer .row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  footer .brand { font-family: var(--display); font-weight: 700; font-size: 1.3rem; }
+  footer .meta { font-family: var(--mono); font-size: .76rem; color: var(--faint); }
+
+  /* ---------- reveal animation ---------- */
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity .7s cubic-bezier(.2,.7,.2,1), transform .7s cubic-bezier(.2,.7,.2,1); }
+  .reveal.in { opacity: 1; transform: none; }
+  @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+  @media (max-width: 640px) {
+    .principle { flex-direction: column; gap: 12px; }
+    .flow .node:not(:last-child)::after { content: "↓"; right: 50%; top: auto; bottom: -6px; transform: translateX(50%); }
+    .flow { flex-direction: column; }
+    .role { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="tag-row reveal">
+      <span class="tag">ThoughtWire · dc-kg</span>
+      <span class="tag">Neo4j causal graph</span>
+      <span class="tag">claude-agent-sdk</span>
+    </div>
+    <p class="eyebrow reveal" style="transition-delay:.05s">Ingestion workflow</p>
+    <h1 class="reveal" style="transition-delay:.1s">How the&nbsp;LLM<br><span class="accent">builds the graph</span></h1>
+    <p class="lede reveal" style="transition-delay:.18s">
+      A deterministic pre-pass feeds parallel Claude proposer agents, which classify and
+      link metrics into JSON proposals. A single writer commits them after review — then
+      a causal pass adds evidence-backed edges. Here is every stage, and exactly where the
+      model is — and isn't — involved.
+    </p>
+
+    <div class="principle reveal" style="transition-delay:.26s">
+      <div class="mark">⊘</div>
+      <div>
+        <h3>The LLM never writes to Neo4j.</h3>
+        <p>
+          It only <em>proposes</em> nodes and edges as JSON. Every write goes through one
+          sequential <code>arbitration writer</code> after review. Combined with
+          <code>canonical_id</code> uniqueness constraints, duplicate nodes and write races
+          are <b style="color:var(--text)">structurally impossible</b>. The model's job is
+          classification, formula reading, link resolution, and causal judgment — not the write.
+        </p>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ===================== FLOW ===================== -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Architecture at a glance</p>
+      <h2>One pipeline, three kinds of work</h2>
+      <p>Pure code does the heavy structural extraction. The LLM runs read-only in the middle. A single deterministic writer is the only thing that touches the database.</p>
+    </div>
+
+    <div class="flow reveal">
+      <div class="node"><span class="chip code">code</span><div class="nm">Pre-pass</div><div class="desc">OpenAPI ⨝ registry → drafts</div></div>
+      <div class="node"><span class="chip llm">llm</span><div class="nm">Proposers</div><div class="desc">per-dashboard, read-only</div></div>
+      <div class="node"><span class="chip human">human</span><div class="nm">Review</div><div class="desc">accept · edit · reject</div></div>
+      <div class="node"><span class="chip human">code</span><div class="nm">Arbitration</div><div class="desc">single writer · MERGE</div></div>
+      <div class="node"><span class="chip code">code</span><div class="nm">Reconcile</div><div class="desc">collapse duplicates</div></div>
+      <div class="node"><span class="chip llm">llm</span><div class="nm">Causal pass</div><div class="desc">judge + refuter</div></div>
+    </div>
+
+    <div class="legend reveal">
+      <div class="item"><span class="dot code"></span> Pure code — zero tokens</div>
+      <div class="item"><span class="dot llm"></span> LLM — proposes JSON, read-only</div>
+      <div class="item"><span class="dot human"></span> Human review &amp; single writer</div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== STAGES ===================== -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Step by step</p>
+      <h2>The seven stages</h2>
+      <p>Each stage is color-coded by who does the work. Commands are the real <code style="font-family:var(--mono)">kg</code> CLI; every one has a Claude Code slash-command twin.</p>
+    </div>
+
+    <div class="timeline">
+
+      <!-- Step 0 -->
+      <div class="stage code reveal">
+        <div class="card">
+          <div class="head">
+            <span class="step-no">STEP 0</span>
+            <h3>One-time setup</h3>
+            <span class="role code">pure code</span>
+          </div>
+          <p class="lead">Install, apply Neo4j constraints, and seed the spine. The spine defines the only IDs the LLM is later allowed to link to — it can never invent a domain or product.</p>
+          <pre><span class="c"># install, constraints, seed Business / Domain / Product spine</span>
+uv sync --extra dev
+uv run <span class="k">kg schema-init</span>
+uv run <span class="k">kg bootstrap-spine</span>
+uv run <span class="k">kg status</span></pre>
+          <p style="margin-top:14px;font-size:.86rem;color:var(--faint)">Slash twins: <span class="file">/create-business-node</span> · <span class="file">/create-domain-node</span> · <span class="file">/create-product-node</span></p>
+        </div>
+      </div>
+
+      <!-- Step 1 -->
+      <div class="stage code reveal">
+        <div class="card">
+          <div class="head">
+            <span class="step-no">STEP 1</span>
+            <h3>Deterministic pre-pass</h3>
+            <span class="role code">pure code · 0 tokens</span>
+          </div>
+          <p class="lead">The biggest design decision: structural fields are extracted in plain code so the LLM context stays tiny.</p>
+          <ul>
+            <li>Joins <b>openapi.json</b> (~902 paths) with <b>chart-registry.json</b> (646 entries) on <code>{dashboard}:{id}</code>.</li>
+            <li>Drops excluded endpoints — <code>master-config</code>, <code>/auth</code>, <code>POST/DELETE</code>, health/docs.</li>
+            <li>Emits one deterministic <b>draft dict</b> per metric &amp; dashboard.</li>
+          </ul>
+          <pre>uv run <span class="k">kg prepass</span>            <span class="c"># ~600 metric + dashboard drafts</span>
+uv run <span class="k">kg prepass</span> <span class="f">--json</span></pre>
+          <p style="margin-top:12px"><span class="file">harness/ingest/prepass.py</span></p>
+        </div>
+      </div>
+
+      <!-- Step 2 -->
+      <div class="stage llm reveal">
+        <div class="card">
+          <div class="head">
+            <span class="step-no">STEP 2</span>
+            <h3>Proposer agents — the LLM generates nodes &amp; edges</h3>
+            <span class="role llm">LLM · read-only</span>
+          </div>
+          <p class="lead">One Claude sub-agent per dashboard, fanned out concurrently (default 6). Each runs with subscription OAuth, schema-constrained JSON output, and <code>setting_sources=[]</code> — no project hooks, MCP, or skills.</p>
+          <ul>
+            <li>Reads only a tiny <b>RAG shortlist</b> of spine IDs from Neo4j (the single read; strictly read-only).</li>
+            <li><b>Reconciles</b> metrics into shared <code>concept_key</code>; <b>classifies</b> with allowed enums only.</li>
+            <li><b>Reads each <code>formula_text</code></b> → proposes <code>DECOMPOSES_INTO</code> edges (conf 1.0).</li>
+            <li>Picks <code>chart_type</code>; emits <code>VISUALIZES · SHOWN_ON · BELONGS_TO_DOMAIN · PART_OF_PRODUCT</code>.</li>
+            <li>Output is merged onto the deterministic draft — <b>"draft → agent reconciles."</b></li>
+          </ul>
+          <pre>uv run <span class="k">kg ingest-dashboard</span> ceo-pulse
+uv run <span class="k">kg ingest-dashboard</span> ceo-pulse <span class="f">--auto-approve</span>
+uv run <span class="k">kg ingest-all</span> <span class="f">--limit</span> 5 <span class="f">--concurrency</span> 6</pre>
+          <p style="margin-top:12px"><span class="file">harness/ingest/proposer.py</span> · <span class="file">harness/agent/engine.py</span> · <span class="file">prompts.py</span></p>
+        </div>
+      </div>
+
+      <!-- Step 3 -->
+      <div class="stage human reveal">
+        <div class="card">
+          <div class="head">
+            <span class="step-no">STEP 3</span>
+            <h3>Review the proposals</h3>
+            <span class="role human">human · canvas</span>
+          </div>
+          <p class="lead">Proposals land with <code>review_state:"proposed"</code>. Nothing is in Neo4j yet. A reject re-spawns that dashboard's proposer with the reason injected as steering (Reflexion-style).</p>
+          <pre>uv run <span class="k">kg proposals list</span> <span class="f">--run</span> &lt;run_id&gt;
+uv run <span class="k">kg proposals approve</span> &lt;id&gt; <span class="f">--all</span>
+uv run <span class="k">kg proposals reject</span> &lt;id&gt; <span class="f">--reason</span> "..."</pre>
+        </div>
+      </div>
+
+      <!-- Step 4 -->
+      <div class="stage human reveal">
+        <div class="card">
+          <div class="head">
+            <span class="step-no">STEP 4</span>
+            <h3>Arbitration writer — the only thing that writes Neo4j</h3>
+            <span class="role human">single writer</span>
+          </div>
+          <p class="lead">Sequentially consumes approved proposals with idempotent <code>MERGE … ON CREATE … ON MATCH …</code>. Run it twice → identical counts. Every write appended to the <code>events.jsonl</code> replay log.</p>
+          <pre>uv run <span class="k">kg apply</span> <span class="f">--run</span> &lt;run_id&gt;</pre>
+          <p style="margin-top:12px"><span class="file">harness/kg/arbitration.py</span></p>
+        </div>
+      </div>
+
+      <!-- Step 5 -->
+      <div class="stage code reveal">
+        <div class="card">
+          <div class="head">
+            <span class="step-no">STEP 5</span>
+            <h3>Cross-partition reconcile</h3>
+            <span class="role code">pure code</span>
+          </div>
+          <p class="lead">A metric that appeared on N dashboards is collapsed into one node, preserving every dashboard's relationships. Unused spine nodes are pruned.</p>
+          <pre>uv run <span class="k">kg reconcile</span>          <span class="c"># --dry-run to preview</span>
+uv run <span class="k">kg prune-empty</span></pre>
+          <p style="margin-top:12px"><span class="file">harness/kg/reconcile.py</span></p>
+        </div>
+      </div>
+
+      <!-- Step 6 -->
+      <div class="stage llm reveal">
+        <div class="card">
+          <div class="head">
+            <span class="step-no">STEP 6</span>
+            <h3>Causal pass — guarded LLM influences</h3>
+            <span class="role llm">LLM · review-only</span>
+          </div>
+          <p class="lead">Mostly deterministic. The LLM is used <b>only</b> for <code>INFLUENCES</code> candidates, and they are never auto-committed.</p>
+          <ul>
+            <li><b>DECOMPOSES_INTO / ROLLS_UP_TO</b> — deterministic, confidence 1.0.</li>
+            <li><b>CORRELATES_WITH</b> — imported priors; never auto-promoted to <code>CAUSES</code>.</li>
+            <li><b>INFLUENCES</b> — statistical gate first → pointwise <b>judge</b> (empty mechanism = reject) → <b>refuter</b> → self-consistency → <code>Beta(α,β)</code> confidence.</li>
+            <li>Confidence is the <b>agreement fraction</b>, not the model's stated number (verbalized confidence is mis-calibrated).</li>
+          </ul>
+          <pre>uv run <span class="k">kg run-causal</span>                  <span class="c"># deterministic only</span>
+uv run <span class="k">kg run-causal</span> <span class="f">--llm</span>            <span class="c"># + review-only INFLUENCES</span>
+uv run <span class="k">kg run-causal</span> <span class="f">--llm-links --platform</span> meta_ads</pre>
+          <p style="margin-top:12px"><span class="file">harness/ingest/causal.py</span></p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ===================== COMMAND TABLE ===================== -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Quick reference</p>
+      <h2>Every command, one table</h2>
+    </div>
+    <div class="table-wrap reveal">
+      <table>
+        <thead>
+          <tr><th>Command</th><th>Stage</th><th>LLM</th><th>What it does</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>kg schema-init</code></td><td>Setup</td><td><span class="pill no">no</span></td><td>Apply Neo4j constraints + indexes</td></tr>
+          <tr><td><code>kg bootstrap-spine</code></td><td>Setup</td><td><span class="pill no">no</span></td><td>Seed Business / Domain / Product spine</td></tr>
+          <tr><td><code>kg prepass</code></td><td>1</td><td><span class="pill no">no</span></td><td>Deterministic OpenAPI ⨝ registry → drafts</td></tr>
+          <tr><td><code>kg ingest-dashboard &lt;id&gt;</code></td><td>2</td><td><span class="pill yes">yes</span></td><td>Proposer agent for one dashboard</td></tr>
+          <tr><td><code>kg ingest-all</code></td><td>2</td><td><span class="pill yes">yes</span></td><td>Fan out proposer agents over all dashboards</td></tr>
+          <tr><td><code>kg proposals list / approve / reject</code></td><td>3</td><td><span class="pill no">no</span></td><td>Review the proposal queue</td></tr>
+          <tr><td><code>kg apply</code></td><td>4</td><td><span class="pill no">no</span></td><td>Arbitration writer MERGEs approved proposals</td></tr>
+          <tr><td><code>kg reconcile</code></td><td>5</td><td><span class="pill no">no</span></td><td>Collapse duplicate cross-dashboard metrics</td></tr>
+          <tr><td><code>kg prune-empty</code></td><td>5</td><td><span class="pill no">no</span></td><td>Drop unused domains / chart-types</td></tr>
+          <tr><td><code>kg run-causal --llm</code></td><td>6</td><td><span class="pill yes">yes*</span></td><td>Causal edges (LLM only for <code>INFLUENCES</code>)</td></tr>
+          <tr><td><code>kg status</code></td><td>any</td><td><span class="pill no">no</span></td><td>Node / edge counts per label</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p style="margin-top:14px;font-size:.84rem;color:var(--faint)">* <code style="font-family:var(--mono)">run-causal</code> is deterministic for DECOMPOSES_INTO / ROLLS_UP_TO / CORRELATES_WITH; the LLM is used only for review-only INFLUENCES candidates.</p>
+  </div>
+</section>
+
+<!-- ===================== GUARANTEES ===================== -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">Why it's safe</p>
+      <h2>Design guarantees</h2>
+    </div>
+    <div class="grid">
+      <div class="gcard reveal"><h4><span class="dot llm"></span>No hallucinated nodes</h4><p>The agent can only link to spine IDs it was given; the output schema rejects off-vocabulary values.</p></div>
+      <div class="gcard reveal"><h4><span class="dot human"></span>No write races or dups</h4><p>A single sequential writer + <code style="font-family:var(--mono);color:var(--text)">canonical_id</code> uniqueness make them structurally impossible.</p></div>
+      <div class="gcard reveal"><h4><span class="dot llm"></span>No auto-committed causality</h4><p>Correlations never become <code style="font-family:var(--mono);color:var(--text)">CAUSES</code>; every influence carries confidence · evidence_mass · mechanism and is held for review.</p></div>
+      <div class="gcard reveal"><h4><span class="dot code"></span>Calibrated confidence</h4><p>Causal confidence is the self-consistency agreement fraction — not the model's stated number.</p></div>
+      <div class="gcard reveal"><h4><span class="dot code"></span>Flat context window</h4><p>Pre-pass + per-dashboard partitioning + schema output + RAG shortlist keep every call small and cheap.</p></div>
+      <div class="gcard reveal"><h4><span class="dot human"></span>Fully replayable</h4><p>Every write is appended to <code style="font-family:var(--mono);color:var(--text)">events.jsonl</code>; Neo4j is durable across restarts.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===================== END-TO-END ===================== -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <p class="eyebrow">TL;DR</p>
+      <h2>A full run, end to end</h2>
+    </div>
+    <pre class="reveal">uv run <span class="k">kg schema-init</span> &amp;&amp; uv run <span class="k">kg bootstrap-spine</span>
+uv run <span class="k">kg ingest-all</span> <span class="f">--auto-approve</span>
+uv run <span class="k">kg reconcile</span> &amp;&amp; uv run <span class="k">kg prune-empty</span>
+uv run <span class="k">kg run-causal</span> <span class="f">--llm</span>
+uv run <span class="k">kg status</span></pre>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <div>
+        <div class="brand">dc-kg · <span style="background:linear-gradient(100deg,var(--code),var(--llm),var(--human));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">causal knowledge graph</span></div>
+        <p style="color:var(--muted);font-size:.9rem;margin-top:6px;max-width:48ch">Deterministic pre-pass → parallel proposers → single arbitration writer → causal pass. Everything reviewed before it is written.</p>
+      </div>
+      <div class="meta">
+        Spec: docs/final-schema-claude.md<br>
+        Plan: docs/implementation-kg-plan.md<br>
+        Detail: docs/kg-llm-ingestion-workflow.md
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // staggered reveal on scroll
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach((e, i) => {
+      if (e.isIntersecting) {
+        e.target.classList.add('in');
+        io.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
+
+  document.querySelectorAll('.reveal').forEach((el, i) => {
+    // gentle stagger for groups already in view at load
+    io.observe(el);
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,59 @@
+{
+  "platforms": [
+    {
+      "platform_id": "ga4",
+      "platform_name": "Google Analytics 4",
+      "platform_type": "analytics",
+      "supports_actions": false,
+      "connector_family": "google",
+      "data_classification": "internal",
+      "min_level": 30,
+      "status": "active",
+      "source_priority": 1
+    },
+    {
+      "platform_id": "google_ads",
+      "platform_name": "Google Ads",
+      "platform_type": "ads",
+      "supports_actions": true,
+      "connector_family": "google",
+      "data_classification": "internal",
+      "min_level": 30,
+      "status": "active",
+      "source_priority": 1
+    },
+    {
+      "platform_id": "meta_ads",
+      "platform_name": "Meta Ads",
+      "platform_type": "ads",
+      "supports_actions": true,
+      "connector_family": "meta",
+      "data_classification": "internal",
+      "min_level": 30,
+      "status": "active",
+      "source_priority": 1
+    },
+    {
+      "platform_id": "klaviyo",
+      "platform_name": "Klaviyo",
+      "platform_type": "crm",
+      "supports_actions": true,
+      "connector_family": "klaviyo",
+      "data_classification": "internal",
+      "min_level": 30,
+      "status": "active",
+      "source_priority": 1
+    },
+    {
+      "platform_id": "magento",
+      "platform_name": "StoreFront IQ",
+      "platform_type": "ecommerce",
+      "supports_actions": false,
+      "connector_family": "magento",
+      "data_classification": "internal",
+      "min_level": 30,
+      "status": "active",
+      "source_priority": 1
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "business": {
+    "business_id": "rare-seeds",
+    "display_name": "Rare Seeds",
+    "tier": "smb",
+    "business_type": "ecommerce",
+    "primary_currency": "USD",
+    "timezone": "UTC",
+    "default_granularity": "daily",
+    "decision_risk_posture": "balanced",
+    "strategic_intent_summary": "Grow profitable DTC revenue across paid, email, and web channels while protecting contribution margin.",
+    "default_data_classification": "internal",
+    "root_seniority_rank": 100,
+    "status": "active"
+  },
+  "domains": [
+    {
+      "domain_id": "finance",
+      "name": "Finance",
+      "domain_type": "business",
+      "decision_scope_summary": "Owns P&L, budget, margin and spend-approval decisions",
+      "min_level": 70,
+      "data_classification": "restricted",
+      "status": "active"
+    },
+    {
+      "domain_id": "marketing",
+      "name": "Marketing",
+      "domain_type": "business",
+      "decision_scope_summary": "Owns acquisition, channel mix and campaign decisions",
+      "min_level": 30,
+      "data_classification": "internal",
+      "status": "active"
+    },
+    {
+      "domain_id": "operations",
+      "name": "Operations",
+      "domain_type": "business",
+      "decision_scope_summary": "Owns fulfilment, logistics and operational efficiency decisions",
+      "min_level": 30,
+      "data_classification": "internal",
+      "status": "active"
+    },
+    {
+      "domain_id": "service",
+      "name": "Service",
+      "domain_type": "business",
+      "decision_scope_summary": "Owns customer support quality and resolution decisions",
+      "min_level": 30,
+      "data_classification": "internal",
+      "status": "active"
+    },
+    {
+      "domain_id": "customer",
+      "name": "Customer",
+      "domain_type": "business",
+      "decision_scope_summary": "Owns retention, LTV and customer-experience decisions",
+      "min_level": 40,
+      "data_classification": "internal",
+      "status": "active"
+    },
+    {
+      "domain_id": "product",
+      "name": "Product",
+      "domain_type": "business",
+      "decision_scope_summary": "Owns catalog, merchandising and product-performance decisions",
+      "min_level": 40,
+      "data_classification": "internal",
+      "status": "active"
+    },
+    {
+      "domain_id": "supply_chain",
+      "name": "Supply Chain",
+      "domain_type": "business",
+      "decision_scope_summary": "Owns inventory, sourcing and replenishment decisions",
+      "min_level": 40,
+      "data_classification": "internal",
+      "status": "active"
+    },
+    {
+      "domain_id": "hr",
+      "name": "HR",
+      "domain_type": "business",
+      "decision_scope_summary": "Owns headcount, hiring and workforce decisions",
+      "min_level": 70,
+      "data_classification": "restricted",
+      "status": "active"
+    },
+    {
+      "domain_id": "data_it",
+      "name": "Data & IT",
+      "domain_type": "technical",
+      "decision_scope_summary": "Owns data pipelines, connector health and data-quality decisions",
+      "min_level": 50,
+      "data_classification": "internal",
+      "status": "active"
+    }
+  ],
+  "products": [
+    {
+      "product_id": "miq",
+      "display_name": "Marketing IQ",
+      "category": "analytics",
+      "description": "Central analytics product (50+ dashboards)",
+      "schema_name": "miq",
+      "schema_status": "owned",
+      "default_domain_ids": ["marketing"],
+      "default_data_classification": "internal",
+      "min_level": 30,
+      "status": "active"
+    },
+    {
+      "product_id": "ciq",
+      "display_name": "Customer IQ",
+      "category": "analytics",
+      "description": "Customer analytics product (on miq schema)",
+      "schema_name": "miq",
+      "schema_status": "shared",
+      "default_domain_ids": ["customer"],
+      "default_data_classification": "internal",
+      "min_level": 30,
+      "status": "active"
+    },
+    {
+      "product_id": "piq",
+      "display_name": "Product IQ",
+      "category": "analytics",
+      "description": "Product analytics product (on miq schema)",
+      "schema_name": "miq",
+      "schema_status": "shared",
+      "default_domain_ids": ["product"],
+      "default_data_classification": "internal",
+      "min_level": 30,
+      "status": "active"
+    },
+    {
+      "product_id": "storefront_iq",
+      "display_name": "StoreFront IQ",
+      "category": "analytics",
+      "description": "Magento storefront analytics product",
+      "schema_name": "miq",
+      "schema_status": "shared",
+      "default_domain_ids": ["product"],
+      "default_data_classification": "internal",
+      "min_level": 30,
+      "status": "active"
+    },
+    {
+      "product_id": "dc",
+      "display_name": "Decision Canvas",
+      "category": "decisioning",
+      "description": "Writes decision capsules/thoughts",
+      "schema_name": "dc",
+      "schema_status": "owned",
+      "default_domain_ids": [],
+      "default_data_classification": "internal",
+      "min_level": 40,
+      "status": "active"
+    },
+    {
+      "product_id": "creative_iq",
+      "display_name": "Creative IQ",
+      "category": "creative",
+      "description": "External creative analytics (separate repo)",
+      "schema_name": "creative_iq",
+      "schema_status": "owned",
+      "default_domain_ids": ["marketing"],
+      "default_data_classification": "internal",
+      "min_level": 30,
+      "status": "active"
+    }
+  ]
+}

@@ -1,0 +1,89 @@
+src,dst,kind,relation,confidence,basis
+blended.revenue,blended.aov,structural,definitional,1.0,"CASE WHEN SUM(NVL(TOTAL_ORDERS, 0)) > 0 THEN SUM(NVL(NET_REVENUE, 0)) / SUM(NVL(TOTAL_ORDERS, 0)) END"
+blended.orders,blended.aov,structural,definitional,1.0,"CASE WHEN SUM(NVL(TOTAL_ORDERS, 0)) > 0 THEN SUM(NVL(NET_REVENUE, 0)) / SUM(NVL(TOTAL_ORDERS, 0)) END"
+blended.sessions,blended.conversion.rate,structural,definitional,1.0,"CASE WHEN SUM(NVL(SESSIONS, 0)) > 0 THEN SUM(NVL(TOTAL_ORDERS, 0)) * 100.0 / SUM(NVL(SESSIONS, 0)) END"
+blended.orders,blended.conversion.rate,structural,definitional,1.0,"CASE WHEN SUM(NVL(SESSIONS, 0)) > 0 THEN SUM(NVL(TOTAL_ORDERS, 0)) * 100.0 / SUM(NVL(SESSIONS, 0)) END"
+blended.spend.sum,blended.cpa.avg,structural,identity,1.0,identity: cpa
+blended.conversions,blended.cpa.avg,structural,identity,1.0,identity: cpa
+blended.impressions,blended.ctr,structural,identity,1.0,identity: ctr
+blended.impressions,blended.frequency.avg,structural,definitional,1.0,case when reach > 0 then impressions * 1.0 / reach end
+blended.reach.sum,blended.frequency.avg,structural,definitional,1.0,case when reach > 0 then impressions * 1.0 / reach end
+blended.ltv.sum,blended.ltv_cac,structural,identity,1.0,identity: ltv_cac
+blended.ltv.sum,blended.ltv_cac.ratio,structural,identity,1.0,identity: ltv_cac
+blended.revenue,blended.mer,structural,definitional,1.0,"CASE WHEN SUM(NVL(m.SPEND, 0)) > 0 THEN NVL(f.MAGENTO_REVENUE, 0) / SUM(NVL(m.SPEND, 0)) END"
+blended.spend.sum,blended.mer,structural,definitional,1.0,"CASE WHEN SUM(NVL(m.SPEND, 0)) > 0 THEN NVL(f.MAGENTO_REVENUE, 0) / SUM(NVL(m.SPEND, 0)) END"
+blended.revenue,blended.new_customer_revenue,structural,definitional,1.0,"SUM(CASE WHEN new_customers > 0 THEN gross_revenue * (new_customers::FLOAT / NULLIF(unique_customers, 0)) ELSE 0 END)"
+blended.returning_customers,blended.repeat.rate,structural,identity,1.0,identity: repeat
+blended.returning_customers,blended.retention,structural,identity,1.0,identity: retention
+blended.revenue,blended.roas,structural,definitional,1.0,CASE WHEN total_ad_spend > 0 THEN net_revenue / total_ad_spend ELSE 0 END
+blended.ad_spend,blended.roas,structural,definitional,1.0,CASE WHEN total_ad_spend > 0 THEN net_revenue / total_ad_spend ELSE 0 END
+blended.conversion_value,blended.roas.avg,structural,definitional,1.0,case when spend > 0 then conversion_value / spend end
+blended.spend.sum,blended.roas.avg,structural,definitional,1.0,case when spend > 0 then conversion_value / spend end
+blended.revenue,blended.spend.sum,structural,definitional,1.0,-- Spend and revenue SUM(spend)
+blended.revenue,blended.yoy_growth,structural,definitional,1.0,CASE WHEN p.REVENUE > 0 THEN (c.REVENUE - p.REVENUE) / p.REVENUE * 100 END
+ecom.revenue,ecom.aov,structural,definitional,1.0,CASE WHEN SUM(TOTAL_ORDERS) > 0 THEN SUM(GROSS_REVENUE) / SUM(TOTAL_ORDERS) ELSE 0 END
+ecom.orders,ecom.aov,structural,definitional,1.0,CASE WHEN SUM(TOTAL_ORDERS) > 0 THEN SUM(GROSS_REVENUE) / SUM(TOTAL_ORDERS) ELSE 0 END
+ecom.orders,ecom.conversion.rate,structural,identity,1.0,identity: conversion
+ecom.customers,ecom.customers.sum,structural,definitional,1.0,SUM(NEW_CUSTOMERS)
+ecom.orders,ecom.orders_per_customer.avg,structural,definitional,1.0,"ROUND(AVG(CASE WHEN first_order_date <= :date_to AND last_order_date >= :date_from THEN total_orders END), 2)"
+ecom.orders,ecom.repeat.rate,structural,definitional,1.0,"ROUND(COUNT(CASE WHEN TOTAL_ORDERS >= 2 THEN 1 END)::FLOAT / NULLIF(COUNT(CASE WHEN TOTAL_ORDERS >= 1 THEN 1 END), 0) * "
+ecom.customers,ecom.retention,structural,identity,1.0,identity: retention
+google.conversions,google.cpa,structural,definitional,1.0,case when conversions > 0 then spend / conversions end
+google.spend,google.cpa,structural,definitional,1.0,case when conversions > 0 then spend / conversions end
+google.spend,google.cpv,structural,definitional,1.0,"CASE WHEN SUM(VIDEO_VIEWS) > 0 THEN ROUND(SUM(SPEND) / SUM(VIDEO_VIEWS), 4) ELSE 0 END"
+google.video_views,google.cpv,structural,definitional,1.0,"CASE WHEN SUM(VIDEO_VIEWS) > 0 THEN ROUND(SUM(SPEND) / SUM(VIDEO_VIEWS), 4) ELSE 0 END"
+google.spend,google.roas,structural,definitional,1.0,case when spend > 0 then conversions_value / spend end
+google.conversion_value,google.target_roas,structural,identity,1.0,identity: target_roas
+google.spend,google.target_roas,structural,identity,1.0,identity: target_roas
+google.impressions,google.view.rate,structural,definitional,1.0,"CASE WHEN SUM(IMPRESSIONS) > 0 THEN ROUND(SUM(VIDEO_VIEWS) * 100.0 / SUM(IMPRESSIONS), 2) ELSE 0 END"
+google.video_views,google.view.rate,structural,definitional,1.0,"CASE WHEN SUM(IMPRESSIONS) > 0 THEN ROUND(SUM(VIDEO_VIEWS) * 100.0 / SUM(IMPRESSIONS), 2) ELSE 0 END"
+klaviyo.emails_sent,klaviyo.bounce.rate,structural,identity,1.0,identity: bounce
+klaviyo.emails_sent,klaviyo.click.rate,structural,identity,1.0,identity: click
+klaviyo.emails_sent,klaviyo.open.rate,structural,identity,1.0,identity: open
+klaviyo.revenue,klaviyo.revenue_per_sms,structural,identity,1.0,identity: revenue_per_sms
+klaviyo.sms,klaviyo.revenue_per_sms,structural,identity,1.0,identity: revenue_per_sms
+klaviyo.emails_sent,klaviyo.unsubscribe.rate,structural,identity,1.0,identity: unsubscribe
+meta.reach,meta.cost_per_1k_reach,structural,definitional,1.0,"ROUND(SUM(SPEND) / NULLIF(SUM(REACH), 0) * 1000, 2)"
+meta.spend,meta.cost_per_1k_reach,structural,definitional,1.0,"ROUND(SUM(SPEND) / NULLIF(SUM(REACH), 0) * 1000, 2)"
+meta.clicks,meta.cpc,structural,definitional,1.0,case when clicks > 0 then spend / clicks end
+meta.spend,meta.cpc,structural,definitional,1.0,case when clicks > 0 then spend / clicks end
+meta.spend,meta.cpc.avg,structural,definitional,1.0,"ROUND(SUM(SPEND) / NULLIF(SUM(LINK_CLICKS), 0), 2)"
+meta.impressions,meta.cpm,structural,definitional,1.0,case when impressions > 0 then spend / impressions * 1000 end
+meta.spend,meta.cpm,structural,definitional,1.0,case when impressions > 0 then spend / impressions * 1000 end
+meta.impressions,meta.cpm.avg,structural,definitional,1.0,case when impressions > 0 then spend / impressions * 1000 end
+meta.spend,meta.cpm.avg,structural,definitional,1.0,case when impressions > 0 then spend / impressions * 1000 end
+meta.clicks,meta.ctr,structural,definitional,1.0,case when impressions > 0 then clicks * 100.0 / impressions end
+meta.impressions,meta.ctr,structural,definitional,1.0,case when impressions > 0 then clicks * 100.0 / impressions end
+meta.impressions,meta.ctr.avg,structural,definitional,1.0,"ROUND(SUM(LINK_CLICKS) * 100.0 / NULLIF(SUM(IMPRESSIONS), 0), 2)"
+meta.impressions,meta.frequency,structural,definitional,1.0,"ROUND(SUM(IMPRESSIONS) / NULLIF(SUM(REACH), 0), 2)"
+meta.reach,meta.frequency,structural,definitional,1.0,"ROUND(SUM(IMPRESSIONS) / NULLIF(SUM(REACH), 0), 2)"
+meta.frequency,meta.frequency.avg,structural,definitional,1.0,"ROUND(AVG(FREQUENCY), 2)"
+meta.impressions,meta.impressions.sum,structural,definitional,1.0,SUM(IMPRESSIONS)
+meta.reach,meta.reach.sum,structural,definitional,1.0,SUM(REACH)
+meta.spend,meta.roas,structural,definitional,1.0,case when spend > 0 then conversions_value / spend end
+meta.spend,meta.spend.sum,structural,definitional,1.0,SUM(SPEND)
+store.active.rate,store.active_customers,structural,definitional,1.0,-- Active: Last order within 90 days of end of range (health metric) COUNT(DISTINCT CASE WHEN last_order_date >= DATEADD
+store.health,store.active_customers,structural,definitional,1.0,-- Active: Last order within 90 days of end of range (health metric) COUNT(DISTINCT CASE WHEN last_order_date >= DATEADD
+store.revenue,store.aov,structural,definitional,1.0,"CASE WHEN SUM(NVL(TOTAL_ORDERS, 0)) > 0 THEN SUM(NVL(NET_REVENUE, 0)) / SUM(NVL(TOTAL_ORDERS, 0)) END"
+store.sessions,store.conversion,structural,identity,1.0,identity: conversion
+store.sessions,store.conversion.rate,structural,identity,1.0,identity: conversion
+store.health_score.avg,store.customers_with_scores,structural,definitional,1.0,COUNT(CASE WHEN h.HEALTH_SCORE IS NOT NULL THEN 1 END)
+store.units,store.items_per_order.avg,structural,identity,1.0,identity: items_per_order
+store.active.rate,store.ltv.avg,structural,definitional,1.0,-- Metrics for customers active in the period ROUND(AVG(CASE WHEN first_order_date <= :date_to AND last_order_date >= :d
+store.customers.sum,store.ltv.avg,structural,definitional,1.0,-- Metrics for customers active in the period ROUND(AVG(CASE WHEN first_order_date <= :date_to AND last_order_date >= :d
+store.ltv.avg,store.ltv_cac,structural,identity,1.0,identity: ltv_cac
+store.cac_current,store.ltv_cac,structural,identity,1.0,identity: ltv_cac
+store.ltv.avg,store.predicted_clv,structural,definitional,1.0,"ROUND(SUM(s.NET_LTV), 2)"
+store.returning_customers,store.repeat.rate,structural,identity,1.0,identity: repeat
+store.customers.sum,store.repeat.rate,structural,identity,1.0,identity: repeat
+store.returning_customers,store.retention,structural,identity,1.0,identity: retention
+store.customers.sum,store.retention,structural,identity,1.0,identity: retention
+store.returning_customers,store.retention.rate,structural,identity,1.0,identity: retention
+store.customers.sum,store.retention.rate,structural,identity,1.0,identity: retention
+store.ltv.avg,store.revenue.sum,structural,definitional,1.0,"ROUND(SUM(CASE WHEN first_order_date <= :date_to AND last_order_date >= :date_from THEN net_ltv ELSE 0 END), 2)"
+store.revenue,store.revenue_per_product.avg,structural,identity,1.0,identity: revenue_per_product
+store.units,store.revenue_per_product.avg,structural,identity,1.0,identity: revenue_per_product
+web.revenue,web.aov,structural,definitional,1.0,"SUM(NVL(REVENUE, 0)) / NULLIF(SUM(NVL(PURCHASES, 0)), 0)"
+web.sessions,web.conversion.rate,structural,definitional,1.0,"SUM(NVL(PURCHASES, 0)) * 100.0 / NULLIF(SUM(NVL(SESSIONS, 0)), 0)"
+web.revenue,web.rpu,structural,definitional,1.0,"SUM(NVL(REVENUE, 0)) / NULLIF(SUM(NVL(SESSIONS, 0)), 0)"
+web.sessions,web.rpu,structural,definitional,1.0,"SUM(NVL(REVENUE, 0)) / NULLIF(SUM(NVL(SESSIONS, 0)), 0)"

@@ -1,0 +1,1255 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Final ThoughtWire Knowledge Graph Schema - Codex</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #5f6d84;
+      --line: #dbe3ee;
+      --paper: #f6f8fb;
+      --card: #ffffff;
+      --green: #21745a;
+      --green-soft: #e9f7f1;
+      --blue: #2f5fb8;
+      --blue-soft: #edf3ff;
+      --amber: #8b640f;
+      --amber-soft: #fff7df;
+      --violet: #6049a3;
+      --violet-soft: #f2efff;
+      --red: #9d3030;
+      --red-soft: #fff0f0;
+      --shadow: 0 18px 42px rgba(23, 32, 51, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.58;
+    }
+
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    pre {
+      overflow-x: auto;
+      background: #121826;
+      color: #f8fafc;
+      border-radius: 8px;
+      padding: 16px;
+      line-height: 1.5;
+    }
+
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 270px minmax(0, 1fr);
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+      background: #111827;
+      color: #f8fafc;
+      padding: 26px 22px;
+    }
+
+    .brand {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.22;
+    }
+
+    .brand small {
+      display: block;
+      color: #aab6c8;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-top: 8px;
+    }
+
+    .nav {
+      display: grid;
+      gap: 8px;
+      margin-top: 28px;
+    }
+
+    .nav a {
+      color: #dbe4f2;
+      font-size: 14px;
+      padding: 8px 10px;
+      border-radius: 8px;
+    }
+
+    .nav a:hover {
+      background: rgba(255,255,255,0.08);
+      text-decoration: none;
+    }
+
+    .note {
+      margin-top: 28px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      border-radius: 8px;
+      padding: 14px;
+      color: #dbe4f2;
+      font-size: 13px;
+    }
+
+    .content {
+      max-width: 1180px;
+      width: 100%;
+      padding: 40px;
+    }
+
+    .section {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 28px;
+      margin: 26px 0;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, #ffffff 0%, #edf3ff 55%, #e9f7f1 100%);
+    }
+
+    .eyebrow {
+      color: var(--green);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    h1, h2, h3 {
+      line-height: 1.18;
+      margin: 0 0 12px;
+    }
+
+    h1 {
+      max-width: 920px;
+      font-size: clamp(36px, 5vw, 58px);
+      letter-spacing: 0;
+    }
+
+    h2 { font-size: 28px; }
+    h3 { font-size: 19px; margin-top: 20px; }
+    p { margin: 0 0 14px; }
+    .lede { max-width: 920px; color: #334155; font-size: 18px; }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      border: 1px solid var(--line);
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .axis-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-top: 20px;
+    }
+
+    .axis {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      background: #ffffff;
+    }
+
+    .axis strong { display: block; margin-bottom: 6px; }
+    .axis p { color: var(--muted); font-size: 14px; margin: 0; }
+
+    .axis.product { border-left: 5px solid var(--blue); background: var(--blue-soft); }
+    .axis.domain { border-left: 5px solid var(--green); background: var(--green-soft); }
+    .axis.platform { border-left: 5px solid var(--violet); background: var(--violet-soft); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+      margin: 16px 0 6px;
+    }
+
+    th, td {
+      text-align: left;
+      vertical-align: top;
+      border-bottom: 1px solid var(--line);
+      padding: 10px 12px;
+    }
+
+    th {
+      color: #334155;
+      background: #f8fafc;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .callout {
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--blue);
+      border-radius: 8px;
+      background: var(--blue-soft);
+      padding: 16px 18px;
+      margin: 16px 0;
+    }
+
+    .callout.red {
+      border-left-color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .callout.green {
+      border-left-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .callout.amber {
+      border-left-color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .kg-diagram-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #ffffff;
+      padding: 14px;
+      margin-top: 18px;
+    }
+
+    .kg-diagram {
+      min-width: 1080px;
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .kg-node {
+      fill: #ffffff;
+      stroke: #cbd5e1;
+      stroke-width: 2;
+      rx: 8;
+    }
+
+    .kg-node.core { fill: var(--blue-soft); stroke: #9bb8ef; }
+    .kg-node.gov { fill: var(--amber-soft); stroke: #d9b75e; }
+    .kg-node.role { fill: var(--violet-soft); stroke: #b8a9ee; }
+    .kg-node.lazy { fill: var(--green-soft); stroke: #8ccfb7; stroke-dasharray: 8 6; }
+
+    .kg-edge {
+      fill: none;
+      stroke: #64748b;
+      stroke-width: 2;
+      marker-end: url(#arrow);
+    }
+
+    .kg-edge.soft { stroke: #94a3b8; }
+    .kg-edge.lazy { stroke: var(--green); stroke-dasharray: 8 6; marker-end: url(#arrow-green); }
+    .kg-edge.role { stroke: var(--violet); marker-end: url(#arrow-violet); }
+    .kg-edge.gov { stroke: var(--amber); marker-end: url(#arrow-amber); }
+
+    .kg-label {
+      fill: #172033;
+      font-size: 14px;
+      font-weight: 800;
+      text-anchor: middle;
+    }
+
+    .kg-sub {
+      fill: #475569;
+      font-size: 11px;
+      text-anchor: middle;
+    }
+
+    .kg-edge-label {
+      fill: #334155;
+      font-size: 10px;
+      font-weight: 800;
+      text-anchor: middle;
+    }
+
+    .node-grid {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .node {
+      text-align: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 12px 8px;
+      font-weight: 800;
+      background: #ffffff;
+    }
+
+    .node.root { background: var(--amber-soft); border-color: #edd99f; }
+    .node.product { background: var(--blue-soft); border-color: #c7d8fb; }
+    .node.domain { background: var(--green-soft); border-color: #bfe5d6; }
+    .node.platform { background: var(--violet-soft); border-color: #d8cff7; }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    .step {
+      min-height: 116px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      background: #ffffff;
+    }
+
+    .step b {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--green);
+      color: #ffffff;
+      margin-bottom: 10px;
+      font-size: 13px;
+    }
+
+    .step span {
+      display: block;
+      font-weight: 800;
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 0;
+    }
+
+    ul, ol { padding-left: 22px; }
+    li { margin: 6px 0; }
+
+    @media (max-width: 980px) {
+      .layout { display: block; }
+      .sidebar { position: static; height: auto; }
+      .content { padding: 22px; }
+      .axis-grid, .node-grid, .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 640px) {
+      .section { padding: 20px; }
+      .axis-grid, .node-grid, .steps { grid-template-columns: 1fr; }
+      table { display: block; overflow-x: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <div class="sidebar">
+      <div class="brand">
+        ThoughtWire KG
+        <small>Final Schema Codex</small>
+      </div>
+      <div class="nav">
+        <a href="#decision">Decision</a>
+        <a href="#drawbacks">Drawbacks</a>
+        <a href="#business">Business</a>
+        <a href="#nodes">Nodes</a>
+        <a href="#data-detail">Data Detail</a>
+        <a href="#products">Products</a>
+        <a href="#domains">Domains</a>
+        <a href="#platforms">Platforms</a>
+        <a href="#metric">Metric</a>
+        <a href="#roles">Roles</a>
+        <a href="#edge-detail">Edge Detail</a>
+        <a href="#sources">Sources</a>
+        <a href="#example">Example</a>
+        <a href="#build">Build</a>
+        <a href="#acceptance">Acceptance</a>
+        <a href="#final-diagram">Final Diagram</a>
+      </div>
+      <div class="note">
+        Current scope is KG-only. Decision capsules, monitoring, learning, and execution runtime are deferred.
+      </div>
+    </div>
+
+    <div class="content">
+      <div class="section hero" id="decision">
+        <div class="eyebrow">Final KG direction</div>
+        <h1>Business-rooted graph with product, domain, and platform axes</h1>
+        <p class="lede">
+          The final schema replaces the flat six-label model with a KG-only graph that supports multiple intelligence products,
+          business decision domains, and source/action platforms under one business root.
+        </p>
+        <div class="callout green">
+          Claude comparison update: Codex remains canonical, with Claude's stronger field typing, master-config-free metric identity, defined-only governance, seniority/domain-branch RBAC, and rollup/decomposition edge semantics folded in.
+        </div>
+        <div class="callout">
+          Platform decision: keep platform/source fields on <code>Metric</code> always. Materialize <code>Platform</code> as a thin node when platform ownership, RBAC, freshness, outage, grouping, or future action routing needs traversal.
+        </div>
+        <div class="pill-row">
+          <span class="pill">Business</span>
+          <span class="pill">IntelligenceProduct</span>
+          <span class="pill">Domain</span>
+          <span class="pill">Platform (lazy)</span>
+          <span class="pill">Metric</span>
+          <span class="pill">Dashboard</span>
+          <span class="pill">UIComponent</span>
+          <span class="pill">Policy</span>
+          <span class="pill">Threshold</span>
+          <span class="pill">Role</span>
+        </div>
+        <div class="axis-grid">
+          <div class="axis product"><strong>Product axis</strong><p>Business -> IntelligenceProduct -> Dashboard -> UIComponent -> Metric.</p></div>
+          <div class="axis domain"><strong>Domain axis</strong><p>Business -> Domain -> Metric for ownership, governance, and decisions.</p></div>
+          <div class="axis platform"><strong>Platform axis</strong><p>Business -> Platform -> Metric only when platform traversal is materialized.</p></div>
+        </div>
+      </div>
+
+      <div class="section" id="drawbacks">
+        <h2>Drawbacks In The Previous Codex File</h2>
+        <table>
+          <thead><tr><th>Drawback</th><th>Why it matters</th></tr></thead>
+          <tbody>
+            <tr><td>Over-flattened product, domain, and platform</td><td>Agents need separate axes for product surfaces, decision ownership, and source/action systems.</td></tr>
+            <tr><td>No <code>Business</code> root</td><td>There was no home for global company context, defaults, north-star metrics, and business-wide policy.</td></tr>
+            <tr><td>Stale source dependency</td><td>Automated graph truth must not use old master-config surfaces.</td></tr>
+            <tr><td>Weak multiple-product mapping</td><td>Marketing IQ, Product IQ, Customer IQ, Creative IQ, and Decision Canvas must coexist cleanly.</td></tr>
+            <tr><td>Shallow role/social graph</td><td>Real authority needs seniority rank, reporting, escalation, explicit scope, and data-classification clearance.</td></tr>
+            <tr><td>Runtime concepts too early</td><td>The current build should focus on the KG before capsules, monitoring, and learning runtime.</td></tr>
+          </tbody>
+        </table>
+        <h3>Claude Learnings Folded In</h3>
+        <table>
+          <thead><tr><th>Claude contribution</th><th>Codex update</th></tr></thead>
+          <tbody>
+            <tr><td>Stronger field typing</td><td>Use <code>Field / Type / Required / Description</code> as the implementation contract.</td></tr>
+            <tr><td>Master-config-free metric identity</td><td>Use <code>metric_uid</code>, <code>canonical_id</code>, and <code>metric_id</code>.</td></tr>
+            <tr><td>Defined-only governance</td><td><code>Policy</code> and <code>Threshold</code> use <code>population_status = defined</code> in V1.</td></tr>
+            <tr><td>Seniority/domain-branch RBAC</td><td>Use <code>seniority_rank</code>, resource <code>min_level</code>, and <code>data_classification</code>.</td></tr>
+            <tr><td>Missing edge semantics</td><td>Add <code>ROLLS_UP_TO</code>, <code>DECOMPOSES_INTO</code>, <code>SHOWN_ON</code>, <code>ENFORCES_THRESHOLD</code>, and <code>INHERITS_FROM</code>.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="business">
+        <h2>Business Root</h2>
+        <p>
+          There is no <code>Tenant</code> node. Each business/client gets an isolated graph database.
+          The <code>Business</code> node is the root inside that database and is not a multi-tenant isolation mechanism.
+        </p>
+        <div class="callout amber">
+          <code>rare_seeds</code> is only pilot/client historical naming. It must not drive tenant architecture.
+        </div>
+        <table>
+          <thead><tr><th>Business field</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>business_id</code>, <code>business_name</code></td><td>Stable root identity and display name.</td></tr>
+            <tr><td><code>business_type</code>, <code>industry</code></td><td>Company classification.</td></tr>
+            <tr><td><code>primary_currency</code>, <code>timezone</code>, <code>fiscal_year_start_month</code></td><td>Global reporting defaults.</td></tr>
+            <tr><td><code>decision_risk_posture</code>, <code>default_data_classification</code>, <code>root_seniority_rank</code></td><td>Company-wide decision, access, and org-rank defaults.</td></tr>
+            <tr><td><code>strategic_intent_summary</code>, <code>north_star_metrics[]</code>, <code>operating_constraints[]</code></td><td>Business-wide context agents can use before traversal.</td></tr>
+          </tbody>
+        </table>
+        <h3>Detailed Business Data</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Required</th><th>Source</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>business_id</code></td><td>yes</td><td>bootstrap profile or arbitration writer</td><td>Stable root id inside the isolated graph database.</td></tr>
+            <tr><td><code>business_name</code></td><td>yes</td><td>reviewed business profile</td><td>Display name only; not tenant isolation.</td></tr>
+            <tr><td><code>business_type</code>, <code>industry</code></td><td>recommended</td><td>reviewed business profile</td><td>Used for defaults and context, not hardcoded behavior.</td></tr>
+            <tr><td><code>primary_currency</code>, <code>timezone</code></td><td>recommended</td><td>business/admin input</td><td>Default reporting currency and reporting windows.</td></tr>
+            <tr><td><code>default_data_classification</code>, <code>root_seniority_rank</code></td><td>yes/recommended</td><td>governance defaults</td><td>Default classification and top role rank for the org graph model.</td></tr>
+            <tr><td><code>strategic_intent_summary</code></td><td>recommended</td><td>leadership input</td><td>Short agent-readable summary of what the company optimizes for.</td></tr>
+            <tr><td><code>north_star_metrics[]</code></td><td>recommended</td><td>leadership/domain owner input</td><td>References metric ids or concepts after the metric catalog exists.</td></tr>
+            <tr><td><code>operating_constraints[]</code></td><td>recommended</td><td>leadership/domain owner input</td><td>Examples: cash, brand, inventory, service quality, compliance.</td></tr>
+            <tr><td><code>status</code>, <code>last_verified_at</code></td><td>yes/recommended</td><td>arbitration writer</td><td>Lifecycle and drift-check fields.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="nodes">
+        <h2>Core KG Nodes</h2>
+        <p>Mandatory V1 schema labels: <code>Business</code>, <code>Domain</code>, <code>IntelligenceProduct</code>, <code>Metric</code>, <code>Dashboard</code>, <code>UIComponent</code>, <code>Policy</code>, <code>Threshold</code>, and <code>Role</code>.</p>
+        <div class="node-grid">
+          <div class="node root">Business</div>
+          <div class="node product">IntelligenceProduct</div>
+          <div class="node domain">Domain</div>
+          <div class="node">Metric</div>
+          <div class="node">Dashboard</div>
+          <div class="node">UIComponent</div>
+          <div class="node">Policy</div>
+          <div class="node">Threshold</div>
+          <div class="node">Role</div>
+        </div>
+        <h3>Optional lazy supporting label</h3>
+        <p><code>Platform</code> is materialized only when platform traversal, ownership, RBAC, freshness, outage, or future action routing needs it. Platform/source data remains on <code>Metric</code> either way.</p>
+        <h3>KG-defined, implementation later</h3>
+        <p><code>Outcome</code>, <code>Tool</code>, <code>Action</code>, <code>InvestigationRule</code>, and <code>ApprovalRule</code> are schema-defined but can wait until the KG is stable.</p>
+        <h3>Deferred runtime layers</h3>
+        <p><code>Thoughtlet</code>, <code>DecisionCapsule</code>, <code>MonitoringContract</code>, <code>LearningCandidate</code>, <code>PromotedMemory</code>, <code>GraphVersion</code>, <code>EvidenceEvent</code>, <code>CausalRelation</code>, execution runtime, and Capsule Agent lifecycle are deferred.</p>
+      </div>
+
+      <div class="section" id="data-detail">
+        <h2>Detailed Data Model</h2>
+        <p>Every KG record should be explicit about identity, ownership, source, status, and refresh behavior. Edges are source of truth for traversal; denormalized arrays on <code>Metric</code> are fast-read caches.</p>
+        <table>
+          <thead><tr><th>Data area</th><th>Implementation standard</th></tr></thead>
+          <tbody>
+            <tr><td>Stable identity</td><td>Every node has a deterministic id that does not change when display names or routes change.</td></tr>
+            <tr><td>Source ownership</td><td>Nodes and relationships carry source metadata or are created by an arbitration writer that records source metadata externally.</td></tr>
+            <tr><td>Review state</td><td>Harvested or inferred records can be <code>proposed</code> or <code>needs_review</code>; only reviewed records become <code>active</code>.</td></tr>
+            <tr><td>Status over deletion</td><td>Missing or retired records become <code>deprecated</code>, <code>hidden</code>, <code>blocked</code>, or <code>archived</code>; ingestion must not delete them automatically.</td></tr>
+            <tr><td>Cached context</td><td>Metric arrays are rebuilt from graph edges. If an edge and a cache disagree, the edge wins.</td></tr>
+            <tr><td>Access classification</td><td>Sensitive resources must declare <code>data_classification</code> and <code>min_level</code>, or inherit them from product/domain/policy defaults.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Source Of Truth vs Metric Cache</h3>
+        <table>
+          <thead><tr><th>Question</th><th>Source of truth</th><th>Cached on Metric</th></tr></thead>
+          <tbody>
+            <tr><td>Products surfacing a metric</td><td><code>IntelligenceProduct -SURFACES_METRIC-> Metric</code> and dashboard/component paths</td><td><code>product_ids[]</code>, <code>product_names[]</code></td></tr>
+            <tr><td>Domains owning or governing a metric</td><td><code>Domain -OWNS|GOVERNS|CONTEXTUALIZES-> Metric</code></td><td><code>domain_ids[]</code>, <code>domain_names[]</code>, <code>domain_owner_role_keys[]</code></td></tr>
+            <tr><td>Platforms sourcing a metric</td><td><code>Platform -SOURCES-> Metric</code> when materialized; otherwise reviewed source metadata and source edge properties</td><td><code>platform_ids[]</code>, <code>platform_names[]</code>, <code>platform_types[]</code>, <code>primary_platform_id</code></td></tr>
+            <tr><td>Dashboards/components displaying a metric</td><td><code>Dashboard -CONTAINS_COMPONENT-> UIComponent -VISUALIZES-> Metric</code></td><td><code>dashboard_ids[]</code>, <code>component_ids[]</code></td></tr>
+          </tbody>
+        </table>
+
+        <h3>Canonical Node Field Types</h3>
+        <p>This is the field catalog to keep. It follows the Claude-style <code>Field / Type / Required / Description</code> structure, while retaining the Codex final architecture.</p>
+
+        <h3>Business Fields</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>business_id</code></td><td>string</td><td>yes</td><td>Stable root id inside one isolated graph database.</td></tr>
+            <tr><td><code>business_name</code></td><td>string</td><td>yes</td><td>Human display name.</td></tr>
+            <tr><td><code>business_type</code></td><td>enum</td><td>recommended</td><td>Business model: ecommerce, SaaS, marketplace, retail, services, or other.</td></tr>
+            <tr><td><code>industry</code>, <code>primary_currency</code>, <code>timezone</code></td><td>string</td><td>recommended</td><td>Business context and reporting defaults.</td></tr>
+            <tr><td><code>fiscal_year_start_month</code></td><td>int</td><td>optional</td><td>Fiscal calendar anchor from 1 to 12.</td></tr>
+            <tr><td><code>default_granularity</code></td><td>enum</td><td>recommended</td><td>Daily, weekly, monthly, or quarterly.</td></tr>
+            <tr><td><code>decision_risk_posture</code></td><td>enum</td><td>recommended</td><td>Conservative, balanced, or aggressive.</td></tr>
+            <tr><td><code>default_data_classification</code>, <code>root_seniority_rank</code></td><td>enum/int</td><td>yes/recommended</td><td>Default classification and top role rank.</td></tr>
+            <tr><td><code>strategic_intent_summary</code></td><td>string</td><td>recommended</td><td>Agent-readable company intent.</td></tr>
+            <tr><td><code>north_star_metrics[]</code>, <code>operating_constraints[]</code></td><td>string[]</td><td>recommended</td><td>Company-wide priority metrics and constraints.</td></tr>
+            <tr><td><code>status</code></td><td>enum</td><td>yes</td><td>Active, paused, or archived.</td></tr>
+            <tr><td><code>created_at</code>, <code>updated_at</code>, <code>last_verified_at</code></td><td>datetime</td><td>yes/optional</td><td>Audit and verification timestamps.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>IntelligenceProduct Fields</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>product_id</code>, <code>product_name</code></td><td>string</td><td>yes</td><td>Stable product identity and display name.</td></tr>
+            <tr><td><code>product_category</code></td><td>enum</td><td>yes</td><td>Analytics, decisioning, creative, operations, or external.</td></tr>
+            <tr><td><code>description</code></td><td>string</td><td>recommended</td><td>Product purpose for agents and admins.</td></tr>
+            <tr><td><code>route_prefixes[]</code>, <code>default_domain_ids[]</code></td><td>string[]</td><td>recommended</td><td>Routes and common domain mappings.</td></tr>
+            <tr><td><code>primary_domain_id</code></td><td>string/null</td><td>optional</td><td>Main domain when applicable.</td></tr>
+            <tr><td><code>owner_role_key</code></td><td>string</td><td>yes</td><td>Accountable product owner role.</td></tr>
+            <tr><td><code>default_data_classification</code>, <code>min_level</code></td><td>enum/int</td><td>yes</td><td>Default product classification and minimum seniority.</td></tr>
+            <tr><td><code>source_profile_ids[]</code></td><td>string[]</td><td>recommended</td><td>Source profiles that discovered or maintain the product.</td></tr>
+            <tr><td><code>status</code>, <code>created_at</code>, <code>updated_at</code>, <code>last_verified_at</code></td><td>enum/datetime</td><td>yes/optional</td><td>Lifecycle and audit fields.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Domain Fields</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>domain_id</code>, <code>domain_name</code></td><td>string</td><td>yes</td><td>Stable domain identity and display name.</td></tr>
+            <tr><td><code>domain_type</code></td><td>enum</td><td>yes</td><td>Business, technical, risk, data quality, or ML.</td></tr>
+            <tr><td><code>parent_domain_id</code></td><td>string/null</td><td>optional</td><td>Parent domain when a real hierarchy exists.</td></tr>
+            <tr><td><code>owner_role_key</code></td><td>string</td><td>yes</td><td>Accountable domain owner.</td></tr>
+            <tr><td><code>default_product_ids[]</code>, <code>default_platform_ids[]</code></td><td>string[]</td><td>recommended</td><td>Common product and platform mappings.</td></tr>
+            <tr><td><code>decision_scope_summary</code></td><td>string</td><td>yes</td><td>Decisions this domain owns or contextualizes.</td></tr>
+            <tr><td><code>approval_policy_summary</code></td><td>string</td><td>recommended</td><td>Human summary; machine rules live in Policy.</td></tr>
+            <tr><td><code>data_classification</code>, <code>min_level</code></td><td>enum/int</td><td>yes</td><td>Default classification and minimum seniority for the domain branch.</td></tr>
+            <tr><td><code>status</code>, <code>created_at</code>, <code>updated_at</code>, <code>last_verified_at</code></td><td>enum/datetime</td><td>yes/optional</td><td>Lifecycle and audit fields.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Platform Fields</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>platform_id</code>, <code>platform_name</code></td><td>string</td><td>yes</td><td>Stable platform identity and display name.</td></tr>
+            <tr><td><code>platform_type</code></td><td>enum</td><td>yes</td><td>Analytics, ads, CRM, ecommerce, warehouse, activation, support, finance, or other.</td></tr>
+            <tr><td><code>connector_id</code>, <code>connector_family</code></td><td>string/null</td><td>optional</td><td>Connector references when known.</td></tr>
+            <tr><td><code>owner_role_key</code></td><td>string</td><td>recommended</td><td>Role accountable for freshness and integration quality.</td></tr>
+            <tr><td><code>freshness_sla_hours</code></td><td>number/null</td><td>optional</td><td>Expected data freshness service level.</td></tr>
+            <tr><td><code>supports_actions</code></td><td>bool</td><td>yes</td><td>Future action eligibility only.</td></tr>
+            <tr><td><code>source_priority</code></td><td>int/null</td><td>optional</td><td>Priority for resolving duplicate source claims.</td></tr>
+            <tr><td><code>api_base_url_ref</code></td><td>string/null</td><td>optional</td><td>Safe API/connector reference; never a secret.</td></tr>
+            <tr><td><code>data_quality_status</code></td><td>enum</td><td>recommended</td><td>Good, warning, degraded, or unknown.</td></tr>
+            <tr><td><code>last_successful_sync_at</code></td><td>datetime/null</td><td>optional</td><td>Last successful ingestion or connector sync.</td></tr>
+            <tr><td><code>status</code>, <code>created_at</code>, <code>updated_at</code></td><td>enum/datetime</td><td>yes</td><td>Lifecycle and audit fields.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Metric Fields</h3>
+        <table>
+          <thead><tr><th>Field group</th><th>Type</th><th>Req</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>metric_uid</code>, <code>canonical_id</code>, <code>metric_id</code>, <code>display_name</code></td><td>string</td><td>yes</td><td>Neo4j identity, cross-source business id, API/local slug, and display name.</td></tr>
+            <tr><td><code>description</code>, <code>concept_key</code>, <code>concept_name</code>, <code>metric_base</code>, <code>category</code></td><td>string/enum/null</td><td>recommended</td><td>Semantic meaning and business grouping.</td></tr>
+            <tr><td><code>synonyms[]</code>, <code>aliases[]</code></td><td>string[]</td><td>optional/recommended</td><td>Resolution aliases, endpoint labels, old names, and chart names.</td></tr>
+            <tr><td><code>business_id</code>, <code>scope_key</code>, <code>scope_level</code>, <code>measurement_type</code></td><td>string/enum</td><td>yes/recommended</td><td>Business root cache, source scope, scope level, and production type.</td></tr>
+            <tr><td><code>product_ids[]</code>, <code>product_names[]</code>, <code>domain_ids[]</code>, <code>domain_names[]</code>, <code>domain_owner_role_keys[]</code></td><td>string[]</td><td>recommended/optional</td><td>Cached product and domain context rebuilt from edges.</td></tr>
+            <tr><td><code>platform_ids[]</code>, <code>platform_names[]</code>, <code>platform_types[]</code>, <code>primary_platform_id</code></td><td>string[]/string/null</td><td>recommended/optional</td><td>Cached platform context; also works when Platform nodes are not materialized yet.</td></tr>
+            <tr><td><code>source</code>, <code>source_set[]</code>, <code>connector_ids[]</code>, <code>mart_sources[]</code>, <code>primary_grain</code>, <code>grain_source</code>, <code>dimensions[]</code>, <code>availability</code>, <code>n_periods</code></td><td>enum/string[]/int/null</td><td>optional/recommended</td><td>Lineage, connector, grain, and availability data. <code>source_set[]</code> is a free string list, not a strict enum.</td></tr>
+            <tr><td><code>dashboard_ids[]</code>, <code>source_dashboards[]</code>, <code>component_ids[]</code></td><td>string[]</td><td>recommended/optional</td><td>Cached and raw surfaces rebuilt from dashboard/component edges and source metadata.</td></tr>
+            <tr><td><code>card_endpoint_path</code>, <code>series_endpoint_path</code>, <code>endpoint_paths[]</code></td><td>string/null/string[]</td><td>optional</td><td>Non-excluded endpoint references; no Endpoint node in current scope.</td></tr>
+            <tr><td><code>formula_text</code>, <code>formula_explanation</code>, <code>formula_status</code></td><td>string/null/enum</td><td>optional/yes</td><td>Formula and derivation trust state.</td></tr>
+            <tr><td><code>value_format</code>, <code>unit_family</code>, <code>granularity</code>, <code>aggregation</code>, <code>directionality</code></td><td>enum</td><td>recommended/optional</td><td>Interpretation, formatting, and aggregation behavior.</td></tr>
+            <tr><td><code>causal_role</code>, <code>causal_role_confidence</code></td><td>enum/null</td><td>recommended/optional</td><td>Causal classification and categorical confidence.</td></tr>
+            <tr><td><code>is_model_output</code>, <code>is_derived</code></td><td>bool</td><td>recommended</td><td>Normalize any yes/no source values to booleans.</td></tr>
+            <tr><td><code>data_classification</code>, <code>min_level</code>, <code>owner_role_id</code>, <code>is_kpi</code>, <code>keep</code>, <code>confidence</code>, <code>data_quality_status</code></td><td>enum/int/string/bool/number</td><td>yes/recommended</td><td>RBAC classification, seniority floor, ownership, curation, confidence, and quality status.</td></tr>
+            <tr><td><code>platform_data_quality_json</code>, <code>data_freshness_by_platform_json</code></td><td>json</td><td>optional</td><td>Per-platform cached quality and freshness maps.</td></tr>
+            <tr><td><code>status</code>, <code>created_at</code>, <code>updated_at</code>, <code>last_verified_at</code></td><td>enum/datetime</td><td>yes/optional</td><td>Lifecycle and audit fields.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Dashboard Fields</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>dashboard_id</code>, <code>display_name</code></td><td>string</td><td>yes</td><td>Stable dashboard identity and name.</td></tr>
+            <tr><td><code>product_id</code></td><td>string</td><td>yes</td><td>Owning intelligence product.</td></tr>
+            <tr><td><code>domain_ids[]</code></td><td>string[]</td><td>recommended</td><td>Domains represented on the dashboard.</td></tr>
+            <tr><td><code>route_path</code>, <code>description</code>, <code>owner_role_key</code></td><td>string/null</td><td>optional/recommended</td><td>Navigation, purpose, and owner role.</td></tr>
+            <tr><td><code>dashboard_type</code></td><td>enum</td><td>optional</td><td>Overview, deep dive, operations, executive, review, ML, or unknown.</td></tr>
+            <tr><td><code>default_endpoint_path</code>, <code>metadata_endpoint_path</code></td><td>string/null</td><td>optional</td><td>Non-excluded dashboard endpoints.</td></tr>
+            <tr><td><code>data_classification</code>, <code>min_level</code></td><td>enum/int</td><td>yes</td><td>Dashboard classification and minimum seniority.</td></tr>
+            <tr><td><code>status</code>, <code>created_at</code>, <code>updated_at</code></td><td>enum/datetime</td><td>yes</td><td>Lifecycle and audit fields.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>UIComponent Fields</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Type</th><th>Req</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>component_id</code>, <code>canonical_id</code>, <code>dashboard_id</code>, <code>title</code></td><td>string</td><td>yes</td><td>Stable component identity, parent dashboard, and rendered title.</td></tr>
+            <tr><td><code>chart_id</code></td><td>string/null</td><td>recommended</td><td>Chart id when available.</td></tr>
+            <tr><td><code>component_type</code></td><td>enum</td><td>yes</td><td>Chart, KPI card, table, narrative, or alert panel.</td></tr>
+            <tr><td><code>chart_type</code></td><td>enum/null</td><td>optional</td><td>Line, bar, pie, table, sparkline, scatter, treemap, gauge, funnel, etc.</td></tr>
+            <tr><td><code>query_endpoint_path</code></td><td>string/null</td><td>optional</td><td>Non-excluded component endpoint.</td></tr>
+            <tr><td><code>formula_text</code>, <code>formula_explanation</code></td><td>string/null</td><td>recommended</td><td>Component formula and explanation.</td></tr>
+            <tr><td><code>how_to_read[]</code>, <code>decisions_answered[]</code>, <code>metric_ids[]</code></td><td>string[]</td><td>recommended</td><td>Interpretation help, questions answered, and cached metric ids.</td></tr>
+            <tr><td><code>narration_text</code>, <code>audio_file</code></td><td>string/null</td><td>optional</td><td>Narrative and audio assets when available.</td></tr>
+            <tr><td><code>data_classification</code>, <code>min_level</code>, <code>status</code>, <code>created_at</code>, <code>updated_at</code></td><td>enum/int/datetime</td><td>yes</td><td>Access, lifecycle, and audit fields.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Policy, Threshold, Role Fields</h3>
+        <table>
+          <thead><tr><th>Node</th><th>Key fields and types</th><th>Description</th></tr></thead>
+          <tbody>
+            <tr><td><code>Policy</code></td><td><code>policy_id:string</code>, <code>policy_name:string</code>, <code>policy_type:enum</code>, <code>description:string/null</code>, <code>applies_to_kind:enum</code>, <code>condition_json:json</code>, <code>effect_json:json</code>, <code>severity:enum</code>, <code>priority:int</code>, <code>owner_role_key:string</code>, <code>approval_required:bool</code>, <code>population_status:enum</code>, <code>review_state:enum</code>, <code>status:enum</code></td><td>Defined-only V1 governance shell; instances populate later from trusted non-master-config sources.</td></tr>
+            <tr><td><code>Threshold</code></td><td><code>threshold_id:string</code>, <code>metric_id:string</code>, <code>threshold_type:enum</code>, <code>operator:enum</code>, <code>warning_value:number/null</code>, <code>critical_value:number/null</code>, <code>target_value:number/null</code>, <code>green_value:string/null</code>, <code>yellow_value:string/null</code>, <code>red_value:string/null</code>, <code>avg_val:number/null</code>, <code>stddev_val:number/null</code>, <code>lower_2sigma:number/null</code>, <code>upper_2sigma:number/null</code>, <code>population_status:enum</code></td><td>Defined-only V1 threshold shell with raw bands and normalized/statistical fields.</td></tr>
+            <tr><td><code>Role</code></td><td><code>role_key:string</code>, <code>display_name:string</code>, <code>role_type:enum</code>, <code>seniority_rank:int</code>, <code>business_function:string</code>, <code>default_product_ids[]:string[]</code>, <code>default_domain_ids[]:string[]</code>, <code>default_platform_ids[]:string[]</code>, <code>max_data_classification:enum</code>, <code>can_manage_rbac:bool</code>, <code>can_create_policy:bool</code>, <code>can_create_threshold:bool</code>, <code>agent_context_limit:int/null</code>, <code>redaction_policy_json:json</code>, <code>is_engine_generated:bool</code>, <code>status:enum</code></td><td>Authority, access, approval, escalation, and social-graph role. Seniority is not automatic visibility.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>IntelligenceProduct Detail</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Required</th><th>Source</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>product_id</code></td><td>yes</td><td>reviewed product catalog or app route metadata</td><td>Stable slugs such as <code>marketing_iq</code>, not display names.</td></tr>
+            <tr><td><code>product_name</code></td><td>yes</td><td>product catalog or reviewed config</td><td>Example: Marketing IQ, Product IQ, Customer IQ.</td></tr>
+            <tr><td><code>product_category</code></td><td>yes</td><td>reviewed product catalog</td><td>High-level grouping, not authorization by itself.</td></tr>
+            <tr><td><code>route_prefixes[]</code></td><td>recommended</td><td>current app route metadata</td><td>Maps surfaces without using excluded master-config.</td></tr>
+            <tr><td><code>default_domain_ids[]</code>, <code>primary_domain_id</code></td><td>recommended/optional</td><td>reviewed mapping</td><td>Initial domain linkage; explicit domain edges still win.</td></tr>
+            <tr><td><code>owner_role_key</code>, <code>default_data_classification</code>, <code>min_level</code></td><td>yes</td><td>role catalog and governance defaults</td><td>Accountability, classification default, and minimum seniority floor.</td></tr>
+            <tr><td><code>source_profile_ids[]</code>, <code>last_verified_at</code></td><td>recommended</td><td>ingestion framework/arbitration writer</td><td>Supports drift and coverage reports.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Domain Detail</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Required</th><th>Source</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>domain_id</code>, <code>domain_name</code></td><td>yes</td><td>reviewed domain taxonomy</td><td>Examples: marketing, finance, operations, service, product, inventory, customer, risk.</td></tr>
+            <tr><td><code>domain_type</code></td><td>yes</td><td>reviewed taxonomy</td><td>Business, technical, risk, data quality, or ML.</td></tr>
+            <tr><td><code>parent_domain_id</code></td><td>optional</td><td>reviewed hierarchy</td><td>Use only when hierarchy is real; do not force every domain into a tree.</td></tr>
+            <tr><td><code>owner_role_key</code></td><td>yes</td><td>role catalog</td><td>Default accountability owner.</td></tr>
+            <tr><td><code>default_product_ids[]</code>, <code>default_platform_ids[]</code></td><td>recommended</td><td>reviewed mapping and connector catalog</td><td>Common products/platforms associated with the domain.</td></tr>
+            <tr><td><code>decision_scope_summary</code></td><td>yes</td><td>domain owner input</td><td>Defines what decisions this domain can own.</td></tr>
+            <tr><td><code>approval_policy_summary</code>, <code>data_classification</code>, <code>min_level</code></td><td>recommended/yes</td><td>governance input</td><td>Human summary, default classification, and minimum seniority floor; policy nodes hold machine rules.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Platform Detail</h3>
+        <table>
+          <thead><tr><th>Field</th><th>Required</th><th>Source</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>platform_id</code>, <code>platform_name</code></td><td>yes</td><td>connector/platform manifest or reviewed catalog</td><td>Stable ids such as <code>ga4</code>, <code>google_ads</code>, <code>klaviyo</code>.</td></tr>
+            <tr><td><code>platform_type</code></td><td>yes</td><td>manifest or reviewed catalog</td><td>Analytics, ads, CRM, ecommerce, warehouse, activation, support, or finance.</td></tr>
+            <tr><td><code>connector_id</code>, <code>connector_family</code></td><td>recommended</td><td>connector manifest</td><td>Runtime connector references where available.</td></tr>
+            <tr><td><code>owner_role_key</code></td><td>yes</td><td>role catalog</td><td>Operational owner for freshness, quality, and integration issues.</td></tr>
+            <tr><td><code>freshness_sla_hours</code>, <code>data_quality_status</code></td><td>recommended</td><td>connector manifest and ingestion jobs</td><td>Enables stale data and quality warnings.</td></tr>
+            <tr><td><code>supports_actions</code></td><td>yes</td><td>manifest or reviewed catalog</td><td>Future action eligibility only; no execution runtime now.</td></tr>
+            <tr><td><code>source_priority</code></td><td>recommended</td><td>reviewed source policy</td><td>Helps choose canonical source for duplicate concepts.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Metric Detail</h3>
+        <table>
+          <thead><tr><th>Group</th><th>Fields</th><th>Required</th><th>Source/notes</th></tr></thead>
+          <tbody>
+            <tr><td>Identity</td><td><code>metric_uid</code>, <code>canonical_id</code>, <code>metric_id</code>, <code>display_name</code>, <code>concept_key</code>, <code>aliases[]</code></td><td>yes/recommended</td><td><code>metric_uid</code> is Neo4j identity, <code>canonical_id</code> is cross-source business identity, and <code>metric_id</code> is the API/local/dashboard slug.</td></tr>
+            <tr><td>Business/product/domain cache</td><td><code>business_id</code>, <code>product_ids[]</code>, <code>product_names[]</code>, <code>domain_ids[]</code>, <code>domain_names[]</code>, <code>domain_owner_role_keys[]</code></td><td>yes/recommended</td><td>Rebuilt from root, product, and domain edges.</td></tr>
+            <tr><td>Platform/source cache</td><td><code>platform_ids[]</code>, <code>platform_names[]</code>, <code>platform_types[]</code>, <code>primary_platform_id</code>, <code>connector_ids[]</code>, <code>source_set[]</code>, <code>mart_sources[]</code></td><td>recommended</td><td>Rebuilt from optional platform edges, source metadata, connector manifests, and warehouse lineage.</td></tr>
+            <tr><td>Scope/grain</td><td><code>scope_key</code>, <code>scope_level</code>, <code>measurement_type</code>, <code>primary_grain</code>, <code>grain_source</code>, <code>dimensions[]</code>, <code>availability</code>, <code>n_periods</code>, <code>source_dashboards[]</code></td><td>recommended/optional</td><td>Claude fields retained for source-free metric grouping, decomposition, and coverage reporting.</td></tr>
+            <tr><td>Semantics</td><td><code>description</code>, <code>formula_text</code>, <code>formula_status</code>, <code>value_format</code>, <code>granularity</code>, <code>directionality</code></td><td>recommended/yes</td><td>Formula status is required so agents know whether derivation is explicit, parsed, unknown, or needs review.</td></tr>
+            <tr><td>Reasoning/governance</td><td><code>causal_role</code>, <code>data_classification</code>, <code>min_level</code>, <code>owner_role_id</code>, <code>is_kpi</code>, <code>keep</code>, <code>confidence</code></td><td>recommended/yes</td><td>Supports causal traversal, RBAC, lifecycle filtering, and confidence-aware reasoning.</td></tr>
+            <tr><td>Trust/lifecycle</td><td><code>data_quality_status</code>, <code>platform_data_quality_json</code>, <code>data_freshness_by_platform_json</code>, <code>status</code>, <code>last_verified_at</code></td><td>recommended/yes</td><td>Quality, freshness, lifecycle, and drift reporting.</td></tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          Metric identity is three-part: <code>metric_uid</code> is the Neo4j identity, <code>canonical_id</code> is the cross-source business identity, and <code>metric_id</code> is the API/local/dashboard slug. Do not use the prior name <code>canonical_key</code> in the final contract.
+        </div>
+
+        <h3>Dashboard And UIComponent Detail</h3>
+        <table>
+          <thead><tr><th>Node</th><th>Required fields</th><th>Recommended fields</th><th>Allowed sources</th></tr></thead>
+          <tbody>
+            <tr><td><code>Dashboard</code></td><td><code>dashboard_id</code>, <code>display_name</code>, <code>product_id</code>, <code>data_classification</code>, <code>min_level</code>, <code>status</code></td><td><code>domain_ids[]</code>, <code>route_path</code>, <code>dashboard_type</code>, <code>owner_role_key</code></td><td>Live route metadata, chart registry, live non-master dashboard metadata, reviewed manual config.</td></tr>
+            <tr><td><code>UIComponent</code></td><td><code>component_id</code>, <code>canonical_id</code>, <code>dashboard_id</code>, <code>title</code>, <code>component_type</code>, <code>data_classification</code>, <code>min_level</code>, <code>status</code></td><td><code>chart_id</code>, <code>formula_text</code>, <code>formula_explanation</code>, <code>how_to_read[]</code>, <code>decisions_answered[]</code>, <code>metric_ids[]</code></td><td>Chart registry, live dashboard metadata, reviewed manual config.</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Policy, Threshold, Role Detail</h3>
+        <table>
+          <thead><tr><th>Node</th><th>Required fields</th><th>Recommended fields</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>Policy</code></td><td><code>policy_id</code>, <code>policy_name</code>, <code>policy_type</code>, <code>applies_to_kind</code>, <code>owner_role_key</code>, <code>population_status</code>, <code>review_state</code></td><td><code>condition_json</code>, <code>effect_json</code>, <code>severity</code>, <code>priority</code>, <code>approval_required</code></td><td>Defined-only V1 governance shell; no instances are harvested from <code>master-config</code>.</td></tr>
+            <tr><td><code>Threshold</code></td><td><code>threshold_id</code>, <code>metric_id</code>, <code>threshold_type</code>, <code>operator</code>, <code>owner_role_key</code>, <code>population_status</code>, <code>review_state</code></td><td><code>warning_value</code>, <code>critical_value</code>, <code>target_value</code>, <code>green_value</code>, <code>yellow_value</code>, <code>red_value</code>, <code>avg_val</code>, <code>stddev_val</code>, <code>lower_2sigma</code>, <code>upper_2sigma</code></td><td>Defined-only V1 threshold shell with raw bands plus normalized/statistical fields.</td></tr>
+            <tr><td><code>Role</code></td><td><code>role_key</code>, <code>display_name</code>, <code>role_type</code>, <code>seniority_rank</code>, <code>max_data_classification</code>, <code>status</code></td><td><code>business_function</code>, <code>default_product_ids[]</code>, <code>default_domain_ids[]</code>, <code>default_platform_ids[]</code>, <code>can_manage_rbac</code>, <code>redaction_policy_json</code>, <code>is_engine_generated</code></td><td>Higher seniority is authority, not automatic visibility.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="products">
+        <h2>Multiple Intelligence Products</h2>
+        <p>One <code>Business</code> can have many <code>IntelligenceProduct</code> nodes. A metric should not be duplicated just because it appears in more than one product.</p>
+        <pre><code>(:Business)-[:HAS_PRODUCT]->(:IntelligenceProduct {product_id: "marketing_iq"})
+(:Business)-[:HAS_PRODUCT]->(:IntelligenceProduct {product_id: "product_iq"})
+(:Business)-[:HAS_PRODUCT]->(:IntelligenceProduct {product_id: "customer_iq"})
+
+(:IntelligenceProduct)-[:CONTAINS_DASHBOARD]->(:Dashboard)
+(:IntelligenceProduct)-[:SURFACES_METRIC]->(:Metric)</code></pre>
+      </div>
+
+      <div class="section" id="domains">
+        <h2>Domain Axis</h2>
+        <p><code>Domain</code> is first-class because decisions, owners, approval paths, and investigation rules are usually domain-led.</p>
+        <pre><code>(:Business)-[:HAS_DOMAIN]->(:Domain)
+(:Domain)-[:PARENT_OF]->(:Domain)
+(:Domain)-[:CONTEXTUALIZES]->(:Metric)
+(:Domain)-[:GOVERNS]->(:Metric)
+(:Domain)-[:OWNS]->(:Metric)</code></pre>
+      </div>
+
+      <div class="section" id="platforms">
+        <h2>Platform Axis</h2>
+        <p>
+          Platform/source data always lives on <code>Metric</code> as fast-read context. The <code>Platform</code> node is a thin, lazily materialized traversal node for platform ownership, RBAC, freshness, outage, grouping, and future action routing.
+        </p>
+        <div class="callout amber">
+          If the first ingestion pass only needs lineage and filtering, keep platform data in <code>Metric.platform_ids[]</code>, <code>Metric.source_set[]</code>, <code>Metric.connector_ids[]</code>, and <code>Metric.mart_sources[]</code>. Materialize <code>Platform</code> once platform-level traversal is needed.
+        </div>
+        <pre><code>(:Business)-[:USES_PLATFORM]->(:Platform)
+(:Platform)-[:SOURCES]->(:Metric)
+(:Platform)-[:ACTIVATES]->(:Metric)
+(:Role)-[:CAN_ACCESS_PLATFORM]->(:Platform)</code></pre>
+        <table>
+          <thead><tr><th>Metric platform cache field</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>platform_ids[]</code>, <code>platform_names[]</code>, <code>platform_types[]</code></td><td>Fast source/action context.</td></tr>
+            <tr><td><code>primary_platform_id</code></td><td>Main platform when one dominates.</td></tr>
+            <tr><td><code>connector_ids[]</code>, <code>source_set[]</code>, <code>mart_sources[]</code></td><td>Connector and warehouse lineage.</td></tr>
+            <tr><td><code>platform_data_quality_json</code>, <code>data_freshness_by_platform_json</code></td><td>Per-platform quality and freshness state.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="metric">
+        <h2>Metric Node</h2>
+        <p><code>Metric</code> is canonical and connects to products, domains, platforms, surfaces, policies, thresholds, roles, and causal metric edges.</p>
+        <table>
+          <thead><tr><th>Field group</th><th>Fields</th></tr></thead>
+          <tbody>
+            <tr><td>Identity</td><td><code>metric_uid</code>, <code>canonical_id</code>, <code>metric_id</code>, <code>display_name</code>, <code>concept_key</code>, <code>aliases[]</code></td></tr>
+            <tr><td>Business/product/domain cache</td><td><code>business_id</code>, <code>product_ids[]</code>, <code>product_names[]</code>, <code>domain_ids[]</code>, <code>domain_names[]</code>, <code>domain_owner_role_keys[]</code></td></tr>
+            <tr><td>Platform cache</td><td><code>platform_ids[]</code>, <code>platform_names[]</code>, <code>platform_types[]</code>, <code>primary_platform_id</code></td></tr>
+            <tr><td>Surface cache</td><td><code>dashboard_ids[]</code>, <code>component_ids[]</code>, <code>source_dashboards[]</code></td></tr>
+            <tr><td>Meaning</td><td><code>formula_text</code>, <code>formula_status</code>, <code>value_format</code>, <code>granularity</code>, <code>directionality</code>, <code>causal_role</code>, <code>scope_key</code>, <code>scope_level</code>, <code>measurement_type</code>, <code>primary_grain</code>, <code>dimensions[]</code></td></tr>
+            <tr><td>Trust</td><td><code>data_classification</code>, <code>min_level</code>, <code>data_quality_status</code>, <code>platform_data_quality_json</code>, <code>data_freshness_by_platform_json</code>, <code>confidence</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="roles">
+        <h2>Role And Social Graph</h2>
+        <p>Access requires seniority clearance, domain branch or explicit cross-grant, data classification clearance, and no explicit deny.</p>
+        <pre><code>access_allowed =
+  role.seniority_rank >= resource.min_level
+  AND (resource is in the role's domain branch OR an explicit cross-grant applies)
+  AND role.max_data_classification allows resource.data_classification
+  AND no explicit deny edge applies</code></pre>
+        <p>The Org Graph Engine can generate proposed role hierarchy and domain-branch edges, but it is planning infrastructure for schema/RBAC population, not a decision runtime being implemented now.</p>
+        <table>
+          <thead><tr><th>Role/social edge</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>REPORTS_TO</code></td><td>Org/social reporting path.</td></tr>
+            <tr><td><code>INHERITS_FROM</code></td><td>Permission inheritance between roles; kept distinct from org reporting.</td></tr>
+            <tr><td><code>ESCALATES_TO</code></td><td>Approval or incident escalation path.</td></tr>
+            <tr><td><code>CAN_DELEGATE_TO</code></td><td>Temporary or scoped delegation.</td></tr>
+            <tr><td><code>CAN_ACCESS_PRODUCT</code>, <code>CAN_ACCESS_DOMAIN</code>, <code>CAN_ACCESS_PLATFORM</code></td><td>Explicit scope grants.</td></tr>
+            <tr><td><code>CAN_VIEW_*</code>, <code>CAN_EDIT_*</code>, <code>CAN_APPROVE_CHANGE</code></td><td>Concrete permissions.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="edge-detail">
+        <h2>Detailed Relationship Model</h2>
+        <p>Relationship properties matter because they explain why traversal is valid, where it came from, and whether it is approved for agent use.</p>
+        <h3>Common Relationship Properties</h3>
+        <table>
+          <thead><tr><th>Property</th><th>Applies to</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>source_kind</code></td><td>harvested edges</td><td><code>live_openapi</code>, <code>chart_registry</code>, <code>route_metadata</code>, <code>connector_manifest</code>, <code>manual_review</code>, <code>statistical_proposal</code>, or <code>llm_proposal</code>.</td></tr>
+            <tr><td><code>source_ref</code></td><td>harvested edges</td><td>Path, route, manifest id, proposal id, or review ticket.</td></tr>
+            <tr><td><code>source_confidence</code></td><td>inferred edges</td><td>Parser or harvester confidence before human review.</td></tr>
+            <tr><td><code>review_state</code></td><td>important edges</td><td><code>proposed</code>, <code>approved</code>, <code>rejected</code>, <code>needs_review</code>, or <code>deprecated</code>.</td></tr>
+            <tr><td><code>created_by</code>, <code>created_at</code>, <code>updated_at</code></td><td>important edges</td><td>Audit ownership and timestamps.</td></tr>
+            <tr><td><code>valid_from</code>, <code>valid_to</code></td><td>policy/access/causal edges</td><td>Effective dating where needed.</td></tr>
+          </tbody>
+        </table>
+        <h3>Traversal And Source Edges</h3>
+        <table>
+          <thead><tr><th>Edge</th><th>Required properties</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr><td><code>HAS_PRODUCT</code>, <code>HAS_DOMAIN</code>, <code>USES_PLATFORM</code></td><td><code>review_state</code>, <code>created_at</code></td><td>Connect the business root to the three primary axes.</td></tr>
+            <tr><td><code>CONTAINS_DASHBOARD</code></td><td><code>display_order</code>, <code>review_state</code>, <code>created_at</code></td><td>Product navigation structure.</td></tr>
+            <tr><td><code>CONTAINS_COMPONENT</code></td><td><code>layout_order</code>, <code>section_key</code>, <code>review_state</code>, <code>created_at</code></td><td>Dashboard composition.</td></tr>
+            <tr><td><code>VISUALIZES</code></td><td><code>visual_role</code>, <code>formula_ref</code>, <code>review_state</code>, <code>created_at</code></td><td><code>visual_role</code> can be primary, secondary, comparison, or filter.</td></tr>
+            <tr><td><code>SHOWN_ON</code></td><td><code>surface_kind</code>, <code>surface_id</code>, <code>review_state</code>, <code>created_at</code></td><td>Direct metric-to-dashboard/component surface shortcut when traversal needs a fast surface answer.</td></tr>
+            <tr><td><code>ENFORCES_THRESHOLD</code></td><td><code>review_state</code>, <code>created_at</code></td><td>Connects a policy to a threshold it enforces.</td></tr>
+            <tr><td><code>CONTEXTUALIZES</code>, <code>GOVERNS</code>, <code>OWNS</code></td><td><code>context_type</code> or <code>governance_type</code>, <code>ownership_type</code>, <code>review_state</code></td><td>Domain and role accountability relationships.</td></tr>
+            <tr><td><code>SOURCES</code></td><td><code>source_metric_name</code>, <code>source_endpoint_ref</code>, <code>lineage_ref</code>, <code>freshness_sla_hours</code>, <code>review_state</code></td><td>Source detail belongs on the platform-to-metric edge.</td></tr>
+            <tr><td><code>ACTIVATES</code></td><td><code>activation_mode</code>, <code>requires_approval</code>, <code>review_state</code></td><td>Future action eligibility only.</td></tr>
+            <tr><td><code>ROLLS_UP_TO</code></td><td><code>rollup_method</code>, <code>weight</code>, <code>review_state</code></td><td>Metric aggregation hierarchy such as campaign revenue rolling up to total revenue.</td></tr>
+            <tr><td><code>DECOMPOSES_INTO</code></td><td><code>decomposition_type</code>, <code>review_state</code></td><td>Metric breakdown relationship such as revenue decomposing into orders and AOV.</td></tr>
+            <tr><td><code>INFLUENCES</code>, <code>CAUSES</code>, <code>CORRELATES_WITH</code></td><td><code>confidence</code>, <code>evidence_mass</code>, <code>lag_min_hours</code>, <code>lag_max_hours</code>, <code>mechanism</code>, <code>review_state</code></td><td>Causal confidence is evidence-backed using a Beta fold: <code>confidence = alpha / (alpha + beta)</code>; correlation is association only.</td></tr>
+          </tbody>
+        </table>
+        <h3>Permission Edges</h3>
+        <table>
+          <thead><tr><th>Edge family</th><th>Required properties</th><th>Rule</th></tr></thead>
+          <tbody>
+            <tr><td><code>CAN_ACCESS_PRODUCT</code></td><td><code>effect</code>, <code>permission</code>, <code>min_seniority_rank</code>, <code>classification_ceiling</code>, <code>review_state</code></td><td>Product scope grant or deny.</td></tr>
+            <tr><td><code>CAN_ACCESS_DOMAIN</code></td><td><code>effect</code>, <code>permission</code>, <code>min_seniority_rank</code>, <code>classification_ceiling</code>, <code>review_state</code></td><td>Domain scope grant or deny.</td></tr>
+            <tr><td><code>CAN_ACCESS_PLATFORM</code></td><td><code>effect</code>, <code>permission</code>, <code>min_seniority_rank</code>, <code>classification_ceiling</code>, <code>review_state</code></td><td>Platform scope grant or deny.</td></tr>
+            <tr><td><code>CAN_VIEW_*</code></td><td><code>effect</code>, <code>condition_json</code>, <code>allowed_fields[]</code>, <code>masked_fields[]</code>, <code>priority</code>, <code>review_state</code></td><td>Concrete view permission.</td></tr>
+            <tr><td><code>CAN_EDIT_*</code></td><td><code>effect</code>, <code>condition_json</code>, <code>requires_approval</code>, <code>priority</code>, <code>review_state</code></td><td>Concrete edit permission.</td></tr>
+            <tr><td><code>CAN_APPROVE_CHANGE</code></td><td><code>approval_scope</code>, <code>min_seniority_rank</code>, <code>condition_json</code>, <code>priority</code>, <code>review_state</code></td><td>Approval authority, not general visibility.</td></tr>
+            <tr><td><code>REPORTS_TO</code>, <code>ESCALATES_TO</code>, <code>CAN_DELEGATE_TO</code>, <code>INHERITS_FROM</code></td><td><code>valid_from</code>, <code>valid_to</code>, <code>review_state</code>, plus edge-specific scope/SLA fields</td><td>Org hierarchy, escalation, scoped delegation, and role inheritance.</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section" id="sources">
+        <h2>Source And Ingestion Rules</h2>
+        <div class="callout red">
+          Automated ingestion must not use stale <code>master-config/**</code> sources. They are never node truth, edge truth, identity truth, governance truth, or secondary evidence.
+        </div>
+        <h3>Excluded automated sources</h3>
+        <pre><code>master-config/**
+master-config/config/metrics
+master-config/config/dashboards
+master-config/config/thresholds
+master-config/config/knowledge-graph/relationships</code></pre>
+        <h3>Allowed sources</h3>
+        <ul>
+          <li>Business-plane OpenAPI endpoint families outside <code>master-config/**</code>.</li>
+          <li>Live dashboard/card/chart endpoints outside excluded <code>master-config/**</code> surfaces.</li>
+          <li>Current app route metadata.</li>
+          <li>Chart registry for UI component inventory and chart explanations.</li>
+          <li>Connector/platform manifests where available.</li>
+          <li>Deterministic formula parsing.</li>
+          <li>Reviewed manual config.</li>
+          <li>Statistical or LLM proposals routed through review.</li>
+        </ul>
+        <h3>Source Priority</h3>
+        <table>
+          <thead><tr><th>Entity</th><th>Preferred sources</th><th>Fallback sources</th><th>Never use automatically</th></tr></thead>
+          <tbody>
+            <tr><td><code>Business</code></td><td>Reviewed business profile</td><td>Manual bootstrap file</td><td>Excluded <code>master-config/**</code></td></tr>
+            <tr><td><code>IntelligenceProduct</code></td><td>Current product catalog, live route metadata</td><td>Reviewed manual config</td><td>Excluded <code>master-config/**</code></td></tr>
+            <tr><td><code>Domain</code></td><td>Reviewed business taxonomy</td><td>Product/domain owner input</td><td>Excluded <code>master-config/**</code></td></tr>
+            <tr><td><code>Platform</code></td><td>Connector/platform manifests</td><td>Reviewed platform catalog</td><td>Excluded <code>master-config/**</code></td></tr>
+            <tr><td><code>Dashboard</code></td><td>Live route metadata, live non-master dashboard endpoints, chart registry</td><td>Reviewed manual config</td><td>Excluded <code>master-config/**</code> dashboards/endpoints</td></tr>
+            <tr><td><code>UIComponent</code></td><td>Chart registry, live dashboard metadata</td><td>Reviewed manual config</td><td>Excluded <code>master-config/**</code></td></tr>
+            <tr><td><code>Metric</code></td><td>Canonical metric review, endpoint schemas, chart formulas, connector manifests</td><td>Statistical/LLM proposals after review</td><td>Excluded <code>master-config/**</code> metrics/relationships</td></tr>
+            <tr><td><code>Policy</code></td><td>Schema definition only in V1</td><td>Trusted non-master-config governance review later</td><td>Excluded <code>master-config/**</code> thresholds/policies</td></tr>
+            <tr><td><code>Threshold</code></td><td>Schema definition only in V1</td><td>Trusted non-master-config governance/statistical review later</td><td>Excluded <code>master-config/**</code> thresholds</td></tr>
+            <tr><td><code>Role</code></td><td>Auth/session role map and reviewed Org Graph Engine proposal</td><td>Reviewed manual config</td><td>Inferred hierarchy without review</td></tr>
+          </tbody>
+        </table>
+        <h3>Proposal Payload Shape</h3>
+        <pre><code>{
+  "proposal_id": "kgp_2026_001",
+  "operation": "upsert",
+  "target_label": "Metric",
+  "target_id": "metric:blended:revenue",
+  "source_kind": "chart_registry",
+  "source_ref": "marketing_iq/revenue_overview/blended_revenue_card",
+  "confidence": 0.82,
+  "review_state": "proposed",
+  "payload": {
+    "metric_uid": "metric:blended:revenue",
+    "canonical_id": "blended_revenue",
+    "metric_id": "blended_revenue",
+    "display_name": "Blended Revenue",
+    "concept_key": "revenue",
+    "value_format": "currency",
+    "directionality": "higher_is_better",
+    "platform_ids": ["shopify", "google_ads", "meta_ads"],
+    "domain_ids": ["marketing", "finance"]
+  },
+  "relationship_payloads": [
+    {
+      "type": "SURFACES_METRIC",
+      "from_label": "IntelligenceProduct",
+      "from_id": "marketing_iq",
+      "to_label": "Metric",
+      "to_id": "metric:blended:revenue"
+    },
+    {
+      "type": "SOURCES",
+      "from_label": "Platform",
+      "from_id": "shopify",
+      "to_label": "Metric",
+      "to_id": "metric:blended:revenue",
+      "properties": {
+        "source_metric_name": "gross_sales",
+        "review_state": "proposed"
+      }
+    }
+  ]
+}</code></pre>
+        <div class="callout green">
+          Harvesters emit proposals only. The arbitration writer is the only component that should convert reviewed proposals into graph writes.
+        </div>
+      </div>
+
+      <div class="section" id="example">
+        <h2>Example Instance Mapping</h2>
+        <p>This shows how a single canonical metric can sit on all three axes without being duplicated per product, dashboard, or platform.</p>
+        <pre><code>(:Business {business_id: "business_default", business_name: "Example Commerce"})
+  -[:HAS_PRODUCT]->(:IntelligenceProduct {product_id: "marketing_iq", product_name: "Marketing IQ"})
+  -[:HAS_PRODUCT]->(:IntelligenceProduct {product_id: "product_iq", product_name: "Product IQ"})
+  -[:HAS_PRODUCT]->(:IntelligenceProduct {product_id: "customer_iq", product_name: "Customer IQ"})
+
+(:Business {business_id: "business_default"})
+  -[:HAS_DOMAIN]->(:Domain {domain_id: "marketing", domain_name: "Marketing"})
+  -[:HAS_DOMAIN]->(:Domain {domain_id: "finance", domain_name: "Finance"})
+  -[:HAS_DOMAIN]->(:Domain {domain_id: "operations", domain_name: "Operations"})
+
+(:Business {business_id: "business_default"})
+  -[:USES_PLATFORM]->(:Platform {platform_id: "google_ads", platform_name: "Google Ads"})
+  -[:USES_PLATFORM]->(:Platform {platform_id: "ga4", platform_name: "GA4"})
+  -[:USES_PLATFORM]->(:Platform {platform_id: "shopify", platform_name: "Shopify"})
+
+(:IntelligenceProduct {product_id: "marketing_iq"})
+  -[:CONTAINS_DASHBOARD]->(:Dashboard {dashboard_id: "marketing_revenue_overview"})
+  -[:SURFACES_METRIC]->(:Metric {metric_uid: "metric:blended:revenue"})
+
+(:Domain {domain_id: "marketing"})-[:CONTEXTUALIZES]->(:Metric {metric_uid: "metric:blended:revenue"})
+(:Domain {domain_id: "finance"})-[:GOVERNS]->(:Metric {metric_uid: "metric:blended:revenue"})
+(:Platform {platform_id: "shopify"})-[:SOURCES]->(:Metric {metric_uid: "metric:blended:revenue"})
+(:Platform {platform_id: "google_ads"})-[:ACTIVATES]->(:Metric {metric_uid: "metric:blended:revenue"})</code></pre>
+        <h3>Metric Fast-Read Cache</h3>
+        <pre><code>{
+  "metric_uid": "metric:blended:revenue",
+  "canonical_id": "blended_revenue",
+  "metric_id": "blended_revenue",
+  "display_name": "Blended Revenue",
+  "concept_key": "revenue",
+  "business_id": "business_default",
+  "product_ids": ["marketing_iq", "product_iq"],
+  "domain_ids": ["marketing", "finance"],
+  "platform_ids": ["shopify", "google_ads", "ga4"],
+  "primary_platform_id": "shopify",
+  "value_format": "currency",
+  "directionality": "higher_is_better",
+  "data_classification": "internal",
+  "min_level": 40,
+  "status": "active"
+}</code></pre>
+      </div>
+
+      <div class="section">
+        <h2>Neo4j Constraints</h2>
+        <pre><code>CREATE CONSTRAINT business_id IF NOT EXISTS
+FOR (n:Business) REQUIRE n.business_id IS UNIQUE;
+
+CREATE CONSTRAINT product_id IF NOT EXISTS
+FOR (n:IntelligenceProduct) REQUIRE n.product_id IS UNIQUE;
+
+CREATE CONSTRAINT domain_id IF NOT EXISTS
+FOR (n:Domain) REQUIRE n.domain_id IS UNIQUE;
+
+CREATE CONSTRAINT metric_uid IF NOT EXISTS
+FOR (n:Metric) REQUIRE n.metric_uid IS UNIQUE;
+
+CREATE CONSTRAINT dashboard_id IF NOT EXISTS
+FOR (n:Dashboard) REQUIRE n.dashboard_id IS UNIQUE;
+
+CREATE CONSTRAINT component_id IF NOT EXISTS
+FOR (n:UIComponent) REQUIRE n.component_id IS UNIQUE;
+
+CREATE CONSTRAINT policy_id IF NOT EXISTS
+FOR (n:Policy) REQUIRE n.policy_id IS UNIQUE;
+
+CREATE CONSTRAINT threshold_id IF NOT EXISTS
+FOR (n:Threshold) REQUIRE n.threshold_id IS UNIQUE;
+
+CREATE CONSTRAINT role_key IF NOT EXISTS
+FOR (n:Role) REQUIRE n.role_key IS UNIQUE;</code></pre>
+        <p>Optional only when <code>Platform</code> is materialized:</p>
+        <pre><code>CREATE CONSTRAINT platform_id IF NOT EXISTS
+FOR (n:Platform) REQUIRE n.platform_id IS UNIQUE;</code></pre>
+        <p>Recommended indexes:</p>
+        <pre><code>CREATE INDEX metric_domain IF NOT EXISTS
+FOR (n:Metric) ON (n.domain_ids);
+
+CREATE INDEX metric_product IF NOT EXISTS
+FOR (n:Metric) ON (n.product_ids);
+
+CREATE INDEX metric_platform IF NOT EXISTS
+FOR (n:Metric) ON (n.platform_ids);
+
+CREATE INDEX metric_concept IF NOT EXISTS
+FOR (n:Metric) ON (n.concept_key);
+
+CREATE INDEX metric_canonical IF NOT EXISTS
+FOR (n:Metric) ON (n.canonical_id);
+
+CREATE INDEX metric_local_id IF NOT EXISTS
+FOR (n:Metric) ON (n.metric_id);
+
+CREATE INDEX dashboard_product IF NOT EXISTS
+FOR (n:Dashboard) ON (n.product_id);
+
+CREATE INDEX role_seniority IF NOT EXISTS
+FOR (n:Role) ON (n.seniority_rank);</code></pre>
+      </div>
+
+      <div class="section" id="build">
+        <h2>Build Order</h2>
+        <div class="steps">
+          <div class="step"><b>1</b><span>Constraints</span><p>Create constraints and indexes.</p></div>
+          <div class="step"><b>2</b><span>Business</span><p>Seed the root node.</p></div>
+          <div class="step"><b>3</b><span>Axes</span><p>Seed products and domains; materialize platforms when traversal is enabled.</p></div>
+          <div class="step"><b>4</b><span>Surfaces</span><p>Load dashboards and components.</p></div>
+          <div class="step"><b>5</b><span>Metrics</span><p>Load canonical metrics with cached axis fields.</p></div>
+          <div class="step"><b>6</b><span>Edges</span><p>Create product, domain, optional platform, surface, and metric edges.</p></div>
+          <div class="step"><b>7</b><span>Roles</span><p>Seed role and social graph edges from reviewed Org Graph Engine and role-map proposals.</p></div>
+          <div class="step"><b>8</b><span>Governance</span><p>Create Policy and Threshold schema shells with <code>population_status = defined</code>; do not ingest instances yet.</p></div>
+          <div class="step"><b>9</b><span>Causal</span><p>Add causal edges from reviewed evidence/proposals only; do not import relationship catalogs from <code>master-config</code>.</p></div>
+          <div class="step"><b>10</b><span>Defer</span><p>Keep decision runtime for later.</p></div>
+        </div>
+      </div>
+
+      <div class="section" id="acceptance">
+        <h2>Acceptance Criteria</h2>
+        <ul>
+          <li>The new KG has a <code>Business</code> root.</li>
+          <li>One <code>Business</code> can map to many <code>IntelligenceProduct</code> nodes.</li>
+          <li><code>Domain</code> is a first-class decision axis.</li>
+          <li>Platform/source data is always available on <code>Metric</code>; <code>Platform</code> is a thin lazily materialized node when platform-level traversal is needed.</li>
+          <li><code>Metric</code> identity uses <code>metric_uid</code>, <code>canonical_id</code>, and <code>metric_id</code> with distinct meanings.</li>
+          <li>Metrics are canonical and not duplicated per product/dashboard/platform.</li>
+          <li>Detailed node data is defined for business, product, domain, optional platform, metric, dashboard, component, policy, threshold, and role records.</li>
+          <li>Policy and Threshold are defined-only V1 shells with <code>population_status</code>; no instances are harvested from <code>master-config</code>.</li>
+          <li>Relationship properties are defined for traversal, governance, source, causal, rollup/decomposition, threshold, and permission edges.</li>
+          <li>Ingestion proposals are emitted and reviewed before graph writes.</li>
+          <li>Dashboard ids are not sourced from excluded <code>master-config/**</code> surfaces.</li>
+          <li>Role access uses <code>seniority_rank</code>, domain branch or explicit cross-grant, <code>data_classification</code> clearance, and no explicit deny.</li>
+          <li><code>rare_seeds</code> appears only as pilot/client historical context.</li>
+          <li>Decision runtime and memory layers are deferred.</li>
+          <li>Current implementation scope is KG-only.</li>
+        </ul>
+        <div class="callout green">
+          Final shape: <code>Business -> IntelligenceProduct -> Dashboard -> UIComponent -> Metric</code>,
+          <code>Business -> Domain -> Metric</code>, and <code>Business -> Platform -> Metric</code> when platform traversal is materialized.
+        </div>
+      </div>
+
+      <div class="section" id="final-diagram">
+        <h2>Final V1 Node And Edge Diagram</h2>
+        <p>This diagram shows the current V1 KG implementation contract: the nine mandatory labels plus the lazy <code>Platform</code> label. Deferred runtime and memory labels are intentionally not wired here because they are not part of the current graph build.</p>
+        <div class="kg-diagram-wrap">
+          <svg class="kg-diagram" viewBox="0 0 1160 720" role="img" aria-labelledby="kg-diagram-title kg-diagram-desc">
+            <title id="kg-diagram-title">Final ThoughtWire V1 KG node and edge diagram</title>
+            <desc id="kg-diagram-desc">Business connects to products, domains, lazy platforms, metrics, surfaces, governance, thresholds, and roles through the V1 relationship catalog.</desc>
+            <defs>
+              <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L0,6 L9,3 z" fill="#64748b"></path>
+              </marker>
+              <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L0,6 L9,3 z" fill="#21745a"></path>
+              </marker>
+              <marker id="arrow-violet" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L0,6 L9,3 z" fill="#6049a3"></path>
+              </marker>
+              <marker id="arrow-amber" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto" markerUnits="strokeWidth">
+                <path d="M0,0 L0,6 L9,3 z" fill="#8b640f"></path>
+              </marker>
+            </defs>
+
+            <path class="kg-edge" d="M180 329 C210 250 220 120 250 99"></path>
+            <path class="kg-edge" d="M440 99 L500 99"></path>
+            <path class="kg-edge" d="M645 99 L735 99"></path>
+            <path class="kg-edge" d="M880 99 C920 120 950 220 965 310"></path>
+            <path class="kg-edge soft" d="M440 128 C600 190 805 215 965 322"></path>
+            <path class="kg-edge soft" d="M645 128 C780 205 875 245 965 335"></path>
+            <path class="kg-edge soft" d="M965 300 C820 245 720 160 645 128"></path>
+            <path class="kg-edge soft" d="M965 312 C900 230 880 150 880 99"></path>
+
+            <path class="kg-edge" d="M180 329 L270 329"></path>
+            <path class="kg-edge" d="M415 329 L965 329"></path>
+            <path class="kg-edge soft" d="M345 300 C300 250 385 250 345 300"></path>
+
+            <path class="kg-edge lazy" d="M180 345 C220 430 235 535 270 550"></path>
+            <path class="kg-edge lazy" d="M430 550 C610 520 820 430 965 360"></path>
+
+            <path class="kg-edge gov" d="M1038 364 L1038 470"></path>
+            <path class="kg-edge gov" d="M965 345 C890 380 830 420 795 470"></path>
+            <path class="kg-edge gov" d="M500 128 C545 310 630 430 720 495"></path>
+            <path class="kg-edge gov" d="M735 128 C745 270 745 370 755 470"></path>
+            <path class="kg-edge gov" d="M180 338 C355 405 570 460 720 500"></path>
+            <path class="kg-edge gov" d="M875 499 L965 499"></path>
+
+            <path class="kg-edge soft" d="M1110 316 C1150 290 1150 385 1110 360"></path>
+            <path class="kg-edge soft" d="M1110 340 C1135 405 1135 455 1110 495"></path>
+
+            <path class="kg-edge role" d="M180 575 C220 505 235 390 270 345"></path>
+            <path class="kg-edge role" d="M180 570 C225 455 220 160 250 110"></path>
+            <path class="kg-edge role" d="M180 590 L270 555"></path>
+            <path class="kg-edge role" d="M180 575 C430 610 755 555 965 350"></path>
+            <path class="kg-edge role" d="M180 580 C360 620 610 565 720 515"></path>
+            <path class="kg-edge role" d="M180 590 C390 690 755 610 965 515"></path>
+            <path class="kg-edge role" d="M110 560 C55 515 55 655 110 618"></path>
+
+            <rect class="kg-node core" x="40" y="300" width="140" height="58" rx="8"></rect>
+            <text class="kg-label" x="110" y="334">Business</text>
+
+            <rect class="kg-node core" x="250" y="70" width="190" height="58" rx="8"></rect>
+            <text class="kg-label" x="345" y="101">IntelligenceProduct</text>
+
+            <rect class="kg-node core" x="500" y="70" width="145" height="58" rx="8"></rect>
+            <text class="kg-label" x="572" y="101">Dashboard</text>
+
+            <rect class="kg-node core" x="735" y="70" width="145" height="58" rx="8"></rect>
+            <text class="kg-label" x="807" y="101">UIComponent</text>
+
+            <rect class="kg-node core" x="965" y="300" width="145" height="64" rx="8"></rect>
+            <text class="kg-label" x="1038" y="329">Metric</text>
+            <text class="kg-sub" x="1038" y="347">canonical signal</text>
+
+            <rect class="kg-node core" x="270" y="300" width="145" height="58" rx="8"></rect>
+            <text class="kg-label" x="342" y="334">Domain</text>
+
+            <rect class="kg-node lazy" x="270" y="520" width="160" height="58" rx="8"></rect>
+            <text class="kg-label" x="350" y="545">Platform</text>
+            <text class="kg-sub" x="350" y="562">lazy/thin</text>
+
+            <rect class="kg-node gov" x="720" y="470" width="155" height="58" rx="8"></rect>
+            <text class="kg-label" x="797" y="495">Policy</text>
+            <text class="kg-sub" x="797" y="512">defined only</text>
+
+            <rect class="kg-node gov" x="965" y="470" width="145" height="58" rx="8"></rect>
+            <text class="kg-label" x="1038" y="495">Threshold</text>
+            <text class="kg-sub" x="1038" y="512">defined only</text>
+
+            <rect class="kg-node role" x="40" y="560" width="140" height="58" rx="8"></rect>
+            <text class="kg-label" x="110" y="594">Role</text>
+
+            <text class="kg-edge-label" x="207" y="214">HAS_PRODUCT</text>
+            <text class="kg-edge-label" x="470" y="87">CONTAINS_DASHBOARD</text>
+            <text class="kg-edge-label" x="690" y="87">CONTAINS_COMPONENT</text>
+            <text class="kg-edge-label" x="916" y="181">VISUALIZES</text>
+            <text class="kg-edge-label" x="690" y="205">SURFACES_METRIC</text>
+            <text class="kg-edge-label" x="815" y="255">SURFACES_METRIC</text>
+            <text class="kg-edge-label" x="820" y="165">SHOWN_ON</text>
+
+            <text class="kg-edge-label" x="225" y="319">HAS_DOMAIN</text>
+            <text class="kg-edge-label" x="635" y="319">CONTEXTUALIZES / GOVERNS / OWNS</text>
+            <text class="kg-edge-label" x="335" y="266">PARENT_OF</text>
+
+            <text class="kg-edge-label" x="214" y="457">USES_PLATFORM</text>
+            <text class="kg-edge-label" x="675" y="509">SOURCES / ACTIVATES</text>
+
+            <text class="kg-edge-label" x="1074" y="422">HAS_THRESHOLD</text>
+            <text class="kg-edge-label" x="882" y="397">GOVERNED_BY</text>
+            <text class="kg-edge-label" x="568" y="360">GOVERNED_BY</text>
+            <text class="kg-edge-label" x="922" y="489">ENFORCES_THRESHOLD</text>
+
+            <text class="kg-edge-label" x="1104" y="291">ROLLS_UP_TO / DECOMPOSES_INTO</text>
+            <text class="kg-edge-label" x="1090" y="444">INFLUENCES / CAUSES / CORRELATES_WITH</text>
+
+            <text class="kg-edge-label" x="220" y="448">CAN_ACCESS_DOMAIN</text>
+            <text class="kg-edge-label" x="220" y="246">CAN_ACCESS_PRODUCT</text>
+            <text class="kg-edge-label" x="222" y="612">CAN_ACCESS_PLATFORM</text>
+            <text class="kg-edge-label" x="565" y="600">CAN_VIEW_* / CAN_EDIT_* / CAN_APPROVE_CHANGE</text>
+            <text class="kg-edge-label" x="420" y="652">OWNS</text>
+            <text class="kg-edge-label" x="295" y="674">REPORTS_TO / INHERITS_FROM / ESCALATES_TO / CAN_DELEGATE_TO</text>
+          </svg>
+        </div>
+        <div class="callout">
+          Solid blue/gray edges are mandatory V1 traversal families, amber edges are governance and threshold families, violet edges are RBAC/social graph families, and green dashed edges are active only when <code>Platform</code> is materialized.
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
