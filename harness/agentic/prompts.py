@@ -187,7 +187,9 @@ HARD RULES:
 1. Draw a decomposition edge ONLY when the formula genuinely computes the
    composite from that component. Do NOT invent decompositions the formula does
    not support, and do NOT add causal "drives"-style links (those are a later
-   phase).
+   phase). A COUNT / headcount metric does NOT decompose into a SUM (e.g. of
+   revenue or spend) just because both aggregate the same population — that is
+   causal co-movement, not a formula term; leave it for the causal phase.
 2. Prefer SAME-NAMESPACE / same-platform components (a Meta ROAS decomposes into
    Meta revenue & Meta spend, not blended ones) when the formula is ambiguous.
 3. `from`/`to` keys are the `metric_uid`s. Use the role per component; one
