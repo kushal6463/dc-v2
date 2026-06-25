@@ -1,0 +1,17 @@
+id,label,in_openapi_enum,description,examples
+kpi_card,KPI Card,False,"Single headline value + delta + sparkline trend (a metric card, not a plot).",blended.roas; blended.cac; magento.revenue
+line,Line Chart,True,Time series / trend / cumulative metric over time.,alert_trend; cac_trend; revenue_trend; saturation_curves
+area,Area Chart,True,Cumulative or stacked time series; composition over time.,daily_spend_trend; channel_mix_evolution
+bar,Vertical Bar Chart,True,Categorical comparison / ranked distribution / histogram.,path_length_distribution; churn_risk_distribution; roas_distribution
+horizontal_bar,Horizontal Bar Chart,True,"Ranked categories, long labels.",top_states_by_ltv; vtc_impact; top_products
+grouped_bar,Grouped Bar Chart,True,Multi-series side-by-side categorical comparison.,assisted_conversions; audience_type_comparison; device_conversion
+pie,Pie Chart,True,Simple proportional breakdown (prefer donut).,ad_strength_distribution
+donut,Donut Chart,True,Proportional breakdown with a center total.,churn_risk_distribution; rating_distribution
+sankey,Sankey Flow,True,Multi-step flows / path / channel attribution.,revenue_attribution_sankey; stage_migration_flow
+heatmap,Heatmap (Matrix),True,2D categorical performance (rows x columns).,network_device_heatmap; cohort_retention_heatmap; rfm_heatmap
+table,Data Table,True,"Detailed tabular data, many columns/rows.",alert_history; campaign_performance_table
+sparkline,Sparkline,True,Inline mini time series within a KPI card.,metric trend sparkline
+scatter,Scatter Plot,True,Bivariate relationship / bubble chart.,reach_frequency_scatter; campaign_performance_scatter
+treemap,Treemap,True,Hierarchical proportional breakdown.,campaign_treemap; share_treemap
+gauge,Gauge / Pacing,True,KPI pacing / health score (0-100%).,budget_pacing; monthly_pacing; todays_pacing
+funnel,Funnel Chart,True,"Conversion / completion stages, dropoff.",conversion_funnel; funnel_by_channel

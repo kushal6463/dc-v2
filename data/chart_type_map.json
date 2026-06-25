@@ -1,0 +1,3497 @@
+{
+ "alerts-config:active_rules": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "alerts-config:alert_history": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "alerts-config:alert_rules": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "alerts-config:alert_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "alerts-config:critical_alerts": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "alerts-config:current_alerts": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "alerts-config:current_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "alerts-config:notification_channels": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "alerts-config:response_time": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "alerts-config:warning_alerts": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:assisted_conversions": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "attribution:attribution_gap_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "attribution:attribution_model_comparison": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:revenue_attribution_sankey": {
+  "chart_type": "sankey",
+  "confidence": "medium",
+  "source": "name:sankey"
+ },
+ "audience-performance:audience_type_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "audience-performance:custom_audience_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:ga4_audiences": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:klaviyo_audiences": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:network_device_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "audience-performance:reach_frequency_analysis": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "audience-performance:saturation_curves": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "audience-performance:user_list_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "budget-pacing:daily_spend_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "budget-pacing:monthly_pacing": {
+  "chart_type": "gauge",
+  "confidence": "medium",
+  "source": "name:pacing"
+ },
+ "budget-pacing:pacing_alerts": {
+  "chart_type": "gauge",
+  "confidence": "medium",
+  "source": "name:pacing"
+ },
+ "budget-pacing:platform_pacing": {
+  "chart_type": "gauge",
+  "confidence": "medium",
+  "source": "name:pacing"
+ },
+ "budget-pacing:todays_pacing": {
+  "chart_type": "gauge",
+  "confidence": "medium",
+  "source": "name:pacing"
+ },
+ "budget-pacing:weekly_pacing": {
+  "chart_type": "gauge",
+  "confidence": "medium",
+  "source": "name:pacing"
+ },
+ "campaign-matrix:campaign_performance_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:klaviyo_campaigns": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:performance_matrix": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:matrix"
+ },
+ "ceo-pulse:conversion_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ceo-pulse:revenue_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "churn-analysis:priority_customers_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "churn-analysis:weekly_churn_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "cohort-analysis:acquisition_source_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cohort-analysis:cohort_clv_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "cohort-analysis:cohort_detail_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cohort-analysis:cohort_retention_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "cohort-analysis:cohort_size_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "cohort-analysis:retention_curve_comparison": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "competitive:impression_share_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "creative-performance:creative_fatigue_curve": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "creative-performance:email_creative_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "creative-performance:media_type_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "creative-performance:monthly_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "creative-performance:top_ads_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:browser_conversion": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:cart_abandonment_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "cro:funnel": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "cro:landing_page_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:page_exit_analysis": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:regional_conversion": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:source_medium": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:top_products": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:weekly_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-acquisition:cac_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-acquisition:customer_quality": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-acquisition:new_customer_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-acquisition:source_medium": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-acquisition:top_campaigns": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-feedback:nps_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-feedback:product_reviews": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-feedback:recent_feedback": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-health:avg_health_score": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-health:clv_at_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-health:critical_risk_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-health:health_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-health:high_value_at_risk": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-health:regional_health": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:attribution_model_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "customer-journey:channel_revenue_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-journey:cohort_clv": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-journey:conversion_funnel": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "customer-journey:landing_pages": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-ltv:churn_risk": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:matrix"
+ },
+ "customer-ltv:maturation_curve": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "customer-overview:active_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-overview:customer_growth": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-overview:ltv_cac_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-overview:new_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-overview:returning_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-overview:revenue_by_customer_type": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "customer-overview:total_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-retention:first_vs_repeat_revenue": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "customer-retention:retention_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "customer-rfm:at_risk_customers": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:cohort_retention": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:rfm_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "customer-rfm:segment_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:segment_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "data-quality:anomaly_log": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "data-quality:avg_sync_lag": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "data-quality:critical_anomalies": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "data-quality:daily_metrics_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "data-quality:date_coverage_matrix": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:matrix"
+ },
+ "data-quality:schema_coverage": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "data-quality:schema_health": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "data-quality:spend_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "data-quality:sync_status_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "data-quality:tables_monitored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "email-campaigns:historical_comparison": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "email-flows:performance_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "email-overview:campaign_vs_flow_performance": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "email-overview:email_program_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "funnel:checkout_abandonment": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "funnel:conversion_funnel": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "funnel:funnel_by_channel": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "funnel:funnel_by_device": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "funnel:funnel_by_geography": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "funnel:funnel_trend": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "google-pmax:campaign_spend_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-pmax:campaign_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-search:campaign_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-search:top_keywords": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-shopping:campaign_spend_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-shopping:shopping_performance_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-youtube:campaign_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-youtube:hour_day_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "google-youtube:performance_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-youtube:quartile_completion": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "inventory:category_health_matrix": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:daily_funnel_trend": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "inventory:items_stopped_selling": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:low_conversion_items": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:out_of_stock_alerts": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-campaigns:historical_comparison": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:campaign_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:email_volume_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "klaviyo-email:engagement_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "klaviyo-email:engagement_rate_trends": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "klaviyo-email:flow_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:source_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "klaviyo-email:top_campaigns": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:worst_campaigns": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-flows:flow_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-flows:flow_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "klaviyo-flows:flow_type_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "klaviyo-sms:campaigns": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-sms:channel_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "klaviyo-sms:click_rate_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "klaviyo-sms:flows": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-sms:send_time_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "klaviyo-sms:sms_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "klaviyo-sms:top_messages": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:aov_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "magento-customer-analytics:churn_risk_funnel": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "magento-customer-analytics:cross_sell_opportunities": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:marketing_actions": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:orders_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "magento-customer-analytics:registration_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "magento-customer-analytics:top_customers": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:fulfillment_funnel": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "magento-orders-fulfillment:monthly_trends": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "magento-orders-fulfillment:top_products": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-store-overview:category_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-store-overview:orders_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "magento-store-overview:orders_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "magento-store-overview:revenue_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "magento-store-overview:seasonal_alerts": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-store-overview:top_products": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:blended_roas_trending": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "marketing-mix:channel_comparison": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:channel_mix_evolution": {
+  "chart_type": "area",
+  "confidence": "medium",
+  "source": "name:evolution"
+ },
+ "marketing-mix:mer_trending": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "marketing-mix:spend_vs_revenue": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "meta-creative:daily_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "meta-creative:fatigue_alerts": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-creative:top_creatives": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-overview:adset_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-overview:campaign_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-overview:daily_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "meta-overview:region_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:adset_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:campaign_efficiency": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:lookalike_audiences_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:monthly_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "meta-prospecting:region": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:adset_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:audience_inventory": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:audience_overlap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:matrix"
+ },
+ "meta-retargeting:daily_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "meta-retargeting:frequency_ctr": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "ml-churn-analysis:avg_churn_probability": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:clv_at_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:customers_scored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:expected_retained_value": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:high_risk_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:priority_customers_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:retained_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:churn_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:retention_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-churn-analysis:revenue_at_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-models:churn_risk_matrix": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:matrix"
+ },
+ "ml-models:clv_segment_details": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "new-products:needs_optimization": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "new-products:needs_promotion": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "new-products:success_rate_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "new-products:top_products_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "new-products:velocity_curve": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "product-affinity:bundle_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-affinity:category_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "product-affinity:cross_sell_recommendations": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-category:avg_item_price": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-category:items_sold": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-category:purchase_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-overview:new_products": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-overview:revenue_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "product-seasonality:product_seasonality_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "sms-performance:sms_channel_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "sms-performance:sms_performance_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "sms-performance:sms_send_time_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "sms-performance:sms_source_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "sms-performance:sms_top_messages": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:audiences": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:campaigns": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:source_medium": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:top_pages": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:traffic_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "weekly-exec:budget_pacing": {
+  "chart_type": "gauge",
+  "confidence": "medium",
+  "source": "name:pacing"
+ },
+ "weekly-exec:channel_matrix": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:matrix"
+ },
+ "weekly-exec:forecast": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "weekly-exec:orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "weekly-exec:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "weekly-exec:roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "weekly-exec:sessions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "weekly-exec:spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "weekly-exec:weekly_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "ml-intervention-propensity:actionable_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-intervention-propensity:high_response_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-intervention-propensity:mean_propensity": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-intervention-propensity:top_intervention_type": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-intervention-propensity:model_auc": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-intervention-propensity:cohort_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "ml-intervention-propensity:email_engagement": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "ml-marketing-mix:response_curves": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "ml-marketing-mix:model_fit": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "ml-category-affinity:recommendation_depth": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "ml-category-affinity:confidence_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-category-affinity:ready_to_activate": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-purchase-propensity:category_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-life-cycle-stage:stage_cohort_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "ml-segment-value-trajectory:category_breakdown": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "ml-product-affinity:category_product_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-brand-affinity:cross_brand_matrix": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:matrix"
+ },
+ "ml-channel-affinity:confidence_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-message-affinity:message_channel_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-price-elasticity:demand_curves": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "ml-price-elasticity:sensitivity_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-discount-response:response_curves": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "ml-channel-response-curve:response_curves": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "ml-offer-type-response:segment_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-timing-response:timing_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-product-demand-forecasting:product_forecast": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-product-demand-forecasting:forecast_vs_actual": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-product-demand-forecasting:category_forecast": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-category-seasonality:seasonality_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-category-seasonality:yoy_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "ml-category-seasonality:peak_trough": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "ml-stock-out-risk:risk_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-markdown-optimal-timing:timing_scatter": {
+  "chart_type": "scatter",
+  "confidence": "medium",
+  "source": "name:scatter"
+ },
+ "ml-marketing-mix-campaign:total_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix-campaign:total_incremental_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix-campaign:blended_roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix-campaign:reallocation_upside": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix-campaign:saturation_curves": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_curve"
+ },
+ "ml-marketing-mix-forecast:quarter_total_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix-forecast:quarter_range": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix-forecast:growth_vs_prior": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix-forecast:peak_week": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-order-value:total_customers_scored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-order-value:total_expected_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-order-value:avg_predicted_aov": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-order-value:aov_uplift": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-order-value:premium_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-order-value:whale_target_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-order-value:high_confidence_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-order-value:median_uncertainty": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-wallet-share-growth:growth_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-wallet-share-growth:avg_grow_probability": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-wallet-share-growth:untapped_low_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-wallet-share-growth:top_growth_driver": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-activation:total_prospects": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-activation:avg_activation_propensity": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-activation:priority_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-activation:watch_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-cart-recovery:abandoned_carts": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-cart-recovery:avg_recovery_score": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-cart-recovery:high_medium_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-cart-recovery:horizon_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "ml-first-repeat:avg_repeat_propensity": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-first-repeat:median_repeat_propensity": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-first-repeat:one_time_buyers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-first-repeat:top_decile_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-acquisition-forecast:total_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-acquisition-forecast:categories_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-acquisition-forecast:avg_per_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-acquisition-forecast:top_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-acquisition-forecast:top10_concentration": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-acquisition-forecast:top_categories": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-acquisition-forecast:distribution": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-acquisition-forecast:share_treemap": {
+  "chart_type": "treemap",
+  "confidence": "medium",
+  "source": "name:treemap"
+ },
+ "ml-category-buyer-breadth-forecast:total_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-buyer-breadth-forecast:categories_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-buyer-breadth-forecast:avg_per_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-buyer-breadth-forecast:top_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-buyer-breadth-forecast:top10_concentration": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-buyer-breadth-forecast:top_categories": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-category-buyer-breadth-forecast:distribution": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-category-buyer-breadth-forecast:share_treemap": {
+  "chart_type": "treemap",
+  "confidence": "medium",
+  "source": "name:treemap"
+ },
+ "ml-category-buyer-breadth-forecast:forecast_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-revenue-forecast:total_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-revenue-forecast:categories_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-revenue-forecast:avg_per_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-revenue-forecast:top_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-revenue-forecast:top10_concentration": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-revenue-forecast:top_categories": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-category-revenue-forecast:distribution": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-category-revenue-forecast:share_treemap": {
+  "chart_type": "treemap",
+  "confidence": "medium",
+  "source": "name:treemap"
+ },
+ "ml-category-revenue-forecast:forecast_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecast:total_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecast:products_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecast:avg_per_product": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecast:top_product": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecast:top_products": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-product-demand-forecast:distribution": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-product-demand-forecast:share_treemap": {
+  "chart_type": "treemap",
+  "confidence": "medium",
+  "source": "name:treemap"
+ },
+ "ml-product-demand-forecast:forecast_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-revenue-forecast:total_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-revenue-forecast:products_forecast": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-revenue-forecast:avg_per_product": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-revenue-forecast:top_product": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-revenue-forecast:top_products": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-product-revenue-forecast:distribution": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-product-revenue-forecast:share_treemap": {
+  "chart_type": "treemap",
+  "confidence": "medium",
+  "source": "name:treemap"
+ },
+ "ml-product-revenue-forecast:forecast_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "annual-planning:total_budget": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "annual-planning:projected_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "annual-planning:blended_roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "annual-planning:yoy_change": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "annual-planning:monthly_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "budget-pacing:historical_spend_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "competitive:budget_opportunity": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "competitive:budget_vs_rank": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "competitive:campaign_share": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "competitive:performance_correlation": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "competitive:impressions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "competitive:budget_lost": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "competitive:rank_lost": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "creative-performance:total_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "creative-performance:active_ads": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "creative-performance:blended_ctr": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "creative-performance:avg_roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:audience_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:active_audiences": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:audience_conversions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:average_frequency": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:total_reach": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "audience-performance:average_roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "funnel:total_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "funnel:aov": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "funnel:conversion_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "funnel:purchase_reconciliation": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:active_campaigns": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:total_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:average_roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:budget_at_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:scale": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:scale_opportunity": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:optimize_cut": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "campaign-matrix:test_kill": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:total_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:blended_roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:mer": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:total_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:total_conversions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:average_cpa": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "marketing-mix:revenue_reconciliation": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:total_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:google_gap": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:meta_gap": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:klaviyo_gap": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:ga4_magento_gap": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:revenue_reconciliation": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "attribution:direct_share": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:daily_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-overview:yearly_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-overview:search_terms": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:campaign_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:account_structure": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:cpa": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:conversions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:clicks": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-overview:impressions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-search:search_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-search:ad_position": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-search:search_terms": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-search:kpi-search-spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-search:kpi-search-clicks": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-search:kpi-search-conversions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-search:kpi-search-roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-search:kpi-search-quality-score": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-shopping:ad_group_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-shopping:campaign_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-shopping:listing_groups": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-shopping:active_campaigns": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-shopping:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-shopping:roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-shopping:spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-pmax:audience_signals": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-pmax:daily_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "google-pmax:dow_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "google-youtube:video_views": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-youtube:view_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-youtube:cpv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-youtube:roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-youtube:impressions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-youtube:total_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-youtube:conversions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-youtube:conv_value": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-pmax:spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-pmax:roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-pmax:conversions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-pmax:conv_value": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "google-pmax:cpa": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-overview:meta-spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-overview:meta-roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-overview:meta-cpm": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-overview:meta-reach": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-overview:meta-frequency": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:total_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:total_reach": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:cost_per1k_reach": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:avg_cpm": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-prospecting:avg_frequency": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:retargeting-spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:retargeting-roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:retargeting-frequency": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:retargeting-reach": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:retargeting-ctr": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-retargeting:retargeting-fatigue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-creative:total_creatives": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-creative:active_creatives": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-creative:spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-creative:ctr": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "meta-creative:cpc": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:emails-sent": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:open-rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:click-rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:ctor": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-email:bounce-rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-flows:active_flows": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-flows:total_recipients": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-flows:avg_open_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-flows:avg_click_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-sms:sms_sent": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-sms:click_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-sms:unsubscribe_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-sms:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "klaviyo-sms:revenue_per_sms": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "sms-performance:sms_sent": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "sms-performance:click_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "sms-performance:unsubscribe_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "sms-performance:sms_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "sms-performance:revenue_per_sms": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-store-overview:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-store-overview:orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-store-overview:aov": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-store-overview:units_sold": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-store-overview:unique_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:total_orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:aov": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:completed_orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:processing_orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:cancellation_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:refund_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-orders-fulfillment:cart_abandonment": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:total_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:active_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:new_customers_month": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:repeat_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:average_ltv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:avg_orders_per_customer": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:avg_days_between_orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "magento-customer-analytics:guest_checkout_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:sessions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:users": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:bounce_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:engagement_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "website-performance:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:conversion_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:cart_abandonment": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:checkout_completion": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:aov": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cro:rpu": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-acquisition:blended_cac": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-acquisition:cac_efficiency": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-acquisition:first_purchase_aov": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-acquisition:new_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-retention:avg_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-retention:avg_orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-retention:days_between_orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-retention:repeat_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:aov": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:conversion_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:engagement_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:sessions": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:users": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-ltv:total_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-ltv:avg_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-ltv:median_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-ltv:customers_with_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-ltv:predicted_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-ltv:at_risk_value": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-ltv:top_customers": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:total_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:active_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:avg_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:repeat_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:avg_churn_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-rfm:total_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-feedback:nps-score": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-feedback:total-responses": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-feedback:avg-rating": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-feedback:promoter-percent": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-health:customers_with_scores": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cohort-analysis:avg_churn": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cohort-analysis:avg_clv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cohort-analysis:avg_orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cohort-analysis:repeat_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "cohort-analysis:total_ltv": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "churn-analysis:avg_churn_probability": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "churn-analysis:clv_at_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "churn-analysis:high_risk_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "churn-analysis:unsubscribe_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ceo-pulse:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ceo-pulse:orders": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ceo-pulse:aov": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ceo-pulse:roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ceo-pulse:user_segments": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "weekly-exec:conversion_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "weekly-exec:channel_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "monthly-review:channel_profitability": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "monthly-review:gross_margin_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "monthly-review:ltv_cac_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "monthly-review:mer_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "monthly-review:new_vs_returning": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "monthly-review:revenue_vs_plan": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "monthly-review:gross_margin": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "monthly-review:ltv_cac_ratio": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "monthly-review:mer": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "monthly-review:new_customer_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "monthly-review:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "quarterly-review:customer_acquisition": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "quarterly-review:efficiency_metrics": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "quarterly-review:ad_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "quarterly-review:new_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "quarterly-review:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "quarterly-review:roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-seasonality:category_heatmap": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "product-seasonality:weekly_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "product-seasonality:yoy_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "new-products:product_stages": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "new-products:avg_revenue_per_product": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "new-products:launch_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "new-products:success_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "new-products:total_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-overview:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-overview:units": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-overview:avg_price": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-overview:conversion": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-overview:opportunities": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-affinity:avg_items_per_order": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-affinity:bundle_pct": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-affinity:repeat_purchase_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-affinity:top_lift": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-affinity:affinity_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-overview:product_matrix": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:matrix"
+ },
+ "product-overview:funnel": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "product-overview:top_products": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-category:revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-category:revenue_trend": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:_trend"
+ },
+ "product-category:treemap": {
+  "chart_type": "treemap",
+  "confidence": "medium",
+  "source": "name:treemap"
+ },
+ "product-category:category_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "product-category:growth_scatter": {
+  "chart_type": "scatter",
+  "confidence": "medium",
+  "source": "name:scatter"
+ },
+ "product-category:conversion_funnel": {
+  "chart_type": "funnel",
+  "confidence": "medium",
+  "source": "name:funnel"
+ },
+ "product-category:seasonality": {
+  "chart_type": "heatmap",
+  "confidence": "medium",
+  "source": "name:heatmap"
+ },
+ "ml-life-cycle-stage:active_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-life-cycle-stage:at_risk_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-life-cycle-stage:avg_stage_duration_days": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-life-cycle-stage:stage_transition_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-segment-value-trajectory:customers_scored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-segment-value-trajectory:model_accuracy": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-segment-value-trajectory:ascending_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-segment-value-trajectory:declining_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-segment-value-trajectory:stable_high_value": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-high-value-propensity:model_auc": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-high-value-propensity:high_propensity_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-high-value-propensity:predicted_new_hv_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-high-value-propensity:total_customers_scored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-discount-response-propensity:model_auc": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-discount-response-propensity:discount_responsive_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-discount-response-propensity:high_responders_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-discount-response-propensity:revenue_protected_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-message-affinity:total_segmented": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-message-affinity:top_message_type": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-message-affinity:high_confidence_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-message-affinity:avg_confidence": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-channel-affinity:avg_confidence": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-channel-affinity:channel_matched": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-channel-affinity:multi_channel_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-channel-affinity:top_channel": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-channel-response-curve:channels_at_saturation": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-channel-response-curve:optimal_budget_top_channel": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-channel-response-curve:projected_incremental_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-channel-response-curve:total_recommended_budget": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-timing-response:peak_response_hour": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-timing-response:best_day_of_week": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-timing-response:seasonal_sensitivity": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-timing-response:personalization_opportunity": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-discount-response:optimal_discount_range": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-discount-response:peak_response_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-discount-response:rev_max_discount": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-discount-response:break_even_discount": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-type-response:top_converting_offer": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-type-response:avg_conversion_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-type-response:offer_segment_match_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-type-response:revenue_per_top_offer": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-value-lift:customers_scored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-value-lift:high_priority_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-value-lift:high_priority_share": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-value-lift:top_decile_concentration": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-offer-value-lift:horizon_comparison": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:_comparison"
+ },
+ "ml-product-affinity:total_scored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-affinity:high_affinity_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-affinity:top_recommended_product": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-affinity:hit_rate_at_3": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-affinity:total_scored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-affinity:high_confidence": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-affinity:top1_served": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-affinity:top3_served": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-affinity:customers_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecasting:products_forecasted": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecasting:total_forecasted_units_90d": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecasting:forecast_accuracy_mape": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-product-demand-forecasting:high_growth_products": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-stock-out-risk:immediate_action_required": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-stock-out-risk:high_risk_products": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-stock-out-risk:revenue_at_stockout_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-stock-out-risk:avg_days_until_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-purchase-propensity:total_customers_scored": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-purchase-propensity:high_purchase_propensity_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-purchase-propensity:model_auc": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-purchase-propensity:top_opportunity_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-seasonality:peak_season_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-seasonality:avg_seasonality_index": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-seasonality:highest_yoy_growth_category": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-category-seasonality:off_peak_revenue_at_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-brand-affinity:single_brand_loyalists": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-brand-affinity:multi_brand_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-brand-affinity:top_brand": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-brand-affinity:brand_switcher_pool": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-affinity:premium_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-affinity:value_seekers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-affinity:budget_customers": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-affinity:avg_wtp_score": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-affinity:customers_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-elasticity:highly_elastic_products": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-elasticity:inelastic_products": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-elasticity:avg_elasticity_coefficient": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-price-elasticity:revenue_sensitivity_score": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-markdown-optimal-timing:markdown_ready_now": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-markdown-optimal-timing:projected_margin_recovery": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-markdown-optimal-timing:avg_optimal_markdown_depth": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-markdown-optimal-timing:revenue_uplift_vs_no_markdown": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix:total_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix:paid_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix:organic_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix:blended_roas": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix:total_spend": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "ml-marketing-mix-campaign:share_budget_return": {
+  "chart_type": "grouped_bar",
+  "confidence": "medium",
+  "source": "name:vs_"
+ },
+ "ml-marketing-mix-campaign:campaign_treemap": {
+  "chart_type": "treemap",
+  "confidence": "medium",
+  "source": "name:treemap"
+ },
+ "ml-marketing-mix-forecast:forecast": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-marketing-mix-forecast:cumulative_pacing": {
+  "chart_type": "gauge",
+  "confidence": "medium",
+  "source": "name:pacing"
+ },
+ "ml-marketing-mix-forecast:forecast_vs_last_year": {
+  "chart_type": "line",
+  "confidence": "medium",
+  "source": "name:forecast"
+ },
+ "ml-acquisition-forecast:forecast_table": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:source_medium_attribution": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "customer-journey:campaign_performance": {
+  "chart_type": "table",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:items_at_risk": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:estimated_lost_revenue": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:true_oos_count": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:cart_to_purchase_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:declining_items": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ },
+ "inventory:funnel_drop_rate": {
+  "chart_type": "kpi_card",
+  "confidence": "high",
+  "source": "entity_type"
+ }
+}

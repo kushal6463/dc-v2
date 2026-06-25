@@ -1,0 +1,168 @@
+[
+  {
+    "id": "kpi_card",
+    "label": "KPI Card",
+    "in_openapi_enum": false,
+    "description": "Single headline value + delta + sparkline trend (a metric card, not a plot).",
+    "examples": [
+      "blended.roas",
+      "blended.cac",
+      "magento.revenue"
+    ]
+  },
+  {
+    "id": "line",
+    "label": "Line Chart",
+    "in_openapi_enum": true,
+    "description": "Time series / trend / cumulative metric over time.",
+    "examples": [
+      "alert_trend",
+      "cac_trend",
+      "revenue_trend",
+      "saturation_curves"
+    ]
+  },
+  {
+    "id": "area",
+    "label": "Area Chart",
+    "in_openapi_enum": true,
+    "description": "Cumulative or stacked time series; composition over time.",
+    "examples": [
+      "daily_spend_trend",
+      "channel_mix_evolution"
+    ]
+  },
+  {
+    "id": "bar",
+    "label": "Vertical Bar Chart",
+    "in_openapi_enum": true,
+    "description": "Categorical comparison / ranked distribution / histogram.",
+    "examples": [
+      "path_length_distribution",
+      "churn_risk_distribution",
+      "roas_distribution"
+    ]
+  },
+  {
+    "id": "horizontal_bar",
+    "label": "Horizontal Bar Chart",
+    "in_openapi_enum": true,
+    "description": "Ranked categories, long labels.",
+    "examples": [
+      "top_states_by_ltv",
+      "vtc_impact",
+      "top_products"
+    ]
+  },
+  {
+    "id": "grouped_bar",
+    "label": "Grouped Bar Chart",
+    "in_openapi_enum": true,
+    "description": "Multi-series side-by-side categorical comparison.",
+    "examples": [
+      "assisted_conversions",
+      "audience_type_comparison",
+      "device_conversion"
+    ]
+  },
+  {
+    "id": "pie",
+    "label": "Pie Chart",
+    "in_openapi_enum": true,
+    "description": "Simple proportional breakdown (prefer donut).",
+    "examples": [
+      "ad_strength_distribution"
+    ]
+  },
+  {
+    "id": "donut",
+    "label": "Donut Chart",
+    "in_openapi_enum": true,
+    "description": "Proportional breakdown with a center total.",
+    "examples": [
+      "churn_risk_distribution",
+      "rating_distribution"
+    ]
+  },
+  {
+    "id": "sankey",
+    "label": "Sankey Flow",
+    "in_openapi_enum": true,
+    "description": "Multi-step flows / path / channel attribution.",
+    "examples": [
+      "revenue_attribution_sankey",
+      "stage_migration_flow"
+    ]
+  },
+  {
+    "id": "heatmap",
+    "label": "Heatmap (Matrix)",
+    "in_openapi_enum": true,
+    "description": "2D categorical performance (rows x columns).",
+    "examples": [
+      "network_device_heatmap",
+      "cohort_retention_heatmap",
+      "rfm_heatmap"
+    ]
+  },
+  {
+    "id": "table",
+    "label": "Data Table",
+    "in_openapi_enum": true,
+    "description": "Detailed tabular data, many columns/rows.",
+    "examples": [
+      "alert_history",
+      "campaign_performance_table"
+    ]
+  },
+  {
+    "id": "sparkline",
+    "label": "Sparkline",
+    "in_openapi_enum": true,
+    "description": "Inline mini time series within a KPI card.",
+    "examples": [
+      "metric trend sparkline"
+    ]
+  },
+  {
+    "id": "scatter",
+    "label": "Scatter Plot",
+    "in_openapi_enum": true,
+    "description": "Bivariate relationship / bubble chart.",
+    "examples": [
+      "reach_frequency_scatter",
+      "campaign_performance_scatter"
+    ]
+  },
+  {
+    "id": "treemap",
+    "label": "Treemap",
+    "in_openapi_enum": true,
+    "description": "Hierarchical proportional breakdown.",
+    "examples": [
+      "campaign_treemap",
+      "share_treemap"
+    ]
+  },
+  {
+    "id": "gauge",
+    "label": "Gauge / Pacing",
+    "in_openapi_enum": true,
+    "description": "KPI pacing / health score (0-100%).",
+    "examples": [
+      "budget_pacing",
+      "monthly_pacing",
+      "todays_pacing"
+    ]
+  },
+  {
+    "id": "funnel",
+    "label": "Funnel Chart",
+    "in_openapi_enum": true,
+    "description": "Conversion / completion stages, dropoff.",
+    "examples": [
+      "conversion_funnel",
+      "funnel_by_channel"
+    ]
+  }
+]
