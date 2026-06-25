@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from harness.kg import models
-from harness.kg.arbitration import write_node_model
+from harness.kg.arbitration import upsert_edge, write_node_model
 from harness.kg.driver import get_db
 
 #: Spine seed file — the Business root plus the Domain and IntelligenceProduct
@@ -107,7 +107,25 @@ def seed_spine(*, dry_run: bool = False) -> list[dict[str, Any]]:
     results = [write_node_model(db, model) for model in built]
     created = sum(1 for r in results if r.get("status") == "created")
     updated = sum(1 for r in results if r.get("status") == "updated")
-    print(f"seeded {len(results)} spine nodes ({created} created, {updated} updated)")
+
+    # Platform hierarchy: draw PARENT_OF for every sub-platform that names a
+    # parent (e.g. google_youtube -> google_ads), so a rebuild recreates the
+    # google/meta sub-channel tree. Idempotent (MERGE on the edge).
+    platforms: dict[str, Any] = json.loads(PLATFORMS_SEED.read_text())
+    parent_edges = 0
+    for entry in platforms.get("platforms", []):
+        parent = entry.get("parent_platform_id")
+        if parent:
+            upsert_edge(
+                db, rel_type="PARENT_OF", from_label="Platform", from_key=parent,
+                to_label="Platform", to_key=entry["platform_id"],
+                props={"source_kind": "spine_seed"},
+            )
+            parent_edges += 1
+    print(
+        f"seeded {len(results)} spine nodes ({created} created, {updated} updated)"
+        f"; drew {parent_edges} platform PARENT_OF edges"
+    )
     return results
 
 

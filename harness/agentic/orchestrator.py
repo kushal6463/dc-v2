@@ -65,7 +65,11 @@ SPINE_IDS: dict[str, list[str]] = {
         "product", "supply_chain", "hr", "data_it",
     ],
     "products": ["miq", "ciq", "piq", "storefront_iq", "dc", "creative_iq"],
-    "platforms": ["ga4", "google_ads", "meta_ads", "klaviyo", "magento"],
+    "platforms": [
+        "ga4", "google_ads", "google_search", "google_youtube", "google_pmax",
+        "google_shopping", "meta_ads", "meta_prospecting", "meta_retargeting",
+        "meta_creative", "klaviyo", "magento",
+    ],
 }
 
 

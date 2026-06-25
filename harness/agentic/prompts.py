@@ -109,10 +109,17 @@ CREATE EACH NODE (`create_metric_node`) — fill from `get_metric_source`:
   `measurement_type`, `is_kpi`, `is_model_output`, `unit_family`, `value_format`,
   `category` when present.
 - Spine ids: `domain_ids` (pipe-delimited) = the catalog `domain` mapped to the
-  spine domain ids you were given; `product_ids` (pipe-delimited) = the catalog
-  product name mapped via {MarketingIQ->miq, CustomerIQ->ciq, ProductIQ->piq,
-  StoreFrontIQ->storefront_iq}; `platform_ids` / `primary_platform_id` from the
-  `source` namespace (google_ads, meta_ads, ga4, klaviyo, magento, blended).
+  spine domain ids you were given. EXCEPTION for ML metrics (`is_ml` true): the
+  catalog domain is `ml_modeling` — do NOT map it to `data_it`; instead use the
+  metric's BUSINESS domain = its product's domain (ciq->customer, piq->product,
+  miq->marketing). `product_ids` (pipe-delimited) = the catalog product name
+  mapped via {MarketingIQ->miq, CustomerIQ->ciq, ProductIQ->piq,
+  StoreFrontIQ->storefront_iq}. `platform_ids` / `primary_platform_id` from the
+  `source` namespace, choosing the MOST SPECIFIC platform: a
+  google_search/google_youtube/google_pmax/google_shopping namespace -> that
+  sub-platform (NOT google_ads); a meta_prospecting/meta_retargeting/meta_creative
+  namespace -> that sub-platform (NOT meta_ads); otherwise google_ads, meta_ads,
+  ga4, klaviyo, magento (a `blended` metric carries no single platform).
   Set `status="active"`.
 
 THEN ATTACH ONTO THE SPINE (`draw_edge`, one per axis the metric carries):

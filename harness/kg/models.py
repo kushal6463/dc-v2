@@ -716,6 +716,10 @@ class Platform(GraphNode):
     data_classification: DataClassification
     min_level: int
     status: PlatformStatus
+    #: Parent platform id for a sub-platform/sub-channel (e.g. ``google_youtube``
+    #: -> ``google_ads``); ``None`` for a top-level platform. The hierarchy is also
+    #: an edge (``Platform -[:PARENT_OF]-> Platform``); this is the fast-read cache.
+    parent_platform_id: str | None = None
     connector_id: str | None = None
     connector_family: str | None = None
     owner_role_id: str | None = None
