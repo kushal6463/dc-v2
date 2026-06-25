@@ -1,0 +1,67 @@
+# Leaf metrics — no metric↔metric edge (candidates for later reconnection)
+
+Build run: 20260625T173728Z · 61 leaves of 317 metrics · loops=0 orphans=0
+
+A leaf has spine attachment but no DECOMPOSES_INTO/INFLUENCES edge to another metric. Most are ML model outputs that terminate at raw model scores (expected); the non-ML ones are the best reconnection candidates.
+
+- blended.klaviyo_attribution_gap
+- ga4.funnel_drop_rate
+- ga4.paid_revenue
+- google_shopping.active_campaigns
+- magento.active_customers_30d
+- magento.avg_health_score
+- magento.customers_with_health_scores
+- magento.nps_score
+- ml.active_customers
+- ml.avg_optimal_markdown_depth
+- ml.avg_seasonality_index
+- ml.best_day_of_week
+- ml.brand_affinity_multi_brand_customers
+- ml.brand_affinity_single_brand_loyalists
+- ml.brand_affinity_top_brand
+- ml.break_even_discount
+- ml.category_purchase_propensity_model_auc
+- ml.category_purchase_propensity_top_opportunity_category
+- ml.channel_affinity_avg_confidence
+- ml.channel_affinity_matched_customers
+- ml.channel_affinity_multi_channel_pool
+- ml.channel_affinity_top_channel
+- ml.discount_high_responders
+- ml.discount_model_auc
+- ml.discount_responsive_customers
+- ml.first_time_buyers_scored
+- ml.forecast_accuracy_mape
+- ml.growth_rate
+- ml.highest_yoy_growth_category
+- ml.incremental_revenue
+- ml.message_affinity_customers_segmented
+- ml.message_affinity_top_message_type
+- ml.model_auc
+- ml.off_peak_revenue_at_risk
+- ml.offer_segment_match_rate
+- ml.offer_top_decile_concentration
+- ml.optimal_budget_top_channel
+- ml.peak_response_hour
+- ml.peak_response_rate
+- ml.peak_season_category
+- ml.peak_week
+- ml.personalization_opportunity
+- ml.premium_tier_count
+- ml.price_affinity_avg_wtp_score
+- ml.price_affinity_budget_customers
+- ml.price_affinity_premium_customers
+- ml.price_affinity_value_seekers
+- ml.product_affinity_hit_rate_at_3
+- ml.product_affinity_top_recommended_product
+- ml.products_forecasted
+- ml.quarter_range
+- ml.revenue_protected_customers
+- ml.seasonal_sensitivity
+- ml.stable_high_value_customers
+- ml.top_growth_driver
+- ml.top_intervention_type
+- ml.total_prospects_scored
+- ml.trajectory_customers_scored
+- ml.trajectory_model_accuracy
+- ml.untapped_low_spend
+- ml.whale_target_count
