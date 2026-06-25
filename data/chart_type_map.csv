@@ -1,0 +1,990 @@
+canonical_id,chart_type,confidence,source,why
+alerts-config:active_rules,kpi_card,high,entity_type,
+alerts-config:alert_history,table,high,entity_type,
+alerts-config:alert_rules,table,high,entity_type,
+alerts-config:alert_trend,line,medium,name:_trend,
+alerts-config:critical_alerts,kpi_card,high,entity_type,
+alerts-config:current_alerts,table,high,entity_type,
+alerts-config:current_performance,table,high,entity_type,
+alerts-config:notification_channels,table,high,entity_type,
+alerts-config:percentile_baselines,line,low,llm,Baseline thresholds plotted across time/period for alerting
+alerts-config:response_time,kpi_card,high,entity_type,
+alerts-config:seasonal_factors,line,medium,llm,Seasonal multiplier pattern across cyclical time periods
+alerts-config:warning_alerts,kpi_card,high,entity_type,
+annual-planning:blended_roas,kpi_card,high,entity_type,
+annual-planning:campaign_type,bar,medium,llm,Performance metric compared across campaign types
+annual-planning:channel_efficiency,bar,medium,llm,Sharpe efficiency compared across channels
+annual-planning:channel_revenue,bar,medium,llm,Revenue compared across channels
+annual-planning:historical_annual,area,medium,llm,Stacked spend composition by channel over years
+annual-planning:monthly_trend,line,medium,name:_trend,
+annual-planning:projected_revenue,kpi_card,high,entity_type,
+annual-planning:quarterly_roas,line,medium,llm,ROAS ratio trend per channel over quarters
+annual-planning:seasonality,line,medium,llm,Seasonal coefficient cycle across ordered months
+annual-planning:spend_buckets,line,medium,llm,Diminishing-returns response curve of ROAS vs spend
+annual-planning:total_budget,kpi_card,high,entity_type,
+annual-planning:yoy_change,kpi_card,high,entity_type,
+annual-planning:yoy_growth,bar,low,llm,Growth rates compared across categories
+attribution:assisted_conversions,grouped_bar,medium,name:vs_,
+attribution:attribution_gap_trend,line,medium,name:_trend,
+attribution:attribution_model_comparison,table,high,entity_type,
+attribution:direct_blackhole,donut,low,llm,Share of unattributable direct traffic vs attributed
+attribution:direct_share,kpi_card,high,entity_type,
+attribution:ga4_magento_gap,kpi_card,high,entity_type,
+attribution:google_gap,kpi_card,high,entity_type,
+attribution:klaviyo_gap,kpi_card,high,entity_type,
+attribution:meta_gap,kpi_card,high,entity_type,
+attribution:path_length_distribution,bar,high,llm,Histogram of conversion path-length buckets
+attribution:revenue_attribution_sankey,sankey,medium,name:sankey,
+attribution:revenue_reconciliation,kpi_card,high,entity_type,
+attribution:time_to_conversion,bar,medium,llm,Distribution of time-to-convert buckets
+attribution:total_revenue,kpi_card,high,entity_type,
+attribution:vtc_impact,bar,low,llm,View-through conversion contribution compared across channels
+audience-performance:active_audiences,kpi_card,high,entity_type,
+audience-performance:audience_conversions,kpi_card,high,entity_type,
+audience-performance:audience_spend,kpi_card,high,entity_type,
+audience-performance:audience_type_comparison,grouped_bar,medium,name:_comparison,
+audience-performance:average_frequency,kpi_card,high,entity_type,
+audience-performance:average_roas,kpi_card,high,entity_type,
+audience-performance:custom_audience_performance,table,high,entity_type,
+audience-performance:ga4_audiences,table,high,entity_type,
+audience-performance:klaviyo_audiences,table,high,entity_type,
+audience-performance:network_device_heatmap,heatmap,medium,name:heatmap,
+audience-performance:reach_frequency_analysis,grouped_bar,medium,name:vs_,
+audience-performance:saturation_curves,line,medium,name:_curve,
+audience-performance:total_reach,kpi_card,high,entity_type,
+audience-performance:user_list_performance,table,high,entity_type,
+budget-pacing:budget_exhaustion,bar,low,llm,Days of budget runway per channel
+budget-pacing:budget_reallocation,table,medium,llm,Recommendations list with reallocation amounts per channel
+budget-pacing:daily_spend_trend,line,medium,name:_trend,
+budget-pacing:historical_spend_trend,line,medium,name:_trend,
+budget-pacing:month_end_projection,line,low,llm,Projected month-end revenue forecast trajectory
+budget-pacing:month_end_revenue,line,low,llm,Cumulative revenue tracked over the month
+budget-pacing:monthly_pacing,gauge,medium,name:pacing,
+budget-pacing:pacing_alerts,gauge,medium,name:pacing,
+budget-pacing:platform_pacing,gauge,medium,name:pacing,
+budget-pacing:todays_pacing,gauge,medium,name:pacing,
+budget-pacing:weekly_pacing,gauge,medium,name:pacing,
+campaign-matrix:active_campaigns,kpi_card,high,entity_type,
+campaign-matrix:average_roas,kpi_card,high,entity_type,
+campaign-matrix:budget_at_risk,kpi_card,high,entity_type,
+campaign-matrix:campaign_performance_table,table,high,entity_type,
+campaign-matrix:hidden_gems,table,medium,llm,Detailed list of hidden-gem campaigns
+campaign-matrix:klaviyo_campaigns,table,high,entity_type,
+campaign-matrix:needs_attention,table,medium,llm,Detailed list of campaigns needing attention
+campaign-matrix:optimize_cut,kpi_card,high,entity_type,
+campaign-matrix:performance_matrix,heatmap,medium,name:matrix,
+campaign-matrix:quadrant_summary,scatter,low,llm,Campaigns positioned in 2D quadrant matrix
+campaign-matrix:roas_distribution,bar,high,llm,Histogram of ROAS value buckets
+campaign-matrix:scale,kpi_card,high,entity_type,
+campaign-matrix:scale_opportunity,kpi_card,high,entity_type,
+campaign-matrix:test_kill,kpi_card,high,entity_type,
+campaign-matrix:total_spend,kpi_card,high,entity_type,
+campaign-matrix:winners,table,medium,llm,Detailed list of top campaigns
+ceo-pulse:aov,kpi_card,high,entity_type,
+ceo-pulse:conversion_rate,kpi_card,high,entity_type,
+ceo-pulse:marketing_spend,line,low,llm,Marketing spend trend over time
+ceo-pulse:orders,kpi_card,high,entity_type,
+ceo-pulse:revenue,kpi_card,high,entity_type,
+ceo-pulse:revenue_trend,line,medium,name:_trend,
+ceo-pulse:roas,kpi_card,high,entity_type,
+ceo-pulse:top_products,horizontal_bar,medium,llm,Top N products ranked by value
+ceo-pulse:traffic_channels,donut,medium,llm,Channel share of total traffic
+ceo-pulse:user_segments,grouped_bar,medium,name:vs_,
+churn-analysis:avg_churn_probability,kpi_card,high,entity_type,
+churn-analysis:churn_by_orders,bar,medium,llm,Churn rate per order-count bucket
+churn-analysis:churn_risk_distribution,bar,medium,llm,Distribution of customers across risk tiers
+churn-analysis:clv_at_risk,kpi_card,high,entity_type,
+churn-analysis:high_risk_customers,kpi_card,high,entity_type,
+churn-analysis:lifecycle_stages,bar,low,llm,Customer count per lifecycle stage
+churn-analysis:next_order_window,bar,low,llm,Distribution of next-order time windows
+churn-analysis:priority_customers_table,table,high,entity_type,
+churn-analysis:unsubscribe_rate,kpi_card,high,entity_type,
+churn-analysis:weekly_churn_trend,line,medium,name:_trend,
+cohort-analysis:acquisition_source_table,table,high,entity_type,
+cohort-analysis:avg_churn,kpi_card,high,entity_type,
+cohort-analysis:avg_clv,kpi_card,high,entity_type,
+cohort-analysis:avg_orders,kpi_card,high,entity_type,
+cohort-analysis:churn_risk_distribution,heatmap,low,llm,Cohort by risk-tier 2D matrix
+cohort-analysis:cohort_clv_trend,line,medium,name:_trend,
+cohort-analysis:cohort_detail_table,table,high,entity_type,
+cohort-analysis:cohort_retention_heatmap,heatmap,medium,name:heatmap,
+cohort-analysis:cohort_size_trend,line,medium,name:_trend,
+cohort-analysis:order_frequency_distribution,bar,medium,llm,Histogram of order-frequency buckets
+cohort-analysis:repeat_rate,kpi_card,high,entity_type,
+cohort-analysis:retention_curve_comparison,line,medium,name:_curve,
+cohort-analysis:segment_distribution,grouped_bar,low,llm,Segments compared side-by-side across cohorts
+cohort-analysis:top_states_by_ltv,horizontal_bar,high,llm,Top N states ranked by LTV
+cohort-analysis:total_ltv,kpi_card,high,entity_type,
+competitive:budget_lost,kpi_card,high,entity_type,
+competitive:budget_opportunity,table,high,entity_type,
+competitive:budget_vs_rank,grouped_bar,medium,name:vs_,
+competitive:campaign_share,table,high,entity_type,
+competitive:channel_share,bar,medium,llm,Ad position compared across channel types
+competitive:impression_share_trend,line,medium,name:_trend,
+competitive:impressions,kpi_card,high,entity_type,
+competitive:performance_correlation,grouped_bar,medium,name:vs_,
+competitive:rank_lost,kpi_card,high,entity_type,
+competitive:top_position,line,low,llm,Top-position rate tracked over time
+competitive:wow_change,bar,low,llm,Week-over-week position change delta per entity
+creative-performance:active_ads,kpi_card,high,entity_type,
+creative-performance:ad_strength_distribution,bar,medium,llm,Distribution across ordinal ad-strength ratings
+creative-performance:avg_roas,kpi_card,high,entity_type,
+creative-performance:blended_ctr,kpi_card,high,entity_type,
+creative-performance:creative_fatigue_curve,line,medium,name:_curve,
+creative-performance:creative_type_performance,bar,low,llm,Spend compared across creative types
+creative-performance:cta_performance,bar,medium,llm,Performance compared across CTA button types
+creative-performance:email_creative_performance,table,high,entity_type,
+creative-performance:media_type_comparison,grouped_bar,medium,name:_comparison,
+creative-performance:monthly_trend,line,medium,name:_trend,
+creative-performance:top_ads_table,table,high,entity_type,
+creative-performance:total_spend,kpi_card,high,entity_type,
+cro:aov,kpi_card,high,entity_type,
+cro:browser_conversion,table,high,entity_type,
+cro:cart_abandonment,kpi_card,high,entity_type,
+cro:cart_abandonment_trend,line,medium,name:_trend,
+cro:channel_conversion,bar,medium,llm,Conversion rate compared across channels
+cro:checkout_completion,kpi_card,high,entity_type,
+cro:checkout_dropoff,funnel,high,llm,Checkout stage dropoff progression
+cro:conversion_rate,kpi_card,high,entity_type,
+cro:device_conversion,bar,medium,llm,Conversion rate compared across devices
+cro:funnel,funnel,medium,name:funnel,
+cro:landing_page_performance,table,high,entity_type,
+cro:page_exit_analysis,table,high,entity_type,
+cro:regional_conversion,table,high,entity_type,
+cro:revenue,kpi_card,high,entity_type,
+cro:rpu,kpi_card,high,entity_type,
+cro:source_medium,table,high,entity_type,
+cro:top_products,table,high,entity_type,
+cro:weekly_trend,line,medium,name:_trend,
+customer-acquisition:blended_cac,kpi_card,high,entity_type,
+customer-acquisition:cac_efficiency,kpi_card,high,entity_type,
+customer-acquisition:cac_trend,line,medium,name:_trend,
+customer-acquisition:channel_breakdown,donut,medium,llm,Channel share composition of acquisition
+customer-acquisition:customer_quality,table,high,entity_type,
+customer-acquisition:first_purchase_aov,kpi_card,high,entity_type,
+customer-acquisition:new_customer_trend,line,medium,name:_trend,
+customer-acquisition:new_customers,kpi_card,high,entity_type,
+customer-acquisition:platform_breakdown,donut,medium,llm,Platform share of new users
+customer-acquisition:source_medium,table,high,entity_type,
+customer-acquisition:top_campaigns,table,high,entity_type,
+customer-feedback:avg-rating,kpi_card,high,entity_type,
+customer-feedback:nps-score,kpi_card,high,entity_type,
+customer-feedback:nps_by_segment,bar,medium,llm,NPS compared across customer segments
+customer-feedback:nps_distribution,bar,medium,llm,Distribution of NPS scores across buckets
+customer-feedback:nps_trend,line,medium,name:_trend,
+customer-feedback:product_reviews,table,high,entity_type,
+customer-feedback:promoter-percent,kpi_card,high,entity_type,
+customer-feedback:rating_distribution,bar,high,llm,Histogram of 1-5 star ratings
+customer-feedback:recent_feedback,table,high,entity_type,
+customer-feedback:total-responses,kpi_card,high,entity_type,
+customer-health:avg_health_score,kpi_card,high,entity_type,
+customer-health:clv_at_risk,kpi_card,high,entity_type,
+customer-health:clv_by_risk_tier,bar,high,llm,CLV compared across risk tier categories
+customer-health:critical_risk_count,kpi_card,high,entity_type,
+customer-health:customers_with_scores,kpi_card,high,entity_type,
+customer-health:engagement_recency,bar,medium,llm,Distribution of engagement recency buckets
+customer-health:expected_order_timing,bar,medium,llm,Distribution of expected order timing windows
+customer-health:health_trend,line,medium,name:_trend,
+customer-health:high_value_at_risk,table,high,entity_type,
+customer-health:order_frequency_health,bar,medium,llm,Order frequency distribution across buckets
+customer-health:regional_health,table,high,entity_type,
+customer-health:risk_distribution,bar,medium,llm,Distribution across risk tiers
+customer-journey:aov,kpi_card,high,entity_type,
+customer-journey:attribution_model_comparison,grouped_bar,medium,name:_comparison,
+customer-journey:campaign_performance,table,high,entity_type,
+customer-journey:channel_attribution,bar,low,llm,Attributed value compared across channels
+customer-journey:channel_revenue_trend,line,medium,name:_trend,
+customer-journey:cohort_clv,line,medium,name:_trend,
+customer-journey:conversion_funnel,funnel,medium,name:funnel,
+customer-journey:conversion_rate,kpi_card,high,entity_type,
+customer-journey:device_journey,donut,medium,llm,Device share as proportion of whole
+customer-journey:engagement_rate,kpi_card,high,entity_type,
+customer-journey:klaviyo_touchpoints,bar,low,llm,Comparing metric values across touchpoints
+customer-journey:landing_pages,table,high,entity_type,
+customer-journey:order_frequency,bar,high,llm,Order frequency histogram
+customer-journey:revenue,kpi_card,high,entity_type,
+customer-journey:sessions,kpi_card,high,entity_type,
+customer-journey:source_medium_attribution,table,high,entity_type,
+customer-journey:users,kpi_card,high,entity_type,
+customer-ltv:aov_tiers,bar,high,llm,CLV compared across AOV tiers
+customer-ltv:at_risk_value,kpi_card,high,entity_type,
+customer-ltv:avg_clv,kpi_card,high,entity_type,
+customer-ltv:channel_revenue,bar,medium,llm,Revenue compared across channels
+customer-ltv:churn_risk,heatmap,medium,name:matrix,
+customer-ltv:clv_tier_distribution,bar,high,llm,Distribution across CLV tiers
+customer-ltv:cohort_clv,bar,medium,llm,CLV compared across acquisition cohorts
+customer-ltv:customers_with_clv,kpi_card,high,entity_type,
+customer-ltv:maturation_curve,line,medium,name:_curve,
+customer-ltv:median_clv,kpi_card,high,entity_type,
+customer-ltv:order_frequency,bar,high,llm,CLV compared across order-frequency buckets
+customer-ltv:predicted_clv,kpi_card,high,entity_type,
+customer-ltv:rfm_segments,bar,low,llm,Comparing RFM segment sizes
+customer-ltv:state_clv,horizontal_bar,high,llm,"Top states ranked by CLV, long labels"
+customer-ltv:top_customers,table,high,entity_type,
+customer-ltv:total_clv,kpi_card,high,entity_type,
+customer-overview:active_customers,kpi_card,high,entity_type,
+customer-overview:cac_by_channel,bar,high,llm,CAC compared across channels
+customer-overview:customer_growth,line,medium,name:_trend,
+customer-overview:customer_health,gauge,low,llm,Overall customer health score 0-100
+customer-overview:customer_segments,bar,medium,llm,Segments compared by LTV value
+customer-overview:geographic_distribution,bar,medium,llm,Distribution across geographic regions
+customer-overview:ltv_cac_trend,line,medium,name:_trend,
+customer-overview:ltv_distribution,bar,high,llm,Histogram of LTV buckets
+customer-overview:new_customers,kpi_card,high,entity_type,
+customer-overview:purchase_frequency,bar,high,llm,Histogram of purchase frequency buckets
+customer-overview:returning_customers,kpi_card,high,entity_type,
+customer-overview:revenue_by_customer_type,grouped_bar,medium,name:vs_,
+customer-overview:total_customers,kpi_card,high,entity_type,
+customer-retention:avg_clv,kpi_card,high,entity_type,
+customer-retention:avg_orders,kpi_card,high,entity_type,
+customer-retention:churn_risk,donut,medium,llm,"Churn risk composition, proportion of whole"
+customer-retention:cohort_retention,heatmap,high,llm,Cohort-by-month retention grid
+customer-retention:days_between_orders,kpi_card,high,entity_type,
+customer-retention:first_vs_repeat_revenue,grouped_bar,medium,name:vs_,
+customer-retention:repeat_rate,kpi_card,high,entity_type,
+customer-retention:retention_trend,line,medium,name:_trend,
+customer-retention:time_between_purchases,bar,medium,llm,Histogram of days between purchases
+customer-rfm:active_customers,kpi_card,high,entity_type,
+customer-rfm:at_risk_customers,table,high,entity_type,
+customer-rfm:avg_churn_risk,kpi_card,high,entity_type,
+customer-rfm:avg_clv,kpi_card,high,entity_type,
+customer-rfm:cohort_retention,table,high,entity_type,
+customer-rfm:repeat_rate,kpi_card,high,entity_type,
+customer-rfm:rfm_heatmap,heatmap,medium,name:heatmap,
+customer-rfm:segment_distribution,bar,medium,llm,Distribution across many RFM segments
+customer-rfm:segment_performance,table,high,entity_type,
+customer-rfm:segment_trend,line,medium,name:_trend,
+customer-rfm:total_clv,kpi_card,high,entity_type,
+customer-rfm:total_customers,kpi_card,high,entity_type,
+data-quality:anomaly_log,table,high,entity_type,
+data-quality:avg_sync_lag,kpi_card,high,entity_type,
+data-quality:completeness_chart,bar,medium,llm,Completeness percentage per field or source
+data-quality:critical_anomalies,kpi_card,high,entity_type,
+data-quality:daily_metrics_trend,line,medium,name:_trend,
+data-quality:date_coverage_matrix,heatmap,medium,name:matrix,
+data-quality:klaviyo_volume,line,medium,llm,Event volume monitored over time for data quality
+data-quality:schema_coverage,table,high,entity_type,
+data-quality:schema_health,kpi_card,high,entity_type,
+data-quality:spend_comparison,grouped_bar,medium,name:_comparison,
+data-quality:sync_status_table,table,high,entity_type,
+data-quality:tables_monitored,kpi_card,high,entity_type,
+email-campaigns:engagement_timeline,line,high,llm,Timeline implies engagement trend over time
+email-campaigns:geographic_distribution,bar,medium,llm,Distribution across geographic regions compared as categories
+email-campaigns:historical_comparison,table,high,entity_type,
+email-campaigns:revenue_attribution,sankey,low,llm,Attribution of revenue across source paths
+email-campaigns:segment_performance,bar,medium,llm,Compares performance metric across customer segments
+email-flows:email_sequence_dropoff,funnel,high,llm,Sequential drop-off across email steps
+email-flows:performance_by_position,bar,medium,llm,Compares performance across discrete email positions
+email-flows:performance_trend,line,medium,name:_trend,
+email-overview:campaign_vs_flow_performance,grouped_bar,medium,name:vs_,
+email-overview:content_type_performance,bar,medium,llm,Compares performance across content type categories
+email-overview:email_list_health,donut,low,llm,List composition by subscriber engagement state
+email-overview:email_program_trend,line,medium,name:_trend,
+email-overview:monthly_order_revenue,line,high,llm,Monthly revenue is a time series
+funnel:aov,kpi_card,high,entity_type,
+funnel:checkout_abandonment,table,high,entity_type,
+funnel:conversion_funnel,funnel,medium,name:funnel,
+funnel:conversion_rate,kpi_card,high,entity_type,
+funnel:funnel_by_channel,funnel,medium,name:funnel,
+funnel:funnel_by_device,funnel,medium,name:funnel,
+funnel:funnel_by_geography,funnel,medium,name:funnel,
+funnel:funnel_trend,funnel,medium,name:funnel,
+funnel:purchase_reconciliation,kpi_card,high,entity_type,
+funnel:stage_conversion_rates,funnel,high,llm,Conversion rates across funnel stages
+funnel:total_revenue,kpi_card,high,entity_type,
+google-overview:account_structure,table,high,entity_type,
+google-overview:audience_summary,table,medium,llm,"Audience segment summary, multi-column overview"
+google-overview:campaign_performance,table,high,entity_type,
+google-overview:campaign_type_spend,bar,medium,llm,Spend compared across campaign types
+google-overview:clicks,kpi_card,high,entity_type,
+google-overview:conversions,kpi_card,high,entity_type,
+google-overview:cpa,kpi_card,high,entity_type,
+google-overview:daily_trend,line,medium,name:_trend,
+google-overview:device_performance,bar,medium,llm,Compares performance across device categories
+google-overview:impressions,kpi_card,high,entity_type,
+google-overview:keyword_portfolio,scatter,low,llm,Portfolio positioning of keywords by two metrics
+google-overview:network_performance,bar,medium,llm,Compares performance across ad networks
+google-overview:quality_score,bar,high,llm,Distribution of quality scores across buckets
+google-overview:roas,kpi_card,high,entity_type,
+google-overview:rsa_strength,bar,low,llm,Ad strength rating breakdown across ordered tiers
+google-overview:search_terms,table,high,entity_type,
+google-overview:spend,kpi_card,high,entity_type,
+google-overview:yearly_trend,line,medium,name:_trend,
+google-pmax:audience_signals,table,high,entity_type,
+google-pmax:campaign_spend_trend,line,medium,name:_trend,
+google-pmax:campaign_table,table,high,entity_type,
+google-pmax:conv_value,kpi_card,high,entity_type,
+google-pmax:conversions,kpi_card,high,entity_type,
+google-pmax:cpa,kpi_card,high,entity_type,
+google-pmax:daily_trend,line,medium,name:_trend,
+google-pmax:device_breakdown,donut,medium,llm,Breakdown implies device share of whole
+google-pmax:dow_heatmap,heatmap,medium,name:heatmap,
+google-pmax:performance_metrics,table,medium,llm,Multiple performance metrics shown as rows
+google-pmax:roas,kpi_card,high,entity_type,
+google-pmax:spend,kpi_card,high,entity_type,
+google-search:ad_position,line,medium,name:_trend,
+google-search:campaign_performance,table,high,entity_type,
+google-search:device_performance,bar,medium,llm,Compares performance across device categories
+google-search:kpi-search-clicks,kpi_card,high,entity_type,
+google-search:kpi-search-conversions,kpi_card,high,entity_type,
+google-search:kpi-search-quality-score,kpi_card,high,entity_type,
+google-search:kpi-search-roas,kpi_card,high,entity_type,
+google-search:kpi-search-spend,kpi_card,high,entity_type,
+google-search:match_type,donut,medium,llm,Spend composition across few match types
+google-search:negative_keywords,gauge,low,llm,Coverage percentage as single health metric
+google-search:quality_score_distribution,bar,high,llm,Distribution histogram of quality score buckets
+google-search:search_intent,bar,medium,llm,Distribution across search intent categories
+google-search:search_terms,table,high,entity_type,
+google-search:search_trend,line,medium,name:_trend,
+google-search:top_keywords,table,high,entity_type,
+google-shopping:active_campaigns,kpi_card,high,entity_type,
+google-shopping:ad_group_performance,table,high,entity_type,
+google-shopping:campaign_performance,table,high,entity_type,
+google-shopping:campaign_spend_trend,line,medium,name:_trend,
+google-shopping:device_performance,bar,medium,llm,Spend compared across device categories
+google-shopping:listing_groups,table,high,entity_type,
+google-shopping:revenue,kpi_card,high,entity_type,
+google-shopping:roas,kpi_card,high,entity_type,
+google-shopping:shopping_performance_metrics,table,medium,llm,Multiple performance metrics shown as rows
+google-shopping:shopping_performance_trend,line,medium,name:_trend,
+google-shopping:spend,kpi_card,high,entity_type,
+google-youtube:campaign_performance,table,high,entity_type,
+google-youtube:conv_value,kpi_card,high,entity_type,
+google-youtube:conversions,kpi_card,high,entity_type,
+google-youtube:cpv,kpi_card,high,entity_type,
+google-youtube:device_performance,bar,medium,llm,Compares performance across device categories
+google-youtube:hour_day_heatmap,heatmap,medium,name:heatmap,
+google-youtube:impressions,kpi_card,high,entity_type,
+google-youtube:network_performance,bar,medium,llm,Views compared across networks
+google-youtube:performance_trend,line,medium,name:_trend,
+google-youtube:quartile_completion,funnel,medium,name:funnel,
+google-youtube:roas,kpi_card,high,entity_type,
+google-youtube:total_spend,kpi_card,high,entity_type,
+google-youtube:video_views,kpi_card,high,entity_type,
+google-youtube:view_rate,kpi_card,high,entity_type,
+inventory:cart_to_purchase_rate,kpi_card,high,entity_type,
+inventory:category_health_matrix,table,high,entity_type,
+inventory:daily_funnel_trend,funnel,medium,name:funnel,
+inventory:declining_items,kpi_card,high,entity_type,
+inventory:estimated_lost_revenue,kpi_card,high,entity_type,
+inventory:funnel_drop_rate,kpi_card,high,entity_type,
+inventory:items_at_risk,kpi_card,high,entity_type,
+inventory:items_stopped_selling,table,high,entity_type,
+inventory:lost_revenue_by_category,bar,medium,llm,Lost revenue ranked by category
+inventory:low_conversion_items,table,high,entity_type,
+inventory:out_of_stock_alerts,table,high,entity_type,
+inventory:true_oos_count,kpi_card,high,entity_type,
+klaviyo-campaigns:engagement_timeline,line,high,llm,Timeline implies engagement trend over time
+klaviyo-campaigns:historical_comparison,table,high,entity_type,
+klaviyo-campaigns:segment_breakdown,donut,low,llm,Breakdown implies segment share of whole
+klaviyo-email:bounce-rate,kpi_card,high,entity_type,
+klaviyo-email:campaign_performance,table,high,entity_type,
+klaviyo-email:click-rate,kpi_card,high,entity_type,
+klaviyo-email:content_performance,bar,medium,llm,Compares performance across content type categories
+klaviyo-email:ctor,kpi_card,high,entity_type,
+klaviyo-email:deliverability_health,gauge,low,llm,Deliverability health as 0-100 score
+klaviyo-email:email_volume_trend,line,medium,name:_trend,
+klaviyo-email:emails-sent,kpi_card,high,entity_type,
+klaviyo-email:engagement_heatmap,heatmap,medium,name:heatmap,
+klaviyo-email:engagement_rate_trends,line,medium,name:_trend,
+klaviyo-email:flow_performance,table,high,entity_type,
+klaviyo-email:open-rate,kpi_card,high,entity_type,
+klaviyo-email:predictive_analytics,line,low,llm,Predictive forecast shown over time
+klaviyo-email:source_comparison,grouped_bar,medium,name:_comparison,
+klaviyo-email:top_campaigns,table,high,entity_type,
+klaviyo-email:worst_campaigns,table,high,entity_type,
+klaviyo-flows:active_flows,kpi_card,high,entity_type,
+klaviyo-flows:avg_click_rate,kpi_card,high,entity_type,
+klaviyo-flows:avg_open_rate,kpi_card,high,entity_type,
+klaviyo-flows:engagement_by_type,bar,medium,llm,Engagement compared across flow types
+klaviyo-flows:flow_performance,table,high,entity_type,
+klaviyo-flows:flow_trend,line,medium,name:_trend,
+klaviyo-flows:flow_type_comparison,grouped_bar,medium,name:_comparison,
+klaviyo-flows:top_flows,horizontal_bar,high,llm,"Top-N flows ranked by recipients, long flow names"
+klaviyo-flows:total_recipients,kpi_card,high,entity_type,
+klaviyo-sms:campaigns,table,high,entity_type,
+klaviyo-sms:channel_comparison,grouped_bar,medium,name:_comparison,
+klaviyo-sms:click_rate,kpi_card,high,entity_type,
+klaviyo-sms:click_rate_trend,line,medium,name:_trend,
+klaviyo-sms:flows,table,high,entity_type,
+klaviyo-sms:list_growth,line,high,llm,Subscriber list size growing over time
+klaviyo-sms:list_health,gauge,medium,llm,"Single list health score, 0-100 metric"
+klaviyo-sms:revenue,kpi_card,high,entity_type,
+klaviyo-sms:revenue_per_sms,kpi_card,high,entity_type,
+klaviyo-sms:send_time_heatmap,heatmap,medium,name:heatmap,
+klaviyo-sms:sms_sent,kpi_card,high,entity_type,
+klaviyo-sms:sms_trend,line,medium,name:_trend,
+klaviyo-sms:top_messages,table,high,entity_type,
+klaviyo-sms:unsubscribe_rate,kpi_card,high,entity_type,
+magento-customer-analytics:active_customers,kpi_card,high,entity_type,
+magento-customer-analytics:aov_trend,line,medium,name:_trend,
+magento-customer-analytics:average_ltv,kpi_card,high,entity_type,
+magento-customer-analytics:avg_days_between_orders,kpi_card,high,entity_type,
+magento-customer-analytics:avg_orders_per_customer,kpi_card,high,entity_type,
+magento-customer-analytics:churn_risk_funnel,funnel,medium,name:funnel,
+magento-customer-analytics:cohort_retention,heatmap,high,llm,Cohort by time-period retention grid
+magento-customer-analytics:cross_sell_opportunities,table,high,entity_type,
+magento-customer-analytics:guest_checkout_rate,kpi_card,high,entity_type,
+magento-customer-analytics:ltv_distribution,bar,high,llm,Histogram of LTV value buckets
+magento-customer-analytics:marketing_actions,table,high,entity_type,
+magento-customer-analytics:new_customers_month,kpi_card,high,entity_type,
+magento-customer-analytics:orders_trend,line,medium,name:_trend,
+magento-customer-analytics:registration_trend,line,medium,name:_trend,
+magento-customer-analytics:repeat_rate,kpi_card,high,entity_type,
+magento-customer-analytics:rfm_revenue,bar,medium,llm,Revenue compared across named RFM segments
+magento-customer-analytics:rfm_segments,treemap,medium,llm,Segment sizes as proportion of customer base
+magento-customer-analytics:top_customers,table,high,entity_type,
+magento-customer-analytics:total_customers,kpi_card,high,entity_type,
+magento-orders-fulfillment:abandoned_cart_analysis,funnel,high,llm,Cart-to-checkout dropoff conversion stages
+magento-orders-fulfillment:aov,kpi_card,high,entity_type,
+magento-orders-fulfillment:cancellation_rate,kpi_card,high,entity_type,
+magento-orders-fulfillment:cart_abandonment,kpi_card,high,entity_type,
+magento-orders-fulfillment:completed_orders,kpi_card,high,entity_type,
+magento-orders-fulfillment:fulfillment_funnel,funnel,medium,name:funnel,
+magento-orders-fulfillment:monthly_trends,line,medium,name:_trend,
+magento-orders-fulfillment:order_status_distribution,donut,medium,llm,Order statuses as share of whole
+magento-orders-fulfillment:orders_by_hour,bar,medium,llm,Order counts distributed across hours of day
+magento-orders-fulfillment:payment_methods,donut,high,llm,Payment method share of total orders
+magento-orders-fulfillment:processing_orders,kpi_card,high,entity_type,
+magento-orders-fulfillment:refund_analysis,bar,low,llm,Refund amounts broken down by category
+magento-orders-fulfillment:refund_rate,kpi_card,high,entity_type,
+magento-orders-fulfillment:revenue,kpi_card,high,entity_type,
+magento-orders-fulfillment:shipping_methods,donut,medium,llm,Shipping method share of orders
+magento-orders-fulfillment:top_products,table,high,entity_type,
+magento-orders-fulfillment:total_orders,kpi_card,high,entity_type,
+magento-store-overview:aov,kpi_card,high,entity_type,
+magento-store-overview:category_performance,table,high,entity_type,
+magento-store-overview:customer_mix,donut,medium,llm,New vs returning customer composition
+magento-store-overview:orders,kpi_card,high,entity_type,
+magento-store-overview:orders_heatmap,heatmap,medium,name:heatmap,
+magento-store-overview:orders_trend,line,medium,name:_trend,
+magento-store-overview:revenue,kpi_card,high,entity_type,
+magento-store-overview:revenue_trend,line,medium,name:_trend,
+magento-store-overview:seasonal_alerts,table,high,entity_type,
+magento-store-overview:status_distribution,donut,medium,llm,Orders split by status proportion
+magento-store-overview:top_products,table,high,entity_type,
+magento-store-overview:unique_customers,kpi_card,high,entity_type,
+magento-store-overview:units_sold,kpi_card,high,entity_type,
+marketing-mix:average_cpa,kpi_card,high,entity_type,
+marketing-mix:blended_roas,kpi_card,high,entity_type,
+marketing-mix:blended_roas_trending,line,medium,name:_trend,
+marketing-mix:channel_comparison,table,high,entity_type,
+marketing-mix:channel_mix_evolution,area,medium,name:evolution,
+marketing-mix:cpa_by_channel,bar,high,llm,CPA compared across few channels
+marketing-mix:efficiency_frontier,scatter,high,llm,Spend vs return bivariate frontier
+marketing-mix:mer,kpi_card,high,entity_type,
+marketing-mix:mer_trending,line,medium,name:_trend,
+marketing-mix:revenue_reconciliation,kpi_card,high,entity_type,
+marketing-mix:spend_by_channel,donut,medium,llm,Budget mix allocation across channels
+marketing-mix:spend_vs_revenue,grouped_bar,medium,name:vs_,
+marketing-mix:total_conversions,kpi_card,high,entity_type,
+marketing-mix:total_revenue,kpi_card,high,entity_type,
+marketing-mix:total_spend,kpi_card,high,entity_type,
+meta-creative:active_creatives,kpi_card,high,entity_type,
+meta-creative:copy_length,bar,low,llm,Performance by copy-length buckets
+meta-creative:cpc,kpi_card,high,entity_type,
+meta-creative:cta_performance,bar,medium,llm,Performance compared across CTA button types
+meta-creative:ctr,kpi_card,high,entity_type,
+meta-creative:daily_trend,line,medium,name:_trend,
+meta-creative:fatigue_alerts,table,high,entity_type,
+meta-creative:format_performance,bar,medium,llm,Performance compared across creative formats
+meta-creative:spend,kpi_card,high,entity_type,
+meta-creative:top_creatives,table,high,entity_type,
+meta-creative:total_creatives,kpi_card,high,entity_type,
+meta-overview:action_breakdown,bar,low,llm,Counts compared across action types
+meta-overview:adset_table,table,high,entity_type,
+meta-overview:age_demographics,bar,high,llm,Distribution across age buckets
+meta-overview:campaign_performance,table,high,entity_type,
+meta-overview:creative_asset_summary,table,high,llm,"Asset library, multi-column detailed rows"
+meta-overview:daily_trend,line,medium,name:_trend,
+meta-overview:device_performance,bar,medium,llm,Performance compared across device types
+meta-overview:gender_demographics,donut,high,llm,"Gender share, few-category proportion"
+meta-overview:meta-cpm,kpi_card,high,entity_type,
+meta-overview:meta-frequency,kpi_card,high,entity_type,
+meta-overview:meta-reach,kpi_card,high,entity_type,
+meta-overview:meta-roas,kpi_card,high,entity_type,
+meta-overview:meta-spend,kpi_card,high,entity_type,
+meta-overview:platform_distribution,donut,high,llm,Platform share of whole
+meta-overview:region_performance,table,high,entity_type,
+meta-prospecting:adset_performance,table,high,entity_type,
+meta-prospecting:age_gender,grouped_bar,medium,llm,Age groups split by gender series
+meta-prospecting:avg_cpm,kpi_card,high,entity_type,
+meta-prospecting:avg_frequency,kpi_card,high,entity_type,
+meta-prospecting:campaign_efficiency,table,high,entity_type,
+meta-prospecting:cost_per1k_reach,kpi_card,high,entity_type,
+meta-prospecting:day_of_week,bar,medium,llm,Spend distributed across days of week
+meta-prospecting:lookalike_audiences_table,table,high,entity_type,
+meta-prospecting:monthly_trend,line,medium,name:_trend,
+meta-prospecting:objective_performance,bar,medium,llm,compares performance across campaign objectives
+meta-prospecting:platform_distribution,donut,medium,llm,share of spend across nominal platforms
+meta-prospecting:region,table,high,entity_type,
+meta-prospecting:total_reach,kpi_card,high,entity_type,
+meta-prospecting:total_spend,kpi_card,high,entity_type,
+meta-retargeting:adset_performance,table,high,entity_type,
+meta-retargeting:audience_inventory,table,high,entity_type,
+meta-retargeting:audience_overlap,heatmap,medium,name:matrix,
+meta-retargeting:audience_roas,bar,high,llm,ROAS compared across audience types
+meta-retargeting:daily_trend,line,medium,name:_trend,
+meta-retargeting:frequency_ctr,grouped_bar,medium,name:vs_,
+meta-retargeting:frequency_distribution,bar,medium,llm,histogram of ad frequency buckets
+meta-retargeting:retargeting-ctr,kpi_card,high,entity_type,
+meta-retargeting:retargeting-fatigue,kpi_card,high,entity_type,
+meta-retargeting:retargeting-frequency,kpi_card,high,entity_type,
+meta-retargeting:retargeting-reach,kpi_card,high,entity_type,
+meta-retargeting:retargeting-roas,kpi_card,high,entity_type,
+meta-retargeting:retargeting-spend,kpi_card,high,entity_type,
+ml-acquisition-forecast:avg_per_category,kpi_card,high,entity_type,
+ml-acquisition-forecast:categories_forecast,kpi_card,high,entity_type,
+ml-acquisition-forecast:distribution,line,medium,name:forecast,
+ml-acquisition-forecast:forecast_table,table,high,entity_type,
+ml-acquisition-forecast:pareto,bar,medium,llm,Pareto base is ranked contribution bars
+ml-acquisition-forecast:share_treemap,treemap,medium,name:treemap,
+ml-acquisition-forecast:top10_concentration,kpi_card,high,entity_type,
+ml-acquisition-forecast:top_categories,line,medium,name:forecast,
+ml-acquisition-forecast:top_category,kpi_card,high,entity_type,
+ml-acquisition-forecast:total_forecast,kpi_card,high,entity_type,
+ml-activation:avg_activation_propensity,kpi_card,high,entity_type,
+ml-activation:expected_first_buyers,bar,medium,llm,Expected first-buyers per decile
+ml-activation:feature_importance,horizontal_bar,high,llm,Top 20 ranked features
+ml-activation:priority_count,kpi_card,high,entity_type,
+ml-activation:propensity_distribution,bar,medium,llm,Propensity per decile bucket
+ml-activation:segments_breakdown,donut,medium,llm,Composition of activation segments
+ml-activation:total_prospects,kpi_card,high,entity_type,
+ml-activation:watch_count,kpi_card,high,entity_type,
+ml-brand-affinity:brand_by_tier,heatmap,medium,llm,Affinity intensity across brand-by-tier matrix
+ml-brand-affinity:brand_distribution,bar,medium,llm,Audience distributed across brand preference categories
+ml-brand-affinity:brand_switcher_pool,kpi_card,high,entity_type,
+ml-brand-affinity:cross_brand_matrix,heatmap,medium,name:matrix,
+ml-brand-affinity:loyalty_index,gauge,low,llm,"Single loyalty index, health-style score gauge"
+ml-brand-affinity:multi_brand_customers,kpi_card,high,entity_type,
+ml-brand-affinity:single_brand_loyalists,kpi_card,high,entity_type,
+ml-brand-affinity:top_brand,kpi_card,high,entity_type,
+ml-cart-recovery:abandoned_carts,kpi_card,high,entity_type,
+ml-cart-recovery:avg_recovery_score,kpi_card,high,entity_type,
+ml-cart-recovery:expected_recovered_carts,bar,high,llm,Value per ordered decile bucket
+ml-cart-recovery:feature_importance,horizontal_bar,high,llm,Top-15 feature importances with long labels
+ml-cart-recovery:high_medium_pool,kpi_card,high,entity_type,
+ml-cart-recovery:horizon_comparison,grouped_bar,medium,name:_comparison,
+ml-cart-recovery:score_distribution,bar,medium,llm,Histogram of recovery score buckets
+ml-category-affinity:campaign_audience,bar,medium,llm,Audience size across confidence tiers
+ml-category-affinity:category_distribution,bar,high,llm,Distribution across predicted categories
+ml-category-affinity:confidence_heatmap,heatmap,medium,name:heatmap,
+ml-category-affinity:confidence_tier,donut,medium,llm,"Confidence tier breakdown, proportion of whole"
+ml-category-affinity:customers_table,table,high,entity_type,
+ml-category-affinity:entropy_distribution,bar,high,llm,Histogram of prediction uncertainty buckets
+ml-category-affinity:feature_importance,horizontal_bar,high,llm,"Top 10 signals ranked, labels"
+ml-category-affinity:high_confidence,kpi_card,high,entity_type,
+ml-category-affinity:per_class_metrics,heatmap,medium,llm,"Per-class metrics grid, classes by metric"
+ml-category-affinity:ready_to_activate,table,high,entity_type,
+ml-category-affinity:recommendation_depth,grouped_bar,medium,name:vs_,
+ml-category-affinity:recommendation_strategy,donut,medium,llm,"Strategy split, proportion of whole"
+ml-category-affinity:top1_served,kpi_card,high,entity_type,
+ml-category-affinity:top3_served,kpi_card,high,entity_type,
+ml-category-affinity:top_category_score,bar,high,llm,Average score compared by category
+ml-category-affinity:total_scored,kpi_card,high,entity_type,
+ml-category-buyer-breadth-forecast:avg_per_category,kpi_card,high,entity_type,
+ml-category-buyer-breadth-forecast:categories_forecast,kpi_card,high,entity_type,
+ml-category-buyer-breadth-forecast:distribution,line,medium,name:forecast,
+ml-category-buyer-breadth-forecast:forecast_table,table,high,entity_type,
+ml-category-buyer-breadth-forecast:pareto,bar,medium,llm,Pareto base is ranked contribution bars
+ml-category-buyer-breadth-forecast:share_treemap,treemap,medium,name:treemap,
+ml-category-buyer-breadth-forecast:top10_concentration,kpi_card,high,entity_type,
+ml-category-buyer-breadth-forecast:top_categories,line,medium,name:forecast,
+ml-category-buyer-breadth-forecast:top_category,kpi_card,high,entity_type,
+ml-category-buyer-breadth-forecast:total_forecast,kpi_card,high,entity_type,
+ml-category-purchase-propensity:category_distribution,horizontal_bar,high,llm,Top categories ranked by audience size
+ml-category-purchase-propensity:category_heatmap,heatmap,medium,name:heatmap,
+ml-category-purchase-propensity:feature_importance,horizontal_bar,high,llm,Ranked feature importances with long model-feature labels
+ml-category-purchase-propensity:high_purchase_propensity_pool,kpi_card,high,entity_type,
+ml-category-purchase-propensity:model_auc,kpi_card,high,entity_type,
+ml-category-purchase-propensity:purchase_likelihood_distribution,bar,high,llm,Histogram of purchase likelihood buckets
+ml-category-purchase-propensity:top_opportunity_category,kpi_card,high,entity_type,
+ml-category-purchase-propensity:total_customers_scored,kpi_card,high,entity_type,
+ml-category-revenue-forecast:avg_per_category,kpi_card,high,entity_type,
+ml-category-revenue-forecast:categories_forecast,kpi_card,high,entity_type,
+ml-category-revenue-forecast:distribution,line,medium,name:forecast,
+ml-category-revenue-forecast:forecast_table,table,high,entity_type,
+ml-category-revenue-forecast:pareto,bar,medium,llm,Pareto base is ranked contribution bars
+ml-category-revenue-forecast:share_treemap,treemap,medium,name:treemap,
+ml-category-revenue-forecast:top10_concentration,kpi_card,high,entity_type,
+ml-category-revenue-forecast:top_categories,line,medium,name:forecast,
+ml-category-revenue-forecast:top_category,kpi_card,high,entity_type,
+ml-category-revenue-forecast:total_forecast,kpi_card,high,entity_type,
+ml-category-seasonality:avg_seasonality_index,kpi_card,high,entity_type,
+ml-category-seasonality:highest_yoy_growth_category,kpi_card,high,entity_type,
+ml-category-seasonality:monthly_revenue,line,high,llm,Revenue trend over months
+ml-category-seasonality:off_peak_revenue_at_risk,kpi_card,high,entity_type,
+ml-category-seasonality:peak_season_category,kpi_card,high,entity_type,
+ml-category-seasonality:peak_trough,grouped_bar,medium,name:vs_,
+ml-category-seasonality:seasonality_heatmap,heatmap,medium,name:heatmap,
+ml-category-seasonality:yoy_comparison,grouped_bar,medium,name:_comparison,
+ml-channel-affinity:avg_confidence,kpi_card,high,entity_type,
+ml-channel-affinity:channel_by_tier,heatmap,medium,llm,Affinity intensity across channel-by-tier matrix
+ml-channel-affinity:channel_distribution,bar,medium,llm,Audience distributed across channel preference categories
+ml-channel-affinity:channel_matched,kpi_card,high,entity_type,
+ml-channel-affinity:confidence_heatmap,heatmap,medium,name:heatmap,
+ml-channel-affinity:feature_importance,horizontal_bar,high,llm,Ranked feature importances with long model-feature labels
+ml-channel-affinity:multi_channel_pool,kpi_card,high,entity_type,
+ml-channel-affinity:top_channel,kpi_card,high,entity_type,
+ml-channel-response-curve:budget_allocation,bar,low,llm,Recommended budget amount per channel
+ml-channel-response-curve:channels_at_saturation,kpi_card,high,entity_type,
+ml-channel-response-curve:marginal_roi,bar,medium,llm,Marginal ROI compared across channels
+ml-channel-response-curve:optimal_budget_top_channel,kpi_card,high,entity_type,
+ml-channel-response-curve:projected_incremental_revenue,kpi_card,high,entity_type,
+ml-channel-response-curve:response_curves,line,medium,name:_curve,
+ml-channel-response-curve:saturation_summary,table,medium,llm,Summary of saturation metrics per channel
+ml-channel-response-curve:total_recommended_budget,kpi_card,high,entity_type,
+ml-churn-analysis:action_summary,table,high,llm,recommended actions list
+ml-churn-analysis:avg_churn_probability,kpi_card,high,entity_type,
+ml-churn-analysis:churn_rate,kpi_card,high,entity_type,
+ml-churn-analysis:churn_segments,bar,low,llm,sizes of churn archetype segments
+ml-churn-analysis:clv_at_risk,kpi_card,high,entity_type,
+ml-churn-analysis:customers_scored,kpi_card,high,entity_type,
+ml-churn-analysis:decile_analysis,bar,medium,llm,lift value per ordered decile
+ml-churn-analysis:expected_retained_value,kpi_card,high,entity_type,
+ml-churn-analysis:feature_importance,horizontal_bar,high,llm,"top churn drivers ranked, long labels"
+ml-churn-analysis:high_risk_customers,kpi_card,high,entity_type,
+ml-churn-analysis:priority_customers_table,table,high,entity_type,
+ml-churn-analysis:retained_revenue,kpi_card,high,entity_type,
+ml-churn-analysis:retention_rate,kpi_card,high,entity_type,
+ml-churn-analysis:revenue_at_risk,kpi_card,high,entity_type,
+ml-churn-analysis:risk_distribution,bar,low,llm,customers across ordered risk bands
+ml-churn-analysis:segment_performance,bar,low,llm,compares performance across segments
+ml-discount-response-propensity:discount_responsive_count,kpi_card,high,entity_type,
+ml-discount-response-propensity:feature_importance,horizontal_bar,high,llm,Ranked feature importances with long model-feature labels
+ml-discount-response-propensity:high_responders_count,kpi_card,high,entity_type,
+ml-discount-response-propensity:model_auc,kpi_card,high,entity_type,
+ml-discount-response-propensity:response_distribution,bar,high,llm,Histogram of predicted response probability across buckets
+ml-discount-response-propensity:revenue_protected_count,kpi_card,high,entity_type,
+ml-discount-response-propensity:revenue_risk,bar,low,llm,Revenue-at-risk amount likely compared across discount tiers
+ml-discount-response-propensity:tier_segmentation,donut,medium,llm,Segmentation into discount tiers shows proportion of whole
+ml-discount-response:break_even_discount,kpi_card,high,entity_type,
+ml-discount-response:optimal_discount_range,kpi_card,high,entity_type,
+ml-discount-response:peak_response_rate,kpi_card,high,entity_type,
+ml-discount-response:recommendations,table,medium,llm,"Per-segment discount recommendations, actionable list"
+ml-discount-response:response_curves,line,medium,name:_curve,
+ml-discount-response:rev_max_discount,kpi_card,high,entity_type,
+ml-discount-response:revenue_impact,bar,medium,llm,Revenue compared across discrete discount levels
+ml-discount-response:segment_breakdown,bar,medium,llm,Response rate compared across customer segments
+ml-first-repeat:avg_repeat_propensity,kpi_card,high,entity_type,
+ml-first-repeat:expected_repeat_buyers,bar,high,llm,Expected buyers per ordered decile bucket
+ml-first-repeat:feature_importance,horizontal_bar,high,llm,"Top features by gain, long labels"
+ml-first-repeat:median_repeat_propensity,kpi_card,high,entity_type,
+ml-first-repeat:one_time_buyers,kpi_card,high,entity_type,
+ml-first-repeat:propensity_by_decile,bar,high,llm,Propensity value per ordered decile bucket
+ml-first-repeat:segments_breakdown,donut,medium,llm,Composition share across repeat segments
+ml-first-repeat:top_decile_pool,kpi_card,high,entity_type,
+ml-high-value-propensity:feature_importance,horizontal_bar,high,llm,"Top predictive features ranked, labels"
+ml-high-value-propensity:high_propensity_pool,kpi_card,high,entity_type,
+ml-high-value-propensity:model_auc,kpi_card,high,entity_type,
+ml-high-value-propensity:predicted_new_hv_customers,kpi_card,high,entity_type,
+ml-high-value-propensity:revenue_concentration,donut,medium,llm,Revenue share concentrated by tier
+ml-high-value-propensity:score_distribution,bar,high,llm,Histogram of propensity scores
+ml-high-value-propensity:tier_breakdown,donut,medium,llm,"Tier breakdown, proportion of whole"
+ml-high-value-propensity:total_customers_scored,kpi_card,high,entity_type,
+ml-intervention-propensity:actionable_customers,kpi_card,high,entity_type,
+ml-intervention-propensity:cohort_trend,line,medium,name:_trend,
+ml-intervention-propensity:email_engagement,grouped_bar,medium,name:vs_,
+ml-intervention-propensity:frequency_segments,bar,medium,llm,Propensity compared across frequency segments
+ml-intervention-propensity:high_response_pool,kpi_card,high,entity_type,
+ml-intervention-propensity:intervention_types,donut,medium,llm,"Intervention type breakdown, proportion of whole"
+ml-intervention-propensity:mean_propensity,kpi_card,high,entity_type,
+ml-intervention-propensity:model_auc,kpi_card,high,entity_type,
+ml-intervention-propensity:propensity_by_type,grouped_bar,medium,llm,"Tiers across intervention types, multi-series"
+ml-intervention-propensity:propensity_distribution,bar,high,llm,Histogram of propensity scores into buckets
+ml-intervention-propensity:propensity_tiers,donut,medium,llm,Tier segmentation as proportion of whole
+ml-intervention-propensity:response_drivers,horizontal_bar,high,llm,Top drivers ranked with feature labels
+ml-intervention-propensity:top_intervention_type,kpi_card,high,entity_type,
+ml-life-cycle-stage:active_customers,kpi_card,high,entity_type,
+ml-life-cycle-stage:at_risk_customers,kpi_card,high,entity_type,
+ml-life-cycle-stage:avg_stage_duration_days,kpi_card,high,entity_type,
+ml-life-cycle-stage:stage_cohort_trend,line,medium,name:_trend,
+ml-life-cycle-stage:stage_distribution,bar,medium,llm,Customer counts distributed across lifecycle stages
+ml-life-cycle-stage:stage_migration_flow,sankey,high,llm,Customer migration flow between lifecycle stages
+ml-life-cycle-stage:stage_revenue,bar,medium,llm,Revenue compared across lifecycle stages
+ml-life-cycle-stage:stage_transition_rate,kpi_card,high,entity_type,
+ml-markdown-optimal-timing:avg_optimal_markdown_depth,kpi_card,high,entity_type,
+ml-markdown-optimal-timing:markdown_distribution,bar,medium,llm,Histogram of optimal markdown percentages
+ml-markdown-optimal-timing:markdown_ready_now,kpi_card,high,entity_type,
+ml-markdown-optimal-timing:projected_margin_recovery,kpi_card,high,entity_type,
+ml-markdown-optimal-timing:revenue_recovery,bar,medium,llm,Projected recovery compared across categories
+ml-markdown-optimal-timing:revenue_uplift_vs_no_markdown,kpi_card,high,entity_type,
+ml-markdown-optimal-timing:timing_scatter,scatter,medium,name:scatter,
+ml-markdown-optimal-timing:urgency_distribution,donut,medium,llm,Proportion across markdown urgency tiers
+ml-marketing-mix-campaign:attribution_method,donut,medium,llm,Attribution method composition mix
+ml-marketing-mix-campaign:blended_roas,kpi_card,high,entity_type,
+ml-marketing-mix-campaign:budget_allocator,table,low,llm,Reallocation recommendations with per-channel columns
+ml-marketing-mix-campaign:campaign_performance_map,scatter,medium,llm,Campaigns plotted on two performance axes
+ml-marketing-mix-campaign:campaign_treemap,treemap,medium,name:treemap,
+ml-marketing-mix-campaign:data_quality_tier,donut,low,llm,Composition across data quality tiers
+ml-marketing-mix-campaign:reallocation_upside,kpi_card,high,entity_type,
+ml-marketing-mix-campaign:saturation_curves,line,medium,name:_curve,
+ml-marketing-mix-campaign:share_budget_return,grouped_bar,medium,name:vs_,
+ml-marketing-mix-campaign:top_campaigns_pareto,bar,medium,llm,Pareto ranked bars descending
+ml-marketing-mix-campaign:top_campaigns_revenue,horizontal_bar,medium,llm,"Top campaigns ranked by revenue, long labels"
+ml-marketing-mix-campaign:top_campaigns_spend,horizontal_bar,medium,llm,"Top campaigns ranked by spend, long labels"
+ml-marketing-mix-campaign:total_incremental_revenue,kpi_card,high,entity_type,
+ml-marketing-mix-campaign:total_spend,kpi_card,high,entity_type,
+ml-marketing-mix-forecast:cumulative_pacing,gauge,medium,name:pacing,
+ml-marketing-mix-forecast:downside_risk,line,low,llm,Forecast downside floor over time
+ml-marketing-mix-forecast:forecast,line,medium,name:forecast,
+ml-marketing-mix-forecast:forecast_vs_last_year,line,medium,name:forecast,
+ml-marketing-mix-forecast:growth_vs_prior,kpi_card,high,entity_type,
+ml-marketing-mix-forecast:peak_seasonality,line,high,llm,Weekly revenue seasonality over time
+ml-marketing-mix-forecast:peak_week,kpi_card,high,entity_type,
+ml-marketing-mix-forecast:quarter_range,kpi_card,high,entity_type,
+ml-marketing-mix-forecast:quarter_total_forecast,kpi_card,high,entity_type,
+ml-marketing-mix:adstock_decay,line,high,llm,Adstock effect decaying over time
+ml-marketing-mix:attribution,sankey,low,llm,Revenue attribution flow across channels
+ml-marketing-mix:blended_roas,kpi_card,high,entity_type,
+ml-marketing-mix:budget_optimization,donut,medium,llm,Budget allocation as proportion of whole
+ml-marketing-mix:channel_roas,bar,high,llm,ROAS compared across channels
+ml-marketing-mix:marginal_roas,line,medium,llm,Marginal ROAS curve over spend
+ml-marketing-mix:model_fit,grouped_bar,medium,name:vs_,
+ml-marketing-mix:organic_revenue,kpi_card,high,entity_type,
+ml-marketing-mix:paid_revenue,kpi_card,high,entity_type,
+ml-marketing-mix:response_curves,line,medium,name:_curve,
+ml-marketing-mix:saturation,line,medium,llm,Saturation response curve over spend
+ml-marketing-mix:total_revenue,kpi_card,high,entity_type,
+ml-marketing-mix:total_spend,kpi_card,high,entity_type,
+ml-message-affinity:avg_confidence,kpi_card,high,entity_type,
+ml-message-affinity:high_confidence_pool,kpi_card,high,entity_type,
+ml-message-affinity:message_by_tier,heatmap,medium,llm,Preference intensity across message-by-tier matrix
+ml-message-affinity:message_channel_heatmap,heatmap,medium,name:heatmap,
+ml-message-affinity:message_distribution,bar,medium,llm,Audience distributed across message type categories
+ml-message-affinity:top_affinity_signals,horizontal_bar,medium,llm,"Top signals ranked, long labels"
+ml-message-affinity:top_message_type,kpi_card,high,entity_type,
+ml-message-affinity:total_segmented,kpi_card,high,entity_type,
+ml-models:channel_attribution,bar,low,llm,attributed value compared across channels
+ml-models:churn_risk_matrix,heatmap,medium,name:matrix,
+ml-models:clv_segment_details,table,high,entity_type,
+ml-models:cohort_ltv_analysis,heatmap,low,llm,cohort rows by period LTV grid
+ml-models:expected_order_timeline,line,medium,llm,expected orders over time
+ml-models:ltv_distribution,bar,high,llm,histogram of LTV buckets
+ml-models:marketing_mix_model,bar,low,llm,channel revenue contributions compared
+ml-models:next_best_action,table,high,llm,recommendations list
+ml-offer-type-response:avg_conversion_rate,kpi_card,high,entity_type,
+ml-offer-type-response:conversion_by_type,bar,medium,llm,Conversion rate compared across offer types
+ml-offer-type-response:offer_distribution,donut,medium,llm,Share of campaigns by offer type
+ml-offer-type-response:offer_segment_match_rate,kpi_card,high,entity_type,
+ml-offer-type-response:revenue_by_type,bar,medium,llm,Revenue compared across offer types
+ml-offer-type-response:revenue_per_top_offer,kpi_card,high,entity_type,
+ml-offer-type-response:segment_heatmap,heatmap,medium,name:heatmap,
+ml-offer-type-response:top_converting_offer,kpi_card,high,entity_type,
+ml-offer-value-lift:customers_scored,kpi_card,high,entity_type,
+ml-offer-value-lift:feature_importance,horizontal_bar,high,llm,"Ranked feature importances, long labels"
+ml-offer-value-lift:high_priority_pool,kpi_card,high,entity_type,
+ml-offer-value-lift:high_priority_share,kpi_card,high,entity_type,
+ml-offer-value-lift:horizon_comparison,grouped_bar,medium,name:_comparison,
+ml-offer-value-lift:priority_breakdown,donut,medium,llm,Composition across priority tiers
+ml-offer-value-lift:score_distribution,bar,high,llm,Histogram of response score buckets
+ml-offer-value-lift:top_decile_concentration,kpi_card,high,entity_type,
+ml-order-value:aov_uplift,kpi_card,high,entity_type,
+ml-order-value:avg_predicted_aov,kpi_card,high,entity_type,
+ml-order-value:high_confidence_count,kpi_card,high,entity_type,
+ml-order-value:median_uncertainty,kpi_card,high,entity_type,
+ml-order-value:premium_count,kpi_card,high,entity_type,
+ml-order-value:total_customers_scored,kpi_card,high,entity_type,
+ml-order-value:total_expected_revenue,kpi_card,high,entity_type,
+ml-order-value:whale_target_count,kpi_card,high,entity_type,
+ml-price-affinity:aov_by_tier,bar,high,llm,Average order value compared across price tiers
+ml-price-affinity:avg_wtp_score,kpi_card,high,entity_type,
+ml-price-affinity:budget_customers,kpi_card,high,entity_type,
+ml-price-affinity:customers_table,table,high,entity_type,
+ml-price-affinity:feature_importance,horizontal_bar,high,llm,Ranked feature importances with long model-feature labels
+ml-price-affinity:premium_customers,kpi_card,high,entity_type,
+ml-price-affinity:tier_distribution,bar,medium,llm,Counts distributed across ordinal price tiers
+ml-price-affinity:value_seekers,kpi_card,high,entity_type,
+ml-price-affinity:wtp_distribution,bar,high,llm,Histogram of willingness-to-pay scores across buckets
+ml-price-elasticity:avg_elasticity_coefficient,kpi_card,high,entity_type,
+ml-price-elasticity:category_breakdown,bar,medium,llm,Elasticity compared across product categories
+ml-price-elasticity:demand_curves,line,medium,name:_curve,
+ml-price-elasticity:elasticity_distribution,bar,high,llm,Histogram of elasticity values across buckets
+ml-price-elasticity:highly_elastic_products,kpi_card,high,entity_type,
+ml-price-elasticity:inelastic_products,kpi_card,high,entity_type,
+ml-price-elasticity:revenue_sensitivity_score,kpi_card,high,entity_type,
+ml-price-elasticity:sensitivity_heatmap,heatmap,medium,name:heatmap,
+ml-product-affinity:category_product_heatmap,heatmap,medium,name:heatmap,
+ml-product-affinity:confidence_tier,donut,medium,llm,Confidence tier breakdown shows proportion of whole
+ml-product-affinity:feature_importance,horizontal_bar,high,llm,Ranked feature importances with long model-feature labels
+ml-product-affinity:high_affinity_pool,kpi_card,high,entity_type,
+ml-product-affinity:hit_rate_at_3,kpi_card,high,entity_type,
+ml-product-affinity:product_distribution,horizontal_bar,high,llm,"Top products ranked by audience size, long names"
+ml-product-affinity:top_recommended_product,kpi_card,high,entity_type,
+ml-product-affinity:total_scored,kpi_card,high,entity_type,
+ml-product-demand-forecast:avg_per_product,kpi_card,high,entity_type,
+ml-product-demand-forecast:distribution,line,medium,name:forecast,
+ml-product-demand-forecast:forecast_table,table,high,entity_type,
+ml-product-demand-forecast:pareto,bar,medium,llm,Pareto base is ranked contribution bars
+ml-product-demand-forecast:products_forecast,kpi_card,high,entity_type,
+ml-product-demand-forecast:share_treemap,treemap,medium,name:treemap,
+ml-product-demand-forecast:top_product,kpi_card,high,entity_type,
+ml-product-demand-forecast:top_products,line,medium,name:forecast,
+ml-product-demand-forecast:total_forecast,kpi_card,high,entity_type,
+ml-product-demand-forecasting:category_forecast,line,medium,name:forecast,
+ml-product-demand-forecasting:forecast_accuracy_mape,kpi_card,high,entity_type,
+ml-product-demand-forecasting:forecast_vs_actual,line,medium,name:forecast,
+ml-product-demand-forecasting:growth_distribution,bar,medium,llm,Histogram of growth rate buckets
+ml-product-demand-forecasting:high_growth_products,kpi_card,high,entity_type,
+ml-product-demand-forecasting:product_forecast,line,medium,name:forecast,
+ml-product-demand-forecasting:products_forecasted,kpi_card,high,entity_type,
+ml-product-demand-forecasting:total_forecasted_units_90d,kpi_card,high,entity_type,
+ml-product-revenue-forecast:avg_per_product,kpi_card,high,entity_type,
+ml-product-revenue-forecast:distribution,line,medium,name:forecast,
+ml-product-revenue-forecast:forecast_table,table,high,entity_type,
+ml-product-revenue-forecast:pareto,bar,medium,llm,Pareto base is ranked contribution bars
+ml-product-revenue-forecast:products_forecast,kpi_card,high,entity_type,
+ml-product-revenue-forecast:share_treemap,treemap,medium,name:treemap,
+ml-product-revenue-forecast:top_product,kpi_card,high,entity_type,
+ml-product-revenue-forecast:top_products,line,medium,name:forecast,
+ml-product-revenue-forecast:total_forecast,kpi_card,high,entity_type,
+ml-segment-value-trajectory:ascending_customers,kpi_card,high,entity_type,
+ml-segment-value-trajectory:category_breakdown,grouped_bar,medium,name:vs_,
+ml-segment-value-trajectory:customers_scored,kpi_card,high,entity_type,
+ml-segment-value-trajectory:declining_customers,kpi_card,high,entity_type,
+ml-segment-value-trajectory:feature_importance,horizontal_bar,high,llm,Ranked feature importances with long model-feature labels
+ml-segment-value-trajectory:model_accuracy,kpi_card,high,entity_type,
+ml-segment-value-trajectory:stable_high_value,kpi_card,high,entity_type,
+ml-segment-value-trajectory:trajectory_distribution,bar,medium,llm,Counts distributed across trajectory categories
+ml-segment-value-trajectory:value_change,bar,medium,llm,Predicted value change compared across segments
+ml-stock-out-risk:avg_days_until_risk,kpi_card,high,entity_type,
+ml-stock-out-risk:days_until_risk,horizontal_bar,medium,llm,Top products ranked by days until risk
+ml-stock-out-risk:high_risk_products,kpi_card,high,entity_type,
+ml-stock-out-risk:immediate_action_required,kpi_card,high,entity_type,
+ml-stock-out-risk:revenue_at_risk,bar,medium,llm,Revenue at risk compared across categories
+ml-stock-out-risk:revenue_at_stockout_risk,kpi_card,high,entity_type,
+ml-stock-out-risk:risk_distribution,donut,medium,llm,Proportion of products per risk tier
+ml-stock-out-risk:risk_heatmap,heatmap,medium,name:heatmap,
+ml-timing-response:best_day_of_week,kpi_card,high,entity_type,
+ml-timing-response:daily_response,bar,medium,llm,Response rate across seven weekdays
+ml-timing-response:hourly_response,line,medium,llm,Response rate pattern across 24 hours
+ml-timing-response:peak_response_hour,kpi_card,high,entity_type,
+ml-timing-response:personalization_opportunity,kpi_card,high,entity_type,
+ml-timing-response:seasonal_response,line,medium,llm,Seasonal response pattern over time
+ml-timing-response:seasonal_sensitivity,kpi_card,high,entity_type,
+ml-timing-response:timing_heatmap,heatmap,medium,name:heatmap,
+ml-wallet-share-growth:avg_grow_probability,kpi_card,high,entity_type,
+ml-wallet-share-growth:grow_distribution,bar,medium,llm,Histogram of grow-probability scores
+ml-wallet-share-growth:growth_by_spend,bar,medium,llm,Growth propensity across spend tiers
+ml-wallet-share-growth:growth_drivers,horizontal_bar,medium,llm,Ranked drivers of growth
+ml-wallet-share-growth:growth_rate,kpi_card,high,entity_type,
+ml-wallet-share-growth:growth_segments,donut,low,llm,Composition of customers across growth segments
+ml-wallet-share-growth:top_growth_driver,kpi_card,high,entity_type,
+ml-wallet-share-growth:untapped_low_spend,kpi_card,high,entity_type,
+monthly-review:channel_profitability,table,high,entity_type,
+monthly-review:cohort_retention,heatmap,high,llm,Cohort by period retention matrix
+monthly-review:gross_margin,kpi_card,high,entity_type,
+monthly-review:gross_margin_trend,line,medium,name:_trend,
+monthly-review:ltv_cac_ratio,kpi_card,high,entity_type,
+monthly-review:ltv_cac_trend,line,medium,name:_trend,
+monthly-review:mer,kpi_card,high,entity_type,
+monthly-review:mer_trend,line,medium,name:_trend,
+monthly-review:new_customer_revenue,kpi_card,high,entity_type,
+monthly-review:new_vs_returning,grouped_bar,medium,name:vs_,
+monthly-review:revenue,kpi_card,high,entity_type,
+monthly-review:revenue_vs_plan,grouped_bar,medium,name:vs_,
+new-products:avg_revenue_per_product,kpi_card,high,entity_type,
+new-products:launch_count,kpi_card,high,entity_type,
+new-products:launches_by_month,bar,low,llm,monthly launch counts as volume bars
+new-products:needs_optimization,table,high,entity_type,
+new-products:needs_promotion,table,high,entity_type,
+new-products:performance_tier_distribution,bar,low,llm,products across ordered performance tiers
+new-products:product_stages,table,high,entity_type,
+new-products:success_rate,kpi_card,high,entity_type,
+new-products:success_rate_trend,line,medium,name:_trend,
+new-products:top_products_table,table,high,entity_type,
+new-products:total_revenue,kpi_card,high,entity_type,
+new-products:velocity_curve,line,medium,name:_curve,
+product-affinity:affinity_table,table,high,entity_type,
+product-affinity:avg_items_per_order,kpi_card,high,entity_type,
+product-affinity:bundle_pct,kpi_card,high,entity_type,
+product-affinity:bundle_performance,table,high,entity_type,
+product-affinity:category_heatmap,heatmap,medium,name:heatmap,
+product-affinity:cross_sell_recommendations,table,high,entity_type,
+product-affinity:multi_item_distribution,bar,high,llm,histogram of orders by item count
+product-affinity:repeat_purchase_rate,kpi_card,high,entity_type,
+product-affinity:top_lift,kpi_card,high,entity_type,
+product-affinity:top_product_pairs,horizontal_bar,medium,llm,"top pairs ranked, long combined labels"
+product-category:avg_item_price,kpi_card,high,entity_type,
+product-category:category_table,table,high,entity_type,
+product-category:conversion_funnel,funnel,medium,name:funnel,
+product-category:growth_scatter,scatter,medium,name:scatter,
+product-category:items_sold,kpi_card,high,entity_type,
+product-category:leaderboard,horizontal_bar,high,llm,Ranked categories by revenue
+product-category:purchase_rate,kpi_card,high,entity_type,
+product-category:revenue,kpi_card,high,entity_type,
+product-category:revenue_trend,line,medium,name:_trend,
+product-category:seasonality,heatmap,medium,name:heatmap,
+product-category:treemap,treemap,medium,name:treemap,
+product-overview:avg_price,kpi_card,high,entity_type,
+product-overview:categories,bar,medium,llm,Revenue compared across categories
+product-overview:conversion,kpi_card,high,entity_type,
+product-overview:conversion_analysis,bar,low,llm,conversion rate compared across categories
+product-overview:funnel,funnel,medium,name:funnel,
+product-overview:new_products,table,high,entity_type,
+product-overview:opportunities,table,high,entity_type,
+product-overview:product_matrix,heatmap,medium,name:matrix,
+product-overview:revenue,kpi_card,high,entity_type,
+product-overview:revenue_trend,line,medium,name:_trend,
+product-overview:seasonal,heatmap,low,llm,Products by season performance matrix
+product-overview:top_products,table,high,entity_type,
+product-overview:units,kpi_card,high,entity_type,
+product-seasonality:category_heatmap,heatmap,medium,name:heatmap,
+product-seasonality:day_of_week,bar,medium,llm,Revenue compared across days of week
+product-seasonality:product_seasonality_table,table,high,entity_type,
+product-seasonality:quarterly_by_category,area,low,llm,Category revenue composition over quarters
+product-seasonality:seasonality_distribution,donut,low,llm,share across nominal seasonality types
+product-seasonality:weekly_trend,line,medium,name:_trend,
+product-seasonality:yoy_comparison,grouped_bar,medium,name:_comparison,
+quarterly-review:ad_spend,kpi_card,high,entity_type,
+quarterly-review:channel_saturation,scatter,low,llm,Spend versus incremental return curve per channel
+quarterly-review:channel_yoy_growth,grouped_bar,high,llm,This year versus last year per channel
+quarterly-review:customer_acquisition,line,medium,name:_trend,
+quarterly-review:efficiency_metrics,table,high,entity_type,
+quarterly-review:market_opportunities,horizontal_bar,low,llm,"Opportunities ranked by size, long labels"
+quarterly-review:new_customers,kpi_card,high,entity_type,
+quarterly-review:revenue,kpi_card,high,entity_type,
+quarterly-review:roas,kpi_card,high,entity_type,
+quarterly-review:seasonality,line,medium,llm,Seasonal pattern over time
+quarterly-review:strategic_initiatives,table,medium,llm,List of initiatives with details
+sms-performance:click_rate,kpi_card,high,entity_type,
+sms-performance:revenue_per_sms,kpi_card,high,entity_type,
+sms-performance:sms_channel_comparison,grouped_bar,medium,name:_comparison,
+sms-performance:sms_list_growth,line,high,llm,subscriber growth over time
+sms-performance:sms_list_health,donut,low,llm,subscriber status breakdown
+sms-performance:sms_performance_trend,line,medium,name:_trend,
+sms-performance:sms_revenue,kpi_card,high,entity_type,
+sms-performance:sms_send_time_heatmap,heatmap,medium,name:heatmap,
+sms-performance:sms_sent,kpi_card,high,entity_type,
+sms-performance:sms_source_comparison,grouped_bar,medium,name:_comparison,
+sms-performance:sms_top_messages,table,high,entity_type,
+sms-performance:unsubscribe_rate,kpi_card,high,entity_type,
+website-performance:audiences,table,high,entity_type,
+website-performance:bounce_rate,kpi_card,high,entity_type,
+website-performance:browser_os_performance,heatmap,medium,llm,browser by OS performance grid
+website-performance:campaigns,table,high,entity_type,
+website-performance:channel_breakdown,donut,medium,llm,traffic share across channels
+website-performance:demographics,bar,low,llm,age group distribution
+website-performance:device_breakdown,donut,medium,llm,traffic share across devices
+website-performance:engagement_rate,kpi_card,high,entity_type,
+website-performance:geographic,horizontal_bar,low,llm,"top regions ranked, long names"
+website-performance:revenue,kpi_card,high,entity_type,
+website-performance:sessions,kpi_card,high,entity_type,
+website-performance:source_medium,table,high,entity_type,
+website-performance:top_events,horizontal_bar,medium,llm,Ranked top events with category labels
+website-performance:top_pages,table,high,entity_type,
+website-performance:traffic_trend,line,medium,name:_trend,
+website-performance:users,kpi_card,high,entity_type,
+weekly-exec:budget_pacing,gauge,medium,name:pacing,
+weekly-exec:channel_matrix,heatmap,medium,name:matrix,
+weekly-exec:channel_performance,table,high,entity_type,
+weekly-exec:concerns,table,medium,llm,List of qualitative concern items
+weekly-exec:conversion_rate,kpi_card,high,entity_type,
+weekly-exec:forecast,line,medium,name:forecast,
+weekly-exec:orders,kpi_card,high,entity_type,
+weekly-exec:revenue,kpi_card,high,entity_type,
+weekly-exec:roas,kpi_card,high,entity_type,
+weekly-exec:sessions,kpi_card,high,entity_type,
+weekly-exec:spend,kpi_card,high,entity_type,
+weekly-exec:weekly_trend,line,medium,name:_trend,
+weekly-exec:wins,table,medium,llm,List of qualitative win items
