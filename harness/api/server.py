@@ -10,8 +10,9 @@ REST (all under ``/api``)::
     GET  /api/graph?limit=2000&include_deprecated=false
     GET  /api/coverage?tenant=rare_seeds
     GET  /api/edge-diff?tenant=rare_seeds&run_id=
-    GET  /api/traverse/upstream?metric_uid=&max_depth=4
-    GET  /api/traverse/downstream?metric_uid=&max_depth=4
+    GET  /api/traverse/upstream?metric_uid=&max_depth=4&min_confidence=0
+    GET  /api/traverse/downstream?metric_uid=&max_depth=4&min_confidence=0
+    GET  /api/column-impact?column=
     GET  /api/metric-chart?metric_uid=
     GET  /api/dashboards
     GET  /api/proposals?run_id=
@@ -215,16 +216,17 @@ def _shape_hop(rel: dict[str, Any]) -> dict[str, Any]:
     """Shape one raw Cypher rel-map into a wire edge for a traversal path.
 
     Lifts the pinned per-hop fields (``from``, ``to``, ``rel_type``,
-    ``relation``, ``kind``, ``role``, ``sign``, ``confidence``, ``temporal_lag``)
-    into the stable wire shape, labelling the hop ``kind`` via :func:`_hop_kind`
-    and deriving its ``sign`` from the structural ``role`` via :func:`_hop_sign`.
+    ``relation``, ``kind``, ``role``, ``sign``, ``confidence``, ``temporal_lag``,
+    ``lag_plausibility``) into the stable wire shape, labelling the hop ``kind``
+    via :func:`_hop_kind` and deriving its ``sign`` from the structural ``role``
+    via :func:`_hop_sign`.
     Endpoints are coerced to ``str`` (or ``None`` when absent) so the shape is
     uniform.
 
     Args:
         rel: A rel-map row as returned by the traversal Cypher (keys ``from``,
             ``to``, ``rel_type``, ``relation``, ``role``, ``confidence``,
-            ``temporal_lag``).
+            ``temporal_lag``, ``lag_plausibility``).
 
     Returns:
         The wire edge dict.
@@ -241,7 +243,65 @@ def _shape_hop(rel: dict[str, Any]) -> dict[str, Any]:
         "sign": _hop_sign(role),
         "confidence": _jsonable(rel.get("confidence")),
         "temporal_lag": rel.get("temporal_lag"),
+        "lag_plausibility": _jsonable(rel.get("lag_plausibility")),
     }
+
+
+def _as_factor(value: Any) -> float:
+    """Coerce a confidence / lag-plausibility prop into a multiplicative factor.
+
+    A present numeric value is used as-is; a missing (``None``) or unparseable
+    value contributes the neutral factor ``1.0``, so it neither helps nor
+    penalises a path's product score.
+
+    Args:
+        value: A ``confidence`` / ``lag_plausibility`` edge prop (any type).
+
+    Returns:
+        The value as a ``float``, or ``1.0`` when it is missing / unparseable.
+    """
+    if value is None:
+        return 1.0
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return 1.0
+
+
+def _score_path(rels: list[dict[str, Any]]) -> tuple[float, float, int]:
+    """Score one traversal path from its raw rel-maps — pure, no DB.
+
+    Realises FR-SCORE-003: a path's ``score`` is the product over its hops of
+    ``(confidence or 1.0) * (lag_plausibility or 1.0)`` (a missing / unparseable
+    factor counts as ``1.0`` via :func:`_as_factor`, so it neither helps nor
+    penalises). Alongside the score it accumulates the cumulative temporal lag in
+    days (summing :func:`_lag_to_days` over each hop's ``temporal_lag``) and the
+    ``path_sign`` — the product of each hop's :func:`_hop_sign`, so a structural
+    ``denominator`` / ``subtrahend`` hop flips the sign and an unsigned causal hop
+    zeroes it.
+
+    Takes the raw rel-map dicts the traversal Cypher projects (``confidence``,
+    ``lag_plausibility``, ``temporal_lag`` and ``role`` keys), so it is fully
+    unit-testable with no Neo4j.
+
+    Args:
+        rels: The path's rel-maps, each carrying ``confidence``,
+            ``lag_plausibility``, ``temporal_lag`` and ``role`` keys (any missing
+            key defaults safely).
+
+    Returns:
+        ``(score, cumulative_lag_days, path_sign)``.
+    """
+    score = 1.0
+    cumulative_lag = 0.0
+    path_sign = 1
+    for rel in rels:
+        conf = _as_factor(rel.get("confidence"))
+        plausibility = _as_factor(rel.get("lag_plausibility"))
+        score *= conf * plausibility
+        cumulative_lag += _lag_to_days(rel.get("temporal_lag"))
+        path_sign *= _hop_sign(rel.get("role"))
+    return score, cumulative_lag, path_sign
 
 
 def _artifact_path(name: str) -> Path:
@@ -590,14 +650,21 @@ _ACYCLIC_PATH_CAP = 50
 _CYCLIC_PATH_CAP = 25
 
 
-def _traverse(metric_uid: str, *, max_depth: int, upstream: bool) -> dict[str, Any]:
+def _traverse(
+    metric_uid: str,
+    *,
+    max_depth: int,
+    upstream: bool,
+    min_confidence: float = 0.0,
+) -> dict[str, Any]:
     """Walk variable-length lineage paths from a metric over both edge types.
 
     ``upstream`` follows edges INTO the metric (its dependencies / causes);
     downstream follows edges OUT (its blast radius). Deprecated edges are
-    excluded. Each path is scored by the product of its edge confidences (a
-    missing confidence counts as ``1.0`` so it neither helps nor penalises),
-    annotated with the cumulative temporal lag in days, and given a ``path_sign``
+    excluded. Each path is scored by the product of its per-hop ``confidence ×
+    lag_plausibility`` (a missing factor counts as ``1.0`` so it neither helps
+    nor penalises; see :func:`_score_path`), annotated with the cumulative
+    temporal lag in days, and given a ``path_sign``
     — the product of its per-hop signs (a structural ``denominator``/
     ``subtrahend`` hop is ``-1``, every other structural role ``+1``, a causal
     ``INFLUENCES`` hop ``0``; see :func:`_hop_sign`), so the sign is non-zero only
@@ -617,13 +684,16 @@ def _traverse(metric_uid: str, *, max_depth: int, upstream: bool) -> dict[str, A
         metric_uid: The anchor metric's ``metric_uid``.
         max_depth: Maximum traversal depth (number of hops).
         upstream: ``True`` for upstream (dependencies), ``False`` for downstream.
+        min_confidence: Exclude any path containing a hop whose ``confidence``
+            (a missing value counts as ``1.0``) is below this threshold; the
+            default ``0.0`` filters nothing.
 
     Returns:
         ``{"paths": [...], "cyclic_paths": [...], "summary": {"acyclic_count":
         int, "cyclic_count": int}}``. Every path is
         ``{nodes, edges, score, cumulative_lag, path_sign}`` where each edge
         carries ``from``, ``to``, ``rel_type``, ``relation``, ``kind``, ``role``,
-        ``sign``, ``confidence`` and ``temporal_lag``.
+        ``sign``, ``confidence``, ``temporal_lag`` and ``lag_plausibility``.
     """
     depth = max(1, max_depth)
     db = get_db()
@@ -647,33 +717,25 @@ def _traverse(metric_uid: str, *, max_depth: int, upstream: bool) -> dict[str, A
         f"MATCH p = {pattern} "
         "WHERE ALL(r IN relationships(p) WHERE coalesce(r.status, 'active') "
         "<> 'deprecated') "
+        "AND ALL(r IN relationships(p) "
+        "WHERE coalesce(r.confidence, 1.0) >= $min_conf) "
         "RETURN [n IN nodes(p) | n.metric_uid] AS node_uids, "
         "[r IN relationships(p) | {"
         "from: startNode(r).metric_uid, to: endNode(r).metric_uid, "
         "rel_type: type(r), relation: r.relation, role: r.role, "
-        "confidence: r.confidence, temporal_lag: r.temporal_lag}] AS rels",
+        "confidence: r.confidence, temporal_lag: r.temporal_lag, "
+        "lag_plausibility: r.lag_plausibility}] AS rels",
         uid=metric_uid,
+        min_conf=min_confidence,
     )
 
     paths: list[dict[str, Any]] = []
     cyclic_paths: list[dict[str, Any]] = []
     for row in rows:
         node_uids = [str(u) for u in (row["node_uids"] or []) if u is not None]
-        edges: list[dict[str, Any]] = []
-        score = 1.0
-        cumulative_lag = 0.0
-        path_sign = 1
-        for rel in row["rels"] or []:
-            confidence = rel.get("confidence")
-            try:
-                conf_val = float(confidence) if confidence is not None else 1.0
-            except (TypeError, ValueError):
-                conf_val = 1.0
-            score *= conf_val
-            cumulative_lag += _lag_to_days(rel.get("temporal_lag"))
-            hop = _shape_hop(rel)
-            path_sign *= hop["sign"]
-            edges.append(hop)
+        rels = row["rels"] or []
+        edges = [_shape_hop(rel) for rel in rels]
+        score, cumulative_lag, path_sign = _score_path(rels)
         path = {
             "nodes": node_uids,
             "edges": edges,
@@ -703,31 +765,80 @@ def _traverse(metric_uid: str, *, max_depth: int, upstream: bool) -> dict[str, A
 
 
 @app.get("/api/traverse/upstream")
-def traverse_upstream(metric_uid: str, max_depth: int = 4) -> dict[str, Any]:
+def traverse_upstream(
+    metric_uid: str, max_depth: int = 4, min_confidence: float = 0.0
+) -> dict[str, Any]:
     """Return upstream lineage paths (what the metric depends on / its causes).
 
     Walks ``DECOMPOSES_INTO`` + ``INFLUENCES`` edges INTO the metric, excluding
-    deprecated edges. Paths are scored (product of edge confidences), signed
-    (product of per-hop signs as ``path_sign``) and ranked descending; acyclic
-    paths land in ``paths`` (~50-capped), loop-bearing paths in ``cyclic_paths``
-    (~25-capped), with an ``acyclic_count``/``cyclic_count`` summary. See
-    :func:`_traverse`.
+    deprecated edges. Paths are scored (product of per-hop ``confidence ×
+    lag_plausibility``), signed (product of per-hop signs as ``path_sign``) and
+    ranked descending; acyclic paths land in ``paths`` (~50-capped), loop-bearing
+    paths in ``cyclic_paths`` (~25-capped), with an ``acyclic_count``/
+    ``cyclic_count`` summary. ``min_confidence`` drops any path with a hop below
+    that confidence (default ``0.0`` = no filtering). See :func:`_traverse`.
     """
-    return _traverse(metric_uid, max_depth=max_depth, upstream=True)
+    return _traverse(
+        metric_uid, max_depth=max_depth, upstream=True, min_confidence=min_confidence
+    )
 
 
 @app.get("/api/traverse/downstream")
-def traverse_downstream(metric_uid: str, max_depth: int = 4) -> dict[str, Any]:
+def traverse_downstream(
+    metric_uid: str, max_depth: int = 4, min_confidence: float = 0.0
+) -> dict[str, Any]:
     """Return downstream lineage paths (the metric's blast radius).
 
     Walks ``DECOMPOSES_INTO`` + ``INFLUENCES`` edges OUT of the metric, excluding
-    deprecated edges. Paths are scored (product of edge confidences), signed
-    (product of per-hop signs as ``path_sign``) and ranked descending; acyclic
-    paths land in ``paths`` (~50-capped), loop-bearing paths in ``cyclic_paths``
-    (~25-capped), with an ``acyclic_count``/``cyclic_count`` summary. See
-    :func:`_traverse`.
+    deprecated edges. Paths are scored (product of per-hop ``confidence ×
+    lag_plausibility``), signed (product of per-hop signs as ``path_sign``) and
+    ranked descending; acyclic paths land in ``paths`` (~50-capped), loop-bearing
+    paths in ``cyclic_paths`` (~25-capped), with an ``acyclic_count``/
+    ``cyclic_count`` summary. ``min_confidence`` drops any path with a hop below
+    that confidence (default ``0.0`` = no filtering). See :func:`_traverse`.
     """
-    return _traverse(metric_uid, max_depth=max_depth, upstream=False)
+    return _traverse(
+        metric_uid, max_depth=max_depth, upstream=False, min_confidence=min_confidence
+    )
+
+
+# ---------------------------------------------------------------------------
+# Column impact (warehouse-column blast radius)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/column-impact")
+def column_impact(column: str) -> dict[str, Any]:
+    """Return every ``Metric`` whose ``source_columns`` list contains ``column``.
+
+    A parameterised property-scan over ``Metric.source_columns`` — it answers
+    "which metrics break if this warehouse column changes?" without walking any
+    graph edges. For each matching metric the pinned fields (``metric_uid``,
+    ``display_name``, ``mart_sources``, ``domain_ids``) are returned.
+
+    Args:
+        column: The warehouse source-column name to scan ``source_columns`` for.
+
+    Returns:
+        ``{column, count, metrics: [{metric_uid, display_name, mart_sources,
+        domain_ids}]}``.
+    """
+    rows = get_db().read(
+        "MATCH (m:Metric) WHERE $col IN m.source_columns "
+        "RETURN m.metric_uid AS metric_uid, m.display_name AS display_name, "
+        "m.mart_sources AS mart_sources, m.domain_ids AS domain_ids",
+        col=column,
+    )
+    metrics = [
+        {
+            "metric_uid": row.get("metric_uid"),
+            "display_name": row.get("display_name"),
+            "mart_sources": _jsonable(row.get("mart_sources")),
+            "domain_ids": _jsonable(row.get("domain_ids")),
+        }
+        for row in rows
+    ]
+    return {"column": column, "count": len(metrics), "metrics": metrics}
 
 
 # ---------------------------------------------------------------------------

@@ -22,12 +22,17 @@ Run as a stdio server::
 from __future__ import annotations
 
 import json
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
-from harness.kg.arbitration import upsert_edge, write_node_model
+from harness.kg.arbitration import (
+    append_edge_evidence,
+    upsert_edge,
+    write_node_model,
+)
 from harness.kg.config import REPO_ROOT
 from harness.kg.driver import get_db
 from harness.kg.models import (
@@ -362,6 +367,15 @@ def create_metric_node(
     is_model_output: bool | None = None,
     concept_key: str | None = None,
     concept_name: str | None = None,
+    source_columns: str | None = None,
+    sql_query_real: str | None = None,
+    sql_query_canonical: str | None = None,
+    mart_grains: str | None = None,
+    history_start: str | None = None,
+    history_end: str | None = None,
+    data_stale: bool | None = None,
+    formula_sql_mismatch: bool | None = None,
+    formula_sql_note: str | None = None,
 ) -> str:
     """Create or update a Metric hub node (schema-valid, full fields) via arbitration.
 
@@ -422,6 +436,16 @@ def create_metric_node(
         is_model_output: Whether the metric is the output of an ML model.
         concept_key: Cross-scope concept key.
         concept_name: Human-readable concept name.
+        source_columns: Pipe-delimited mart column names used by this metric.
+        sql_query_real: Verbatim backend SQL (from ``get_bc2_sql``).
+        sql_query_canonical: LLM-generated clean, runnable ``SELECT``.
+        mart_grains: Pipe-delimited per-mart grain identifiers.
+        history_start: ISO date — data-coverage start.
+        history_end: ISO date — data-coverage end.
+        data_stale: Whether the latest data is older than the freshness SLA.
+        formula_sql_mismatch: QA flag — ``formula_text`` disagrees with
+            ``sql_query_real``.
+        formula_sql_note: QA explanation set when ``formula_sql_mismatch``.
 
     Returns:
         JSON string ``{"status", "label", "key", "fields"}`` (or an error).
@@ -476,6 +500,15 @@ def create_metric_node(
             is_model_output=is_model_output,
             concept_key=_none_if_blank(concept_key),
             concept_name=_none_if_blank(concept_name),
+            source_columns=_split_list(source_columns),
+            sql_query_real=_none_if_blank(sql_query_real),
+            sql_query_canonical=_none_if_blank(sql_query_canonical),
+            mart_grains=_split_list(mart_grains),
+            history_start=_none_if_blank(history_start),
+            history_end=_none_if_blank(history_end),
+            data_stale=data_stale,
+            formula_sql_mismatch=formula_sql_mismatch,
+            formula_sql_note=_none_if_blank(formula_sql_note),
         )
         result = write_node_model(get_db(), model)
     except Exception as exc:
@@ -484,7 +517,7 @@ def create_metric_node(
 
 
 # ---------------------------------------------------------------------------
-# Edge tool
+# Edge tools
 # ---------------------------------------------------------------------------
 
 
@@ -531,6 +564,98 @@ def draw_edge(
         )
     except Exception as exc:
         return _error(str(exc), rel_type=rel_type)
+    return json.dumps(result)
+
+
+@mcp.tool()
+def add_causal_edge(
+    from_uid: str,
+    to_uid: str,
+    mechanism: str,
+    tier: str = "prior",
+    direction: str = "supports",
+    weight: float | None = None,
+    temporal_lag: str | None = None,
+    lag_plausibility: float | None = None,
+    cross_domain: bool = False,
+    candidate_basis: str | None = None,
+    relation: str = "mart_lineage",
+) -> str:
+    """Append one evidence event to a causal ``INFLUENCES`` edge via arbitration.
+
+    Unlike :func:`draw_edge` (used for structural / spine edges written in
+    place), this tool routes through
+    :func:`~harness.kg.arbitration.append_edge_evidence`: an ``INFLUENCES`` edge's
+    confidence is *never* set directly but is a deterministic fold over its
+    append-only evidence ledger (FR-SCORE-001). One call appends a single
+    evidence event and re-folds the score. Both endpoints are ``Metric`` nodes
+    matched by ``metric_uid``; a missing endpoint yields a ``missing_endpoint``
+    status (no edge is fabricated).
+
+    Args:
+        from_uid: Source ``Metric.metric_uid`` (the cause).
+        to_uid: Target ``Metric.metric_uid`` (the effect).
+        mechanism: Free-text mechanism describing how the cause drives the
+            effect (recorded on both the evidence event and the edge).
+        tier: Evidence tier — one of :class:`~harness.kg.evidence.EvidenceTier`
+            (``prior`` | ``observational`` | ``quasi_experimental`` |
+            ``interventional`` | ``human``); selects the default pseudo-count
+            weight when ``weight`` is omitted.
+        direction: ``supports`` (adds to alpha) or ``refutes`` (adds to beta).
+        weight: Explicit per-event pseudo-count; ``None`` lets the fold fall back
+            to the tier's :data:`~harness.kg.evidence.TIER_WEIGHTS` default.
+        temporal_lag: Optional ISO-8601 duration (``P#DT#H#M#S``, e.g. ``"P1D"``)
+            for the cause→effect lag.
+        lag_plausibility: Optional lag-plausibility multiplier in ``(0, 1]``.
+        cross_domain: Whether the edge crosses domain boundaries.
+        candidate_basis: Optional provenance note for how the candidate arose.
+        relation: ``INFLUENCES`` relation subtype (must be in
+            :data:`~harness.kg.models.INFLUENCES_RELATIONS`; default
+            ``mart_lineage``).
+
+    Returns:
+        JSON string of the
+        :func:`~harness.kg.arbitration.append_edge_evidence` result (``created``
+        | ``updated`` | ``missing_endpoint`` | ``kept_reviewed``), or an error.
+    """
+    if relation not in INFLUENCES_RELATIONS:
+        return _error(
+            f"Unknown INFLUENCES relation {relation!r}; expected one of "
+            f"{sorted(INFLUENCES_RELATIONS)}",
+            from_uid=from_uid,
+            to_uid=to_uid,
+        )
+    # The fold derives confidence from this event; weight is left to the tier
+    # default when None (see fold_ledger). attribution/timestamp make the score
+    # traceable (FR-SCORE-002); event_id is computed by append_edge_evidence.
+    event = {
+        "tier": tier,
+        "direction": direction,
+        "weight": weight,
+        "attribution": "mcp:add_causal_edge",
+        "timestamp": datetime.now(tz=UTC).isoformat(),
+        "mechanism": mechanism,
+    }
+    # Non-ledger edge scalars (None values are stripped by the arbitration write).
+    edge_props = {
+        "relation": relation,
+        "mechanism": mechanism,
+        "temporal_lag": temporal_lag,
+        "lag_plausibility": lag_plausibility,
+        "cross_domain": cross_domain,
+        "source_kind": "mart_lineage",
+        "candidate_basis": candidate_basis,
+    }
+    try:
+        result = append_edge_evidence(
+            get_db(),
+            from_key=from_uid,
+            to_key=to_uid,
+            event=event,
+            edge_props=edge_props,
+        )
+    except Exception as exc:
+        return _error(str(exc), from_uid=from_uid, to_uid=to_uid)
     return json.dumps(result)
 
 

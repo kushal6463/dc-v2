@@ -1,10 +1,12 @@
 """Unit tests for the unified causal-path traversal helpers.
 
-NO-DB tests cover the pure shaping/parsing helpers the traversal payload is built
-from: :func:`harness.api.server._hop_kind` (rel_type -> structural|causal),
-:func:`harness.api.server._hop_sign` (structural ``role`` -> per-hop sign),
-:func:`harness.api.server._shape_hop` (raw rel-map -> wire edge with the pinned
-``from/to/rel_type/relation/kind/role/sign/confidence/temporal_lag`` fields) and
+NO-DB tests cover the pure shaping/parsing/scoring helpers the traversal payload
+is built from: :func:`harness.api.server._hop_kind` (rel_type -> structural|
+causal), :func:`harness.api.server._hop_sign` (structural ``role`` -> per-hop
+sign), :func:`harness.api.server._shape_hop` (raw rel-map -> wire edge with the
+pinned ``from/to/rel_type/relation/kind/role/sign/confidence/temporal_lag/
+lag_plausibility`` fields), :func:`harness.api.server._score_path` (raw rel-maps
+-> ``(score, cumulative_lag_days, path_sign)`` per FR-SCORE-003) and
 :func:`harness.api.server._lag_to_days` (ISO-8601 duration -> fractional days).
 
 The acyclicity guard was removed when the traversal began *returning* cyclic
@@ -22,6 +24,7 @@ from harness.api.server import (
     _hop_kind,
     _hop_sign,
     _lag_to_days,
+    _score_path,
     _shape_hop,
 )
 
@@ -88,6 +91,7 @@ def test_shape_hop_full_structural_edge() -> None:
             "role": "numerator",
             "confidence": 1.0,
             "temporal_lag": "P0D",
+            "lag_plausibility": 0.9,
         }
     )
     assert edge == {
@@ -100,6 +104,7 @@ def test_shape_hop_full_structural_edge() -> None:
         "sign": 1,
         "confidence": 1.0,
         "temporal_lag": "P0D",
+        "lag_plausibility": 0.9,
     }
 
 
@@ -157,6 +162,7 @@ def test_shape_hop_exposes_exactly_the_pinned_fields() -> None:
         "sign",
         "confidence",
         "temporal_lag",
+        "lag_plausibility",
     }
 
 
@@ -168,6 +174,7 @@ def test_shape_hop_missing_endpoints_become_none() -> None:
     assert edge["relation"] is None
     assert edge["confidence"] is None
     assert edge["temporal_lag"] is None
+    assert edge["lag_plausibility"] is None
     assert edge["kind"] == "causal"
     assert edge["role"] is None
     assert edge["sign"] == 0
@@ -225,3 +232,95 @@ def test_lag_to_days_unparseable_is_zero() -> None:
 def test_lag_to_days_is_case_insensitive() -> None:
     """Lowercase ISO durations parse the same as uppercase."""
     assert _lag_to_days("p2d") == 2.0
+
+
+# ---------------------------------------------------------------------------
+# _score_path — raw rel-maps -> (score, cumulative_lag_days, path_sign)
+# ---------------------------------------------------------------------------
+
+
+def test_score_path_empty_is_neutral() -> None:
+    """An empty path scores the multiplicative / additive identities."""
+    assert _score_path([]) == (1.0, 0.0, 1)
+
+
+def test_score_path_product_of_confidence_times_lag_plausibility() -> None:
+    """FR-SCORE-003: score is the product of ``confidence × lag_plausibility``."""
+    score, lag, sign = _score_path(
+        [
+            {"confidence": 0.5, "lag_plausibility": 0.8, "role": "numerator"},
+            {"confidence": 0.5, "lag_plausibility": 0.5, "role": "factor"},
+        ]
+    )
+    assert math.isclose(score, 0.5 * 0.8 * 0.5 * 0.5)
+    assert lag == 0.0
+    assert sign == 1
+
+
+def test_score_path_missing_factors_count_as_one() -> None:
+    """A missing / unparseable confidence or lag_plausibility is the neutral 1.0."""
+    score, _lag, _sign = _score_path(
+        [
+            {"confidence": 0.6},  # no lag_plausibility -> 1.0
+            {"lag_plausibility": 0.5},  # no confidence -> 1.0
+            {"confidence": "bad", "lag_plausibility": None},  # unparseable / None
+        ]
+    )
+    assert math.isclose(score, 0.6 * 0.5)
+
+
+def test_score_path_cumulative_lag_sums_days() -> None:
+    """Cumulative lag sums :func:`_lag_to_days` over each hop's ``temporal_lag``."""
+    _score, lag, _sign = _score_path(
+        [{"temporal_lag": "P2D"}, {"temporal_lag": "PT12H"}, {"temporal_lag": None}]
+    )
+    assert math.isclose(lag, 2.5)
+
+
+def test_score_path_sign_is_product_of_hop_signs() -> None:
+    """``path_sign`` is the product of per-hop signs (a denominator flips it)."""
+    _score, _lag, sign = _score_path(
+        [{"role": "numerator"}, {"role": "denominator"}]
+    )
+    assert sign == -1
+
+
+def test_score_path_causal_hop_zeroes_the_sign() -> None:
+    """An unsigned causal hop (no ``role``) zeroes the whole path's sign."""
+    _score, _lag, sign = _score_path(
+        [{"role": "numerator"}, {"confidence": 0.6}]  # second hop has no role
+    )
+    assert sign == 0
+
+
+# ---------------------------------------------------------------------------
+# _score_path — pinned-value regression checks (the contract's worked examples)
+# ---------------------------------------------------------------------------
+
+
+def test_score_path_confidence_times_lag_plausibility_exact() -> None:
+    """A single hop scores ``confidence × lag_plausibility``: 0.8 × 0.5 == 0.4."""
+    score, _lag, _sign = _score_path([{"confidence": 0.8, "lag_plausibility": 0.5}])
+    assert math.isclose(score, 0.4)
+
+
+def test_score_path_missing_lag_plausibility_is_factor_one() -> None:
+    """A hop with no ``lag_plausibility`` uses the neutral 1.0: score == confidence."""
+    score, _lag, _sign = _score_path([{"confidence": 0.8}])
+    assert math.isclose(score, 0.8)
+
+
+def test_score_path_cumulative_lag_p1d_plus_pt12h_is_one_and_a_half() -> None:
+    """Cumulative lag sums :func:`_lag_to_days`: ``P1D`` + ``PT12H`` == 1.5 days."""
+    _score, lag, _sign = _score_path(
+        [{"temporal_lag": "P1D"}, {"temporal_lag": "PT12H"}]
+    )
+    assert math.isclose(lag, 1.5)
+
+
+def test_score_path_path_sign_multiplies_hop_signs() -> None:
+    """``path_sign`` is the product of per-hop signs: two denominators -> +1."""
+    _score, _lag, sign = _score_path(
+        [{"role": "denominator"}, {"role": "denominator"}]
+    )
+    assert sign == 1
