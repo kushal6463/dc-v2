@@ -61,6 +61,37 @@ _AGG_RE = re.compile(
     r"([A-Za-z_][A-Za-z0-9_]*)",
     re.IGNORECASE,
 )
+#: SQL types / functions / keywords that must NOT be treated as columns — e.g.
+#: ``CAST(x AS FLOAT)`` must not yield ``FLOAT``, ``NVL(...)`` not ``NVL``. Keeps
+#: source_columns (and the shared-column / column-impact logic) meaningful.
+_COLUMN_STOPWORDS: frozenset[str] = frozenset({
+    "FLOAT", "INT", "INTEGER", "BIGINT", "SMALLINT", "NUMERIC", "DECIMAL", "DOUBLE",
+    "NUMBER", "REAL", "VARCHAR", "CHAR", "STRING", "TEXT", "BOOLEAN", "BOOL", "DATE",
+    "DATETIME", "TIMESTAMP", "TIME", "NULL", "TRUE", "FALSE", "NVL", "COALESCE",
+    "NULLIF", "IFNULL", "IFF", "CAST", "CASE", "WHEN", "THEN", "ELSE", "END", "SUM",
+    "COUNT", "AVG", "MIN", "MAX", "MEDIAN", "ROUND", "ABS", "CEIL", "FLOOR",
+    "GREATEST", "LEAST", "DISTINCT", "DATEDIFF", "DATE_TRUNC", "EXTRACT", "AND", "OR",
+    "NOT", "AS", "IN", "IS", "LIKE", "BETWEEN", "FROM", "WHERE", "SELECT", "JOIN",
+    "ON", "GROUP", "ORDER", "BY", "ASC", "DESC", "LIMIT", "OVER", "PARTITION",
+    "WITHIN", "FILTER", "DIV", "MOD", "ROW", "ROWS",
+})
+
+
+def _clean_columns(raw: Any) -> list[str]:
+    """Upper-case, drop SQL keywords/types/functions + junk, dedupe, sort.
+
+    Accepts any iterable of candidate tokens; keeps only real-looking columns: a
+    2+-char identifier containing a letter, not in :data:`_COLUMN_STOPWORDS`.
+    """
+    out: set[str] = set()
+    for token in raw or []:
+        col = str(token).strip().upper()
+        if len(col) < 2 or col in _COLUMN_STOPWORDS:
+            continue
+        if not any(ch.isalpha() for ch in col):
+            continue
+        out.add(col)
+    return sorted(out)
 #: ``file.py:start-end`` (or bare ``:start-end`` reusing the previous file).
 _SLICE_RE = re.compile(r"([A-Za-z0-9_./-]+\.py)?\s*:(\d+)-(\d+)")
 #: ``FROM {VAR}`` / ``{self.MART}`` parameterized table placeholder.
@@ -105,7 +136,7 @@ def extract_source_columns_from_sql(sql_real: str | None) -> list[str]:
     """Best-effort heuristic list of aggregated source columns in a SQL string."""
     if not sql_real:
         return []
-    return sorted({c.upper() for c in _AGG_RE.findall(sql_real)})
+    return _clean_columns(_AGG_RE.findall(sql_real))
 
 
 # ---------------------------------------------------------------------------
@@ -409,9 +440,7 @@ def enrich_metric_fields(
     # Prefer the registry's explicit source_columns (pipe-delimited) when present.
     reg_cols_raw = (reg_row.get("source_columns") or "").strip()
     if reg_cols_raw and reg_cols_raw.lower() not in {"none", "null", "nan"}:
-        source_columns = sorted(
-            {c.strip().upper() for c in re.split(r"[|;,]", reg_cols_raw) if c.strip()}
-        )
+        source_columns = _clean_columns(re.split(r"[|;,]", reg_cols_raw))
     else:
         source_columns = extract_source_columns_from_sql(sql_real)
 
