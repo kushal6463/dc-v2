@@ -1,5 +1,0 @@
-src,dst,lag,corr,granger_p,mi,discovery_score,stability,cond_corr,method,fdr_pass
-google.search,google.daily_trend,1,0.018,0.016,,0.018,,PCMCI+,pcmci+,True
-google.shopping_performance,google.daily_trend,1,0.019,0.0,,0.019,,PCMCI+,pcmci+,True
-web.engagement.rate,web.bounce.rate,1,0.262,0.004,,0.262,,PCMCI+,pcmci+,True
-web.engagement.rate,web.users,2,0.149,0.0279,,0.149,,PCMCI+,pcmci+,True

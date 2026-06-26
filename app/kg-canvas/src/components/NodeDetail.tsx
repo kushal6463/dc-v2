@@ -1,0 +1,592 @@
+// Node inspector for the currently selected node — dc-v2 node-inspector style:
+// header (kind dot + title + id), grouped key/value properties, and connections
+// grouped by relation. Reads from the selected node's `props` + store edges.
+
+import { useEffect, useMemo, useState } from "react"
+
+import { useStore } from "@/store"
+import { edgeVisual, labelStyle, provenanceColor } from "@/lib/graphTheme"
+import {
+  traverseDownstream,
+  traverseUpstream,
+  type GraphNode,
+  type TraversePath,
+  type TraversePayload,
+} from "@/lib/api"
+import { Badge } from "@/components/ui/badge"
+
+// Internal / header-duplicated keys we never surface as properties.
+const HIDDEN_FIELDS = new Set([
+  "id",
+  "title",
+  "label",
+  "name",
+  "node_key",
+  "tenant_id",
+  "label_name",
+  "created_at",
+  "updated_at",
+  "content_hash",
+])
+
+// Long-text fields get a full-width cell so they don't get cramped in the grid.
+const WIDE_FIELDS = new Set(["description", "summary", "formula_expression", "condition", "definition"])
+
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined) return "—"
+  if (typeof value === "boolean") return value ? "yes" : "no"
+  if (Array.isArray(value)) return value.map((x) => String(x)).join(", ")
+  if (typeof value === "object") return JSON.stringify(value)
+  return String(value)
+}
+
+type Conn = { dir: "out" | "in"; otherId: string; otherTitle: string; type: string }
+
+// Curated metric summary fields, in display order. Keys are read off node.props
+// (defensively — older payloads may omit some). The Properties grid below still
+// surfaces everything else generically.
+const METRIC_SUMMARY_FIELDS: { key: string; label: string; wide?: boolean }[] = [
+  { key: "metric_uid", label: "metric_uid" },
+  { key: "display_name", label: "display_name" },
+  { key: "scope_key", label: "scope_key" },
+  { key: "metric_base", label: "metric_base" },
+  { key: "is_derived", label: "is_derived" },
+  { key: "formula_text", label: "formula_text", wide: true },
+  { key: "aliases", label: "aliases", wide: true },
+  { key: "synonyms", label: "synonyms", wide: true },
+  { key: "card_endpoint", label: "card_endpoint", wide: true },
+  { key: "endpoint_paths", label: "endpoint_paths", wide: true },
+  { key: "domain_ids", label: "domain", wide: true },
+  { key: "product_ids", label: "product", wide: true },
+  { key: "platform", label: "platform" },
+  { key: "platform_ids", label: "platform" },
+  { key: "source_refs", label: "source_refs", wide: true },
+]
+
+// Lineage fetched on demand for the selected metric — the full signed-path
+// payloads ({paths, cyclic_paths, summary}) for both directions.
+interface Lineage {
+  upstream: TraversePayload
+  downstream: TraversePayload
+}
+
+const EMPTY_PAYLOAD: TraversePayload = {
+  paths: [],
+  cyclic_paths: [],
+  summary: { acyclic_count: 0, cyclic_count: 0 },
+}
+
+export function NodeDetail() {
+  const selectedNodeId = useStore((s) => s.selectedNodeId)
+  const node = useStore((s) => s.nodes.find((n) => n.id === s.selectedNodeId))
+  const nodes = useStore((s) => s.nodes)
+  const edges = useStore((s) => s.edges)
+  const selectNode = useStore((s) => s.selectNode)
+  const setFocus = useStore((s) => s.setFocus)
+  const setFocusMode = useStore((s) => s.setFocusMode)
+  const setFocusDir = useStore((s) => s.setFocusDir)
+  // Drives which traversal view leads (upstream / downstream); also gates the
+  // canvas path highlight. The panel always shows all views, emphasizing this one.
+  const traversalMode = useStore((s) => s.traversalMode)
+
+  // Lineage: signed upstream/downstream path payloads for the selected metric.
+  // Only fetched for Metric nodes; keyed by metric_uid so it refreshes on change.
+  const isMetric = node?.label === "Metric"
+  const metricUid = isMetric
+    ? ((node?.props?.metric_uid as string | undefined) ?? node?.id)
+    : undefined
+  const [lineage, setLineage] = useState<Lineage | null>(null)
+  const [lineageLoading, setLineageLoading] = useState(false)
+
+  useEffect(() => {
+    if (!metricUid) {
+      setLineage(null)
+      return
+    }
+    let cancelled = false
+    setLineage(null)
+    setLineageLoading(true)
+    Promise.all([traverseUpstream(metricUid), traverseDownstream(metricUid)])
+      .then(([up, down]) => {
+        if (cancelled) return
+        setLineage({ upstream: up, downstream: down })
+      })
+      .catch(() => {
+        if (!cancelled)
+          setLineage({ upstream: EMPTY_PAYLOAD, downstream: EMPTY_PAYLOAD })
+      })
+      .finally(() => {
+        if (!cancelled) setLineageLoading(false)
+      })
+    return () => {
+      cancelled = true
+    }
+  }, [metricUid])
+
+  // Connections grouped by relation type (computed before any early return).
+  const groups = useMemo(() => {
+    if (!selectedNodeId) return [] as { type: string; items: Conn[] }[]
+    const byId = new Map(nodes.map((n) => [n.id, n.title || n.id]))
+    const conns: Conn[] = []
+    for (const e of edges) {
+      if (e.source === selectedNodeId && e.target !== selectedNodeId)
+        conns.push({ dir: "out", otherId: e.target, otherTitle: byId.get(e.target) ?? e.target, type: e.type })
+      else if (e.target === selectedNodeId && e.source !== selectedNodeId)
+        conns.push({ dir: "in", otherId: e.source, otherTitle: byId.get(e.source) ?? e.source, type: e.type })
+    }
+    const byType = new Map<string, Conn[]>()
+    for (const c of conns) {
+      const arr = byType.get(c.type)
+      if (arr) arr.push(c)
+      else byType.set(c.type, [c])
+    }
+    return [...byType.entries()]
+      .map(([type, items]) => ({ type, items: items.sort((a, b) => a.otherTitle.localeCompare(b.otherTitle)) }))
+      .sort((a, b) => b.items.length - a.items.length || a.type.localeCompare(b.type))
+  }, [selectedNodeId, nodes, edges])
+
+  // Curated metric summary (only the populated keys, in display order). Empty
+  // for non-metric nodes.
+  const summary = useMemo(() => {
+    if (node?.label !== "Metric") return [] as { label: string; value: unknown; wide?: boolean }[]
+    const props = (node?.props ?? {}) as Record<string, unknown>
+    const out: { label: string; value: unknown; wide?: boolean }[] = []
+    for (const f of METRIC_SUMMARY_FIELDS) {
+      const v = props[f.key]
+      if (v === null || v === undefined || v === "") continue
+      if (Array.isArray(v) && v.length === 0) continue
+      out.push({ label: f.label, value: v, wide: f.wide })
+    }
+    return out
+  }, [node])
+
+  // Keys already shown in the curated summary are dropped from the generic grid.
+  const summaryKeys = useMemo(() => new Set(METRIC_SUMMARY_FIELDS.map((f) => f.key)), [])
+
+  const fields = useMemo(() => {
+    const props = (node?.props ?? {}) as Record<string, unknown>
+    const isMetricNode = node?.label === "Metric"
+    const out: [string, unknown][] = []
+    for (const [k, v] of Object.entries(props)) {
+      if (HIDDEN_FIELDS.has(k)) continue
+      if (isMetricNode && summaryKeys.has(k)) continue
+      if (v === null || v === undefined || v === "") continue
+      out.push([k, v])
+    }
+    return out
+  }, [node, summaryKeys])
+
+  if (!selectedNodeId || !node) {
+    return (
+      <div className="p-4 text-sm text-muted-foreground">
+        Select a node on the canvas to inspect its properties. Shift-click to focus its connections.
+      </div>
+    )
+  }
+
+  const st = labelStyle(node.label, node.props?.category as string | undefined)
+  const prov = provenanceColor(node.provenance)
+  const connTotal = groups.reduce((n, g) => n + g.items.length, 0)
+
+  const navigate = (n: GraphNode | undefined, id: string) => {
+    selectNode(id)
+    if (n) setFocus(id)
+  }
+
+  // Quick causal-focus presets from the inspector header.
+  const focusAs = (up: boolean, down: boolean) => {
+    setFocusMode("causal")
+    setFocusDir({ up, down })
+    setFocus(node.id)
+  }
+
+  return (
+    <div className="flex h-full w-full flex-col">
+      {/* header */}
+      <div className="flex items-start justify-between gap-2 border-b border-border px-4 py-3">
+        <div className="min-w-0">
+          <div className="mb-1 flex items-center gap-1.5 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+            <i className="inline-block h-2 w-2 rounded-full" style={{ background: st.color }} />
+            {st.label}
+          </div>
+          <div className="truncate text-sm font-semibold text-foreground">{node.title || node.id}</div>
+          <div className="truncate font-mono text-[11px] text-muted-foreground">{node.id}</div>
+          <div className="mt-1.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+            <span className="inline-block size-2.5 rounded-sm" style={{ background: prov }} />
+            {node.provenance}
+          </div>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <button
+            onClick={() => focusAs(true, true)}
+            title="Focus this metric's parents + children"
+            className="rounded-md border border-border px-2 py-1 text-xs hover:bg-accent"
+          >
+            Neighborhood
+          </button>
+          <div className="flex gap-1">
+            <button
+              onClick={() => focusAs(true, false)}
+              title="Show only what drives this metric (parents)"
+              className="rounded-md border border-border px-1.5 py-0.5 text-[11px] hover:bg-accent"
+            >
+              ↑ Up
+            </button>
+            <button
+              onClick={() => focusAs(false, true)}
+              title="Show only what this metric affects (children)"
+              className="rounded-md border border-border px-1.5 py-0.5 text-[11px] hover:bg-accent"
+            >
+              ↓ Down
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* body */}
+      <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
+        {/* metric summary (curated, metric nodes only) */}
+        {summary.length > 0 && (
+          <div>
+            <div className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+              Metric
+            </div>
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+              {summary.map((f) => (
+                <div key={f.label} className={`min-w-0 ${f.wide ? "col-span-2" : ""}`}>
+                  <div className="font-mono text-[10px] text-muted-foreground">{f.label}</div>
+                  <div className="break-words text-xs text-foreground">{formatValue(f.value)}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* properties */}
+        <div>
+          <div className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            Properties
+          </div>
+          {fields.length === 0 ? (
+            <div className="text-xs text-muted-foreground">No properties.</div>
+          ) : (
+            <div className="grid grid-cols-2 gap-x-3 gap-y-2 text-sm">
+              {fields.map(([k, v]) => (
+                <div key={k} className={`min-w-0 ${WIDE_FIELDS.has(k) ? "col-span-2" : ""}`}>
+                  <div className="font-mono text-[10px] text-muted-foreground">{k}</div>
+                  <div className="break-words text-xs text-foreground">{formatValue(v)}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* connections grouped by relation */}
+        <div>
+          <div className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+            Connections ({connTotal})
+          </div>
+          {groups.length === 0 ? (
+            <div className="text-xs text-muted-foreground">No connections.</div>
+          ) : (
+            <div className="space-y-3">
+              {groups.map((g) => {
+                const v = edgeVisual(g.type)
+                return (
+                  <div key={g.type}>
+                    <div className="mb-1 flex items-center gap-1.5">
+                      <i className="inline-block h-1.5 w-4 rounded-full" style={{ background: v.color }} />
+                      <span className="text-[11px] font-medium text-foreground">{v.label}</span>
+                      <span className="text-[11px] text-muted-foreground">{g.items.length}</span>
+                    </div>
+                    <ul className="space-y-1">
+                      {g.items.map((c, i) => (
+                        <li key={`${c.dir}-${c.otherId}-${i}`}>
+                          <button
+                            onClick={() => navigate(nodes.find((n) => n.id === c.otherId), c.otherId)}
+                            className="flex w-full items-center gap-2 rounded-md border border-border px-2 py-1 text-left text-xs hover:bg-accent"
+                            style={{ borderLeftColor: v.color, borderLeftWidth: 3 }}
+                          >
+                            <span className="w-3 shrink-0 text-muted-foreground">{c.dir === "out" ? "→" : "←"}</span>
+                            <span className="truncate text-foreground">{c.otherTitle}</span>
+                            <span className="ml-auto shrink-0 text-muted-foreground">›</span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* traversal: signed upstream / downstream / blast-radius / causal-path
+            lineage + feedback loops (metric nodes only) */}
+        {isMetric && (
+          <TraversalPanel
+            loading={lineageLoading}
+            upstream={lineage?.upstream ?? EMPTY_PAYLOAD}
+            downstream={lineage?.downstream ?? EMPTY_PAYLOAD}
+            mode={traversalMode}
+            nodes={nodes}
+            onNavigate={(id) => navigate(nodes.find((n) => n.id === id), id)}
+          />
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Signed-path traversal panel.
+//
+// Renders the four lineage views the spec calls for, derived from the two
+// fetched directions:
+//   • Upstream      — what this metric depends on / its causes
+//   • Downstream    — what it affects (its blast radius)
+//   • Causal path   — downstream paths that include a causal (INFLUENCES) hop
+//   • Feedback loops — the cyclic_paths (collapsible)
+// The active traversalMode view leads (expanded); each path shows its path_sign
+// (+1 reinforcing → green, −1 dampening → red, 0 contains-causal/unknown → grey),
+// its confidence score, and clickable nodes.
+// ---------------------------------------------------------------------------
+
+/** Sign chip: +1 reinforcing (green) / −1 dampening (red) / 0 unknown (grey). */
+function SignBadge({ sign }: { sign: number }) {
+  const { label, cls } =
+    sign > 0
+      ? { label: "+1 reinforcing", cls: "bg-green-500/15 text-green-600 dark:text-green-400" }
+      : sign < 0
+        ? { label: "−1 dampening", cls: "bg-red-500/15 text-red-600 dark:text-red-400" }
+        : { label: "0 contains causal", cls: "bg-muted text-muted-foreground" }
+  return (
+    <span
+      className={`rounded px-1.5 py-0.5 text-[10px] font-medium tabular-nums ${cls}`}
+      title={
+        sign === 0
+          ? "Path sign is 0: it contains a causal (unsigned) hop, so net direction is unknown in V1"
+          : sign > 0
+            ? "Net reinforcing: the source pushes the target in the same direction"
+            : "Net dampening: the source pushes the target in the opposite direction (denominator / subtrahend on the path)"
+      }
+    >
+      {label}
+    </span>
+  )
+}
+
+function TraversalPanel({
+  loading,
+  upstream,
+  downstream,
+  mode,
+  nodes,
+  onNavigate,
+}: {
+  loading: boolean
+  upstream: TraversePayload
+  downstream: TraversePayload
+  mode: "off" | "upstream" | "downstream"
+  nodes: GraphNode[]
+  onNavigate: (uid: string) => void
+}) {
+  // Causal-path = downstream acyclic paths that traverse at least one causal hop.
+  const causalPaths = useMemo(
+    () => downstream.paths.filter((p) => p.edges.some((e) => e.kind === "causal")),
+    [downstream.paths],
+  )
+  // Feedback loops = both directions' cyclic paths (deduped by node signature).
+  const loops = useMemo(() => {
+    const seen = new Set<string>()
+    const out: TraversePath[] = []
+    for (const p of [...upstream.cyclic_paths, ...downstream.cyclic_paths]) {
+      const key = p.nodes.join(">")
+      if (seen.has(key)) continue
+      seen.add(key)
+      out.push(p)
+    }
+    return out
+  }, [upstream.cyclic_paths, downstream.cyclic_paths])
+
+  return (
+    <div className="space-y-1">
+      <div className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+        Lineage traversal
+      </div>
+      <PathSection
+        title="Upstream"
+        hint="What this metric depends on / its causes"
+        defaultOpen={mode === "upstream"}
+        loading={loading}
+        paths={upstream.paths}
+        nodes={nodes}
+        onNavigate={onNavigate}
+      />
+      <PathSection
+        title="Downstream · blast radius"
+        hint="Everything this metric affects downstream"
+        defaultOpen={mode === "downstream" || mode === "off"}
+        loading={loading}
+        paths={downstream.paths}
+        nodes={nodes}
+        onNavigate={onNavigate}
+      />
+      <PathSection
+        title="Causal path"
+        hint="Downstream paths that pass through a causal influence"
+        defaultOpen={false}
+        loading={loading}
+        paths={causalPaths}
+        nodes={nodes}
+        onNavigate={onNavigate}
+      />
+      <PathSection
+        title="Feedback loops"
+        hint="Cyclic lineage (loops are reported, not broken)"
+        defaultOpen={false}
+        loading={loading}
+        paths={loops}
+        nodes={nodes}
+        onNavigate={onNavigate}
+        emptyLabel="No feedback loops."
+      />
+    </div>
+  )
+}
+
+// One collapsible ranked-path section. Each path shows its signed direction
+// (path_sign), confidence score + cumulative lag, and the clickable metric chain
+// it traverses. Path nodes re-anchor the inspector on click.
+function PathSection({
+  title,
+  hint,
+  defaultOpen,
+  loading,
+  paths,
+  nodes,
+  onNavigate,
+  emptyLabel,
+}: {
+  title: string
+  hint: string
+  defaultOpen: boolean
+  loading: boolean
+  paths: TraversePath[]
+  nodes: GraphNode[]
+  onNavigate: (uid: string) => void
+  emptyLabel?: string
+}) {
+  // `open` follows `defaultOpen` (driven by the leading traversal mode) but can
+  // be toggled by the user. We re-sync DURING RENDER when defaultOpen flips —
+  // React's documented "adjust state when a prop changes" pattern (no effect, so
+  // no cascading-render lint hit).
+  const [open, setOpen] = useState(defaultOpen)
+  const [prevDefault, setPrevDefault] = useState(defaultOpen)
+  if (prevDefault !== defaultOpen) {
+    setPrevDefault(defaultOpen)
+    setOpen(defaultOpen)
+  }
+
+  // Resolve a metric_uid to a readable title. The graph node id IS the
+  // metric_uid for metric nodes; fall back to props.metric_uid lookup.
+  const titleFor = (uid: string): string => {
+    const direct = nodes.find((n) => n.id === uid)
+    if (direct) return direct.title || direct.id
+    const byProp = nodes.find((n) => (n.props?.metric_uid as string | undefined) === uid)
+    return byProp ? byProp.title || byProp.id : uid
+  }
+
+  // Human-readable label for a single hop's kind. 'structural' = a made-of
+  // decomposition; 'causal' = a driven-by influence. Mixed paths interleave both.
+  const hopKindLabel = (kind: string | null): string =>
+    kind === "structural" ? "made-of" : kind === "causal" ? "driven-by" : "links"
+
+  return (
+    <div className="rounded-md border border-border">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-baseline gap-2 px-2.5 py-2 text-left hover:bg-accent/50"
+      >
+        <span className="text-muted-foreground">{open ? "▾" : "▸"}</span>
+        <span className="text-[11px] font-medium tracking-wide text-foreground uppercase">
+          {title}
+        </span>
+        <Badge variant="secondary" className="tabular-nums">
+          {paths.length}
+        </Badge>
+        <span className="ml-auto truncate text-[10px] text-muted-foreground">{hint}</span>
+      </button>
+      {open && (
+        <div className="border-t border-border px-2.5 py-2">
+          {loading ? (
+            <div className="text-xs text-muted-foreground">Loading lineage…</div>
+          ) : paths.length === 0 ? (
+            <div className="text-xs text-muted-foreground">
+              {emptyLabel ?? `No ${title.toLowerCase()} paths.`}
+            </div>
+          ) : (
+            <ul className="space-y-2">
+              {paths.map((p, i) => (
+                <li key={`${title}-${i}`} className="rounded-md border border-border px-2 py-1.5">
+                  <div className="mb-1 flex flex-wrap items-center gap-1.5">
+                    <SignBadge sign={p.path_sign} />
+                    <Badge variant="secondary" className="tabular-nums">
+                      conf {p.score.toFixed(3)}
+                    </Badge>
+                    <Badge variant="outline" className="tabular-nums">
+                      lag {p.cumulative_lag}d
+                    </Badge>
+                    <span className="ml-auto text-[10px] text-muted-foreground">
+                      {p.edges.length} hop{p.edges.length === 1 ? "" : "s"}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-1 text-xs">
+                    {p.nodes.map((uid, j) => {
+                      // The hop arriving at node j is edges[j-1]. Show its kind
+                      // (made-of / driven-by), relation, role and lag so mixed
+                      // structural+causal chains stay legible.
+                      const hop = j > 0 ? p.edges[j - 1] : undefined
+                      const inverse = hop?.sign != null && hop.sign < 0
+                      return (
+                        <span key={`${uid}-${j}`} className="flex items-center gap-1">
+                          {hop && (
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              <span>→</span>
+                              <span
+                                className={`rounded px-1 text-[10px] ${
+                                  inverse
+                                    ? "bg-red-500/15 text-red-600 dark:text-red-400"
+                                    : "bg-muted"
+                                }`}
+                                title={hop.relation ?? undefined}
+                              >
+                                {hopKindLabel(hop.kind)}
+                                {hop.relation ? ` · ${hop.relation}` : ""}
+                                {hop.role ? ` · ${hop.role}` : ""}
+                                {hop.temporal_lag ? ` · ${hop.temporal_lag}` : ""}
+                              </span>
+                              <span>→</span>
+                            </span>
+                          )}
+                          <button
+                            onClick={() => onNavigate(uid)}
+                            className="truncate rounded px-1 text-foreground hover:bg-accent"
+                            title={uid}
+                          >
+                            {titleFor(uid)}
+                          </button>
+                        </span>
+                      )
+                    })}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
