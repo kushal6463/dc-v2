@@ -19,6 +19,9 @@ Milestone 2 — ingestion engine:
 * ``ingest-dashboard`` — propose nodes/edges for one dashboard (optionally
   auto-approve + apply).
 * ``ingest-all`` — propose across many dashboards concurrently.
+* ``ingest-dashboards`` — ingest Dashboard surfaces over the existing live
+  metrics: deterministic in-repo SHOWN_ON edges (every edge targets one of the
+  live 317 metric uids) + parallel LLM enrichment of the descriptive fields.
 * ``proposals list|approve|reject`` — inspect and triage the proposal queue.
 * ``apply`` — replay approved proposals through the arbitration writer.
 * ``reconcile`` — collapse duplicate nodes (e.g. concept metrics) via the
@@ -53,7 +56,9 @@ from typing import Any
 
 from harness.agent import engine
 from harness.ingest import apply as apply_mod
+from harness.ingest import dashboard_prepass as dashboard_prepass_mod
 from harness.ingest import prepass as prepass_mod
+from harness.ingest.dashboard_proposer import propose_dashboard_with_cost
 from harness.ingest.orchestrator import DEFAULT_CONCURRENCY, ingest_dashboards
 from harness.kg import arbitration
 from harness.kg import reconcile as reconcile_mod
@@ -525,6 +530,58 @@ def cmd_ingest_all(args: argparse.Namespace) -> int:
     db = _connected_db()
     summary = engine.run_sync(
         ingest_dashboards(dashboard_ids, concurrency=args.concurrency, db=db)
+    )
+    _print_ingest_summary(summary)
+
+    if args.auto_approve:
+        _auto_approve_and_apply(db, summary["run_id"])
+    return 0
+
+
+def cmd_ingest_dashboards(args: argparse.Namespace) -> int:
+    """Ingest Dashboard surfaces over the existing live metrics.
+
+    Deterministically merges the in-repo chart registry + metric catalog into the
+    full dashboard set and the ground-truth ``SHOWN_ON`` edges (every edge targets
+    one of the live 317 metric uids), then fans out one LLM proposer subagent per
+    dashboard (bounded concurrency) to enrich the descriptive fields. The LLM
+    cannot add or retarget edges. With ``--auto-approve`` the run is approved and
+    applied through the single arbitration writer.
+
+    ``--dry-run`` prints the deterministic plan counts (dashboards / edges /
+    metrics covered) without calling the LLM or touching Neo4j.
+
+    Returns:
+        Process exit code (0 on success).
+    """
+    plan = dashboard_prepass_mod.run_prepass()
+    counts = plan["counts"]
+    if args.dry_run:
+        rows = [
+            ("dashboards", str(counts["dashboards"])),
+            ("edges (SHOWN_ON)", str(counts["edges"])),
+            ("metrics_covered", f"{counts['metrics_covered']}/{counts['live_metrics']}"),
+            ("unlinked_dashboards", str(counts["unlinked_dashboards"])),
+        ]
+        print("Dashboard ingestion plan (deterministic, no LLM/DB):")
+        _print_table(("KIND", "COUNT"), rows)
+        return 0
+
+    dashboard_ids = dashboard_prepass_mod.all_dashboard_ids()
+    if args.limit is not None:
+        dashboard_ids = dashboard_ids[: args.limit]
+    if not dashboard_ids:
+        print("No dashboards to ingest.")
+        return 0
+
+    db = _connected_db()
+    summary = engine.run_sync(
+        ingest_dashboards(
+            dashboard_ids,
+            concurrency=args.concurrency,
+            db=db,
+            propose_fn=propose_dashboard_with_cost,
+        )
     )
     _print_ingest_summary(summary)
 
@@ -1019,6 +1076,36 @@ def cmd_build(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_enrich(args: argparse.Namespace) -> int:
+    """Deterministically enrich the metric layer (mart/SQL/freshness + ledger).
+
+    Runs the no-LLM enrichment against the LIVE graph (additive, idempotent):
+    removes causal edges that parallel a formula edge (``critique_dedupe``),
+    populates ``mart_sources`` / ``sql_query_real`` / ``source_columns`` /
+    freshness from BC_2 + the registry (``run_deterministic_enrich``), and folds
+    each legacy causal edge onto the Beta evidence ledger
+    (``migrate_edge_ledger``). No graph wipe; back up first with
+    ``python -m harness.store.backup export`` if desired.
+
+    Returns:
+        Process exit code (0 on success).
+    """
+    from harness.agentic import enrich
+
+    dry = bool(getattr(args, "dry_run", False))
+    if not getattr(args, "no_dedupe", False):
+        print("critique_dedupe:", json.dumps(enrich.critique_dedupe(dry_run=dry), default=str))
+    print("enrich:", json.dumps(
+        enrich.run_deterministic_enrich(dry_run=dry, limit=getattr(args, "limit", None)),
+        default=str,
+    ))
+    if not getattr(args, "no_migrate", False):
+        print("migrate_edge_ledger:", json.dumps(
+            enrich.migrate_edge_ledger(dry_run=dry), default=str
+        ))
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Argument parser
 # ---------------------------------------------------------------------------
@@ -1109,6 +1196,35 @@ def build_parser() -> argparse.ArgumentParser:
         help="Approve and apply the run's proposals immediately.",
     )
     p_ingest_all.set_defaults(func=cmd_ingest_all)
+
+    p_ingest_dash = subparsers.add_parser(
+        "ingest-dashboards",
+        help="Ingest Dashboard surfaces over the existing live metrics "
+        "(deterministic edges + parallel LLM enrichment).",
+    )
+    p_ingest_dash.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Print the deterministic plan counts without calling the LLM or DB.",
+    )
+    p_ingest_dash.add_argument(
+        "--limit",
+        type=int,
+        default=None,
+        help="Only ingest the first N dashboards (default: all).",
+    )
+    p_ingest_dash.add_argument(
+        "--concurrency",
+        type=int,
+        default=DEFAULT_CONCURRENCY,
+        help="Max concurrent proposer agents (default: 6).",
+    )
+    p_ingest_dash.add_argument(
+        "--auto-approve",
+        action="store_true",
+        help="Approve and apply the run's proposals immediately.",
+    )
+    p_ingest_dash.set_defaults(func=cmd_ingest_dashboards)
 
     p_proposals = subparsers.add_parser(
         "proposals",
@@ -1204,6 +1320,23 @@ def build_parser() -> argparse.ArgumentParser:
         "ClaudeAgentOptions WITHOUT importing the SDK or touching Neo4j (offline).",
     )
     p_build.set_defaults(func=cmd_build)
+
+    p_enrich = subparsers.add_parser(
+        "enrich",
+        help="Deterministically enrich metrics with mart_sources / SQL / columns / "
+        "freshness (BC_2-grounded), remove causal edges that parallel a formula "
+        "edge, and migrate causal edges onto the Beta evidence ledger. Additive, "
+        "idempotent, no LLM.",
+    )
+    p_enrich.add_argument("--dry-run", action="store_true",
+                          help="Compute + report only; write nothing.")
+    p_enrich.add_argument("--limit", type=int, default=None,
+                          help="Cap how many metrics are processed (smoke).")
+    p_enrich.add_argument("--no-dedupe", action="store_true",
+                          help="Skip removing causal/structural parallel edges.")
+    p_enrich.add_argument("--no-migrate", action="store_true",
+                          help="Skip the evidence-ledger migration.")
+    p_enrich.set_defaults(func=cmd_enrich)
 
     p_migrate = subparsers.add_parser(
         "migrate-metric-edges",

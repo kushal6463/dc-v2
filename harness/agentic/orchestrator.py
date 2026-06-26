@@ -543,12 +543,25 @@ async def build(
     # buckets are (re)built.
     phase1 = await _run_phase(phase=1, buckets=node_buckets, concurrency=concurrency,
                               run_id=run_id)
+    # Native enrichment (deterministic, additive, no LLM): mart_sources / SQL /
+    # source_columns / freshness on the just-built nodes, so a fresh `build` is
+    # enriched exactly like the standalone `enrich` path (shared logic).
+    from harness.agentic import enrich as _enrich
+    enrich_summary = _enrich.run_deterministic_enrich()
+    append_event({"type": "build_enrich", "run_id": run_id, **enrich_summary})
     # Phase 2 — structural edges (parallel, BARRIER). Same buckets; all nodes now exist.
     phase2 = await _run_phase(phase=2, buckets=buckets, concurrency=concurrency,
                               run_id=run_id)
     # Phase 3 — weave causal (parallel). Same buckets (each agent reasons over its slice).
     phase3 = await _run_phase(phase=3, buckets=buckets, concurrency=concurrency,
                               run_id=run_id)
+    # Causal hygiene (deterministic): drop INFLUENCES that parallel a formula edge
+    # (structural subsumes causal), then fold each remaining flat-confidence causal
+    # edge onto the Beta evidence ledger — so a fresh build is ledger-native.
+    dedupe_summary = _enrich.critique_dedupe()
+    ledger_summary = _enrich.migrate_edge_ledger()
+    append_event({"type": "build_causal_hygiene", "run_id": run_id,
+                  "dedupe": dedupe_summary, "ledger": ledger_summary})
     # Phase 4 — critique (single graph-wide agent).
     phase4 = await _run_critique(run_id=run_id)
 
