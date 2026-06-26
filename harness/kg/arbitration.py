@@ -22,8 +22,11 @@ structurally impossible (implementation plan sections 2, 5c).
 
 from __future__ import annotations
 
+import json
+import re
 from typing import Any
 
+from harness.kg import evidence
 from harness.store.jsonl import append_event
 
 from .driver import GraphDB
@@ -70,25 +73,45 @@ def _validate_relation(rel_type, props):
         raise ValueError(f"invalid INFLUENCES relation: {relation!r}")
 
 
-def _validate_edge_props(props):
-    """Raise ``ValueError`` if an edge's structural ``role`` is not allowed.
+# A causal edge's ``temporal_lag`` must be an ISO-8601 duration with only
+# day/hour/minute/second components (e.g. "P1D", "PT48H", "P0D"); year/month
+# components are excluded as ambiguous. Used as a write-time format guard below.
+_TEMPORAL_LAG_RE = re.compile(r"^P(?:\d+D)?(?:T(?:\d+H)?(?:\d+M)?(?:\d+S)?)?$")
 
-    Structural (``DECOMPOSES_INTO``) edges carry a ``role`` that fixes a
-    component's part in its parent's formula (:data:`~harness.kg.models.\
-EDGE_ROLES`); a typo'd role is rejected at the single writer instead of
-    silently persisting (same pattern as :func:`_validate_relation`). A
-    ``None``/empty props map or an edge with no ``role`` is left untouched
-    (spine / governance / RBAC / causal edges carry no ``role``).
+
+def _validate_edge_props(props):
+    """Raise ``ValueError`` for a bad ``role`` or ``temporal_lag`` on an edge.
+
+    Two independent edge-property checks, each performed only when its property
+    is present and rejected at the single writer instead of silently persisting
+    (same pattern as :func:`_validate_relation`):
+
+    * ``role`` — a structural (``DECOMPOSES_INTO``) edge fixes a component's part
+      in its parent's formula, so it must be one of
+      :data:`~harness.kg.models.EDGE_ROLES`.
+    * ``temporal_lag`` — a causal (``INFLUENCES``) edge's lag, when non-null, must
+      be an ISO-8601 duration (``P#DT#H#M#S``, e.g. ``"P1D"`` / ``"PT48H"`` /
+      ``"P0D"``).
+
+    A ``None``/empty props map, or an edge carrying neither property, is left
+    untouched (spine / governance / RBAC edges carry neither).
     """
     if not props:
         return
     role = props.get("role")
-    if role is None:
-        return
-    from harness.kg.models import EDGE_ROLES
-    if role not in EDGE_ROLES:
+    if role is not None:
+        from harness.kg.models import EDGE_ROLES
+        if role not in EDGE_ROLES:
+            raise ValueError(
+                f"invalid edge role {role!r}; expected one of {sorted(EDGE_ROLES)}"
+            )
+    temporal_lag = props.get("temporal_lag")
+    if temporal_lag is not None and not (
+        isinstance(temporal_lag, str) and _TEMPORAL_LAG_RE.fullmatch(temporal_lag)
+    ):
         raise ValueError(
-            f"invalid edge role {role!r}; expected one of {sorted(EDGE_ROLES)}"
+            f"invalid temporal_lag {temporal_lag!r}; expected an ISO-8601 "
+            "duration like 'P1D' / 'PT48H' / 'P0D'"
         )
 
 
@@ -322,6 +345,124 @@ def upsert_edge(
     }
     append_event({"type": "edge_upsert", **result})
     return result
+
+
+def append_edge_evidence(
+    db: GraphDB,
+    *,
+    from_key: str,
+    to_key: str,
+    event: dict[str, Any],
+    edge_props: dict[str, Any] | None = None,
+    rel_type: str = "INFLUENCES",
+    from_label: str = "Metric",
+    to_label: str = "Metric",
+) -> dict[str, Any]:
+    """Append one evidence event to a causal edge and re-fold its confidence.
+
+    Realizes **FR-SCORE-001**: an ``INFLUENCES`` edge's confidence is never set
+    in place but is a *deterministic fold* over an append-only evidence ledger.
+    The edge's existing ledger is read, ``event`` is appended (idempotently,
+    keyed on its ``event_id``), the whole ledger is re-folded into a Beta
+    posterior via :func:`harness.kg.evidence.fold_ledger`, and the folded
+    ``alpha`` / ``beta`` / ``confidence`` / ``evidence_mass`` are persisted
+    alongside the updated ledger through :func:`upsert_edge` — so the score is
+    always reproducible from the experiences that produced it (FR-SCORE-002).
+
+    Only ``INFLUENCES`` edges are ledgered: ``DECOMPOSES_INTO`` (structural)
+    edges stay pinned at confidence ``1.0`` outside the ledger, so any other
+    ``rel_type`` is rejected.
+
+    Delegating the write to :func:`upsert_edge` reuses its allowlist validation,
+    injection guard, and missing-endpoint handling (no edge is fabricated when an
+    endpoint is absent).
+
+    Args:
+        db: A connected :class:`~harness.kg.driver.GraphDB`.
+        from_key: Source metric identity value (matched on its key field).
+        to_key: Target metric identity value (matched on its key field).
+        event: An evidence event carrying at least a valid
+            :class:`~harness.kg.evidence.EvidenceTier` ``tier`` and a
+            ``direction`` of ``"supports"`` or ``"refutes"`` (optionally an
+            explicit ``weight`` / ``attribution`` / ``timestamp`` / ``event_id``).
+        edge_props: Optional non-ledger edge scalars merged into the write
+            (e.g. ``relation``, ``mechanism``, ``temporal_lag``,
+            ``lag_plausibility``, ``cross_domain``, ``source_kind``,
+            ``candidate_basis``).
+        rel_type: Must be ``"INFLUENCES"`` (the ledger is causal-only).
+        from_label: Source node label (defaults to ``"Metric"``).
+        to_label: Target node label (defaults to ``"Metric"``).
+
+    Returns:
+        The :func:`upsert_edge` result dict (``created`` / ``updated`` /
+        ``missing_endpoint`` / ``kept_reviewed``).
+
+    Raises:
+        ValueError: If ``rel_type`` is not ``"INFLUENCES"``, or ``event`` has an
+            invalid ``tier`` or ``direction``.
+    """
+    if rel_type != "INFLUENCES":
+        raise ValueError(
+            f"append_edge_evidence is INFLUENCES-only (got {rel_type!r}); "
+            "DECOMPOSES_INTO confidence stays pinned at 1.0 outside the ledger"
+        )
+
+    # Reject an invalid event before it can enter the append-only ledger: a bad
+    # tier/direction must fail at the writer, never be folded into a score.
+    try:
+        evidence.EvidenceTier(event.get("tier"))
+    except ValueError as exc:
+        raise ValueError(
+            f"invalid evidence tier {event.get('tier')!r}; expected one of "
+            f"{[t.value for t in evidence.EvidenceTier]}"
+        ) from exc
+    direction = event.get("direction")
+    if direction not in ("supports", "refutes"):
+        raise ValueError(
+            f"invalid evidence direction {direction!r}; "
+            "expected 'supports' or 'refutes'"
+        )
+
+    # Read the edge's existing ledger (JSON string -> list; absent/null -> []).
+    # The NODE_KEY_FIELDS lookup raises on an unknown label, so only an
+    # allowlisted label/key field is ever interpolated into the read (all values
+    # are parameterized); the write below re-validates via upsert_edge.
+    src_field = NODE_KEY_FIELDS[from_label]
+    dst_field = NODE_KEY_FIELDS[to_label]
+    ledger_rows = db.read(
+        f"OPTIONAL MATCH (a:{from_label} {{{src_field}: $fk}})"
+        f"-[r:{rel_type}]->(b:{to_label} {{{dst_field}: $tk}}) "
+        "RETURN r.evidence_ledger AS ledger",
+        fk=from_key,
+        tk=to_key,
+    )
+    raw_ledger = ledger_rows[0]["ledger"] if ledger_rows else None
+    ledger: list[dict[str, Any]] = json.loads(raw_ledger) if raw_ledger else []
+
+    # Idempotent append: a deterministic event_id lets re-runs skip a duplicate.
+    event_id = event.get("event_id") or evidence.make_event_id(event)
+    event = {**event, "event_id": event_id}
+    if not any(entry.get("event_id") == event_id for entry in ledger):
+        ledger.append(event)
+
+    # Deterministic fold over the append-only ledger -> the one edge score, then
+    # delegate the write (validation + injection guard + missing-endpoint).
+    folded = evidence.fold_ledger(ledger)
+    props = {
+        **(edge_props or {}),
+        **folded,
+        "evidence_ledger": json.dumps(ledger, sort_keys=True, default=str),
+        "scoring_policy": "beta_jeffreys",
+    }
+    return upsert_edge(
+        db,
+        rel_type=rel_type,
+        from_label=from_label,
+        from_key=from_key,
+        to_label=to_label,
+        to_key=to_key,
+        props=props,
+    )
 
 
 def write_node_model(db: GraphDB, model: Any) -> dict[str, Any]:

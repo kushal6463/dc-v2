@@ -786,6 +786,14 @@ class Metric(GraphNode):
     mart_sources: list[str] | None = None
     #: SQL expression from ``metric_registry`` (e.g. ``SUM(REVENUE)``); null ok.
     source_expr: str | None = None
+    #: Mart column names used by this metric.
+    source_columns: list[str] | None = None
+    #: Verbatim backend SQL (from ``get_bc2_sql``).
+    sql_query_real: str | None = None
+    #: LLM-generated clean, runnable ``SELECT``.
+    sql_query_canonical: str | None = None
+    #: Per-mart grain (optional).
+    mart_grains: list[str] | None = None
     platform_data_quality_json: dict[str, Any] | None = None
     data_freshness_by_platform_json: dict[str, Any] | None = None
     primary_grain: PrimaryGrain | None = None
@@ -793,6 +801,16 @@ class Metric(GraphNode):
     dimensions: list[str] | None = None
     availability: str | None = None
     n_periods: int | None = None
+    #: ISO date — data-coverage start.
+    history_start: str | None = None
+    #: ISO date — data-coverage end.
+    history_end: str | None = None
+    #: Latest data older than the freshness SLA.
+    data_stale: bool | None = None
+    #: QA: ``formula_text`` disagrees with ``sql_query_real``.
+    formula_sql_mismatch: bool | None = None
+    #: QA explanation set when ``formula_sql_mismatch``.
+    formula_sql_note: str | None = None
 
     # Causal
     causal_role: CausalRole | None = None
@@ -1119,6 +1137,7 @@ INFLUENCES_RELATIONS: frozenset[str] = frozenset(
         "statistical_candidate",
         "promoted",
         "llm_causal",
+        "mart_lineage",
     }
 )
 #: Allowed structural-edge ``role`` values (``DECOMPOSES_INTO.role``). The role
