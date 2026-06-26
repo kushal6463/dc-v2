@@ -547,3 +547,87 @@ def run_deterministic_enrich(
         "dry_run": dry_run,
         "stamped_at": datetime.now().astimezone().isoformat(timespec="seconds"),
     }
+
+
+#: Fixed timestamp for the one-time ledger migration, so re-running it is a
+#: no-op (the derived ``event_id`` stays stable -> append dedupes).
+_MIGRATION_TS: str = "2026-06-26T00:00:00Z"
+
+
+def critique_dedupe(*, dry_run: bool = False) -> dict[str, Any]:
+    """Remove every ``INFLUENCES`` edge that PARALLELS a ``DECOMPOSES_INTO`` pair.
+
+    A formula edge subsumes the causal one (it is definitional, pinned 1.0, and
+    already walked by traversal), so a parallel causal edge double-counts. Finds
+    each ``(a)-[:INFLUENCES]->(b)`` where ``(a)`` and ``(b)`` are also linked by a
+    ``DECOMPOSES_INTO`` (either direction) and deletes the ``INFLUENCES`` edge.
+    ``dry_run`` reports the pairs without deleting.
+    """
+    from harness.kg.driver import get_db
+
+    db = get_db()
+    pairs = db.read(
+        "MATCH (a:Metric)-[i:INFLUENCES]->(b:Metric) "
+        "WHERE (a)-[:DECOMPOSES_INTO]-(b) "
+        "RETURN a.metric_uid AS f, b.metric_uid AS t"
+    )
+    if not dry_run and pairs:
+        db.write(
+            "MATCH (a:Metric)-[i:INFLUENCES]->(b:Metric) "
+            "WHERE (a)-[:DECOMPOSES_INTO]-(b) DELETE i"
+        )
+    return {
+        "found": len(pairs),
+        "removed": 0 if dry_run else len(pairs),
+        "pairs": [[p["f"], p["t"]] for p in pairs],
+        "dry_run": dry_run,
+    }
+
+
+def migrate_edge_ledger(*, dry_run: bool = False) -> dict[str, Any]:
+    """Seed the evidence ledger on legacy ``INFLUENCES`` edges (flat confidence).
+
+    For every ``INFLUENCES`` edge that carries a flat ``confidence`` but no
+    ``evidence_ledger``, converts that tier into a pair of PRIOR evidence events
+    (:func:`harness.kg.evidence.seed_prior_event`) and folds them in through
+    :func:`harness.kg.arbitration.append_edge_evidence` — so the edge's
+    confidence becomes a reproducible Beta posterior (FR-SCORE-001). The fold
+    writer's structural-dedup guard skips any edge that parallels a formula edge
+    (those should already be gone via :func:`critique_dedupe`). Idempotent via a
+    fixed migration timestamp. ``dry_run`` counts without writing.
+    """
+    from harness.kg import arbitration, evidence
+    from harness.kg.driver import get_db
+
+    db = get_db()
+    rows = db.read(
+        "MATCH (a:Metric)-[i:INFLUENCES]->(b:Metric) "
+        "WHERE i.evidence_ledger IS NULL AND i.confidence IS NOT NULL "
+        "RETURN a.metric_uid AS f, b.metric_uid AS t, i.confidence AS c, "
+        "i.relation AS rel"
+    )
+    migrated = skipped = 0
+    for row in rows:
+        if dry_run:
+            migrated += 1
+            continue
+        events = evidence.seed_prior_event(
+            float(row["c"]), attribution="migrate:flat_confidence",
+            timestamp=_MIGRATION_TS,
+        )
+        result: dict[str, Any] | None = None
+        for event in events:
+            result = arbitration.append_edge_evidence(
+                db, from_key=row["f"], to_key=row["t"], event=event,
+                edge_props={"relation": row.get("rel") or "llm_causal"},
+            )
+        if result and result.get("status") == "skipped_structural_dup":
+            skipped += 1
+        else:
+            migrated += 1
+    return {
+        "candidates": len(rows),
+        "migrated": 0 if dry_run else migrated,
+        "skipped_structural": skipped,
+        "dry_run": dry_run,
+    }
