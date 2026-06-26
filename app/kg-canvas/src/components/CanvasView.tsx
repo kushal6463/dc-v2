@@ -574,6 +574,10 @@ export function CanvasView() {
       const prevStyle = (e.style ?? {}) as Record<string, unknown>
       let opacity = vis?.opacity ?? (prevStyle.opacity as number | undefined) ?? 0.9
       let width = (prevStyle.strokeWidth as number | undefined) ?? d?.baseWidth ?? 1.4
+      // Thickness encodes confidence (metric edges only; widthScale is undefined
+      // for structural edges → no change). Layered before the traversal/selection
+      // boosts below so those still dominate.
+      width *= vis?.widthScale ?? 1
       let z = (e.zIndex as number | undefined) ?? 0
 
       if (offPath) {

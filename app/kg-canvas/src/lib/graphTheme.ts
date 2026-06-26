@@ -120,6 +120,12 @@ export interface EdgeStyle {
   strokeDasharray?: string
   opacity: number
   animated?: boolean
+  /**
+   * Optional stroke-width multiplier (≈0.9–1.7), confidence-driven for metric
+   * edges so higher-confidence causal/decomposition links render thicker. The
+   * canvas multiplies the edge's base width by this; undefined ⇒ no change.
+   */
+  widthScale?: number
 }
 
 // ---------------------------------------------------------------------------
@@ -158,6 +164,22 @@ export function edgeIsInverse(edge: GraphEdge): boolean {
 export function edgeIsCrossDomain(edge: GraphEdge): boolean {
   const v = edgeField(edge, "cross_domain")
   return v === true || v === "true" || v === 1
+}
+
+/** Read an edge's `confidence` (0..1) if numeric, else null. */
+export function edgeConfidence(edge: GraphEdge): number | null {
+  const v = edgeField(edge, "confidence")
+  return typeof v === "number" && Number.isFinite(v) ? v : null
+}
+
+/**
+ * Map a confidence (0..1) to a gentle stroke-width multiplier so thickness
+ * encodes evidence strength without fighting the relation-opacity ladder:
+ * c=0 → 0.9×, c=1 → 1.7×.
+ */
+export function confidenceWidthScale(confidence: number): number {
+  const c = confidence < 0 ? 0 : confidence > 1 ? 1 : confidence
+  return 0.9 + 0.8 * c
 }
 
 // Per-relation styling for DECOMPOSES_INTO. formula/component = strong (solid),
@@ -238,6 +260,12 @@ export function edgeStyle(edge: GraphEdge): EdgeStyle {
     // Non-metric edges: solid, colored by the existing per-type palette.
     style = { stroke: edgeVisual(edge.type).color, opacity: 0.9 }
   }
+
+  // Confidence → stroke-width multiplier (thickness encodes evidence strength).
+  // Only edges carrying a numeric confidence (metric→metric edges) get scaled;
+  // structural spine edges have none, so they render at their base width.
+  const conf = edgeConfidence(edge)
+  if (conf != null) style = { ...style, widthScale: confidenceWidthScale(conf) }
 
   // Structural sign: a denominator/subtrahend hop enters its parent inversely —
   // recolor it red so "this pushes the parent DOWN" reads at a glance.

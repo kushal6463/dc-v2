@@ -128,6 +128,8 @@ interface CanvasState {
   traversalMode: TraversalMode
   traversalRootId: string | null
   traversalResult: TraversalResult | null
+  /** Read-time confidence floor (0..1) passed to the traverse API; 0 = off. */
+  traverseMinConfidence: number
   coverage: CoveragePayload | null
   edgeDiff: EdgeDiffPayload | null
 
@@ -183,6 +185,7 @@ interface CanvasState {
     maxDepth?: number
   ) => Promise<void>
   clearTraversal: () => void
+  setTraverseMinConfidence: (value: number) => void
   loadCoverage: (tenant?: string) => Promise<void>
   loadEdgeDiff: (tenant?: string, runId?: string) => Promise<void>
 
@@ -239,6 +242,7 @@ export const useStore = create<CanvasState>()(
   traversalMode: "off",
   traversalRootId: null,
   traversalResult: null,
+  traverseMinConfidence: 0,
   coverage: null,
   edgeDiff: null,
 
@@ -558,10 +562,14 @@ export const useStore = create<CanvasState>()(
 
   runTraversal: async (metricUid, mode, maxDepth = 3) => {
     try {
+      // Read-time confidence floor (server-side). 0 ⇒ omit the param so the
+      // request is byte-identical to the pre-filter behaviour.
+      const minConf = get().traverseMinConfidence
+      const minConfArg = minConf > 0 ? minConf : undefined
       const payload =
         mode === "upstream"
-          ? await api.traverseUpstream(metricUid, maxDepth)
-          : await api.traverseDownstream(metricUid, maxDepth)
+          ? await api.traverseUpstream(metricUid, maxDepth, minConfArg)
+          : await api.traverseDownstream(metricUid, maxDepth, minConfArg)
 
       // The traverse response is now signed paths ({paths, cyclic_paths,...}),
       // not a {nodes, edges} subgraph. The canvas path-highlight only needs the
@@ -599,6 +607,9 @@ export const useStore = create<CanvasState>()(
 
   clearTraversal: () =>
     set({ traversalMode: "off", traversalRootId: null, traversalResult: null }),
+
+  setTraverseMinConfidence: (value) =>
+    set({ traverseMinConfidence: Math.max(0, Math.min(1, value)) }),
 
   loadCoverage: async (tenant = "rare_seeds") => {
     try {
@@ -702,6 +713,7 @@ export const useStore = create<CanvasState>()(
         inspectorOpen: state.inspectorOpen,
         sidebarTab: state.sidebarTab,
         filtersOpen: state.filtersOpen,
+        traverseMinConfidence: state.traverseMinConfidence,
       }),
     }
   )

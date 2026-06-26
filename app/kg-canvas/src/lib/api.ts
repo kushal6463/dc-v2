@@ -14,6 +14,32 @@ export interface GraphNode {
   props: Record<string, unknown>
 }
 
+/**
+ * Metric-node `props` fields. Metric nodes deliver their attributes inside the
+ * generic `GraphNode.props` record; this interface documents the metric-specific
+ * shape so callers can narrow (`node.props as MetricProps`). Only the recently
+ * added mart-lineage / SQL-provenance / data-quality fields are enumerated here
+ * — every other prop remains reachable via the generic record.
+ */
+export interface MetricProps {
+  /** dbt mart source identifiers this metric is built from. */
+  mart_sources?: string[]
+  /** Warehouse column names this metric reads (drives /api/column-impact). */
+  source_columns?: string[]
+  /** Verbatim backend SQL (from `get_bc2_sql`). */
+  sql_query_real?: string
+  /** LLM-generated clean, runnable canonical `SELECT`. */
+  sql_query_canonical?: string
+  /** ISO date — data-coverage start. */
+  history_start?: string
+  /** ISO date — data-coverage end. */
+  history_end?: string
+  /** Latest data is older than the freshness SLA. */
+  data_stale?: boolean
+  /** QA flag — `formula_text` disagrees with `sql_query_real`. */
+  formula_sql_mismatch?: boolean
+}
+
 export interface GraphEdge {
   id: string
   source: string
@@ -29,9 +55,13 @@ export interface GraphEdge {
   scoring_policy?: string
   review_state?: string
   temporal_lag?: string
+  /** Plausibility (0..1) that `temporal_lag` is mechanistically credible; a path-score factor (confidence × lag_plausibility). */
+  lag_plausibility?: number
   mechanism?: string
   source_kind?: string
   deprecated_at?: string
+  /** True when the edge spans two disjoint metric domains (cross-domain link; drawn violet + dashed). */
+  cross_domain?: boolean
   // Machine-discovery stats. Arrive inside edge.props for source_kind ==
   // 'kg_discovery'; typed here for direct access in the EdgeDetail panel.
   method?: string
@@ -190,6 +220,30 @@ export interface TraversePayload {
 }
 
 // ---------------------------------------------------------------------------
+// Column-impact payload — warehouse-column blast radius.
+//
+// GET /api/column-impact?column= scans every Metric's `source_columns` and
+// returns the metrics that read the given warehouse column ("which metrics break
+// if this column changes?"). It walks no edges — a flat property scan — so each
+// row carries only the pinned identity/lineage fields (values may be null).
+// ---------------------------------------------------------------------------
+
+/** One metric whose `source_columns` contains the queried column. */
+export interface ColumnImpactMetric {
+  metric_uid: string | null
+  display_name: string | null
+  mart_sources: string[] | null
+  domain_ids: string[] | null
+}
+
+/** Wire shape of GET /api/column-impact. */
+export interface ColumnImpactPayload {
+  column: string
+  count: number
+  metrics: ColumnImpactMetric[]
+}
+
+// ---------------------------------------------------------------------------
 // Metric-chart payload (shift-click chart panel).
 //
 // /api/metric-chart returns the live metric's chart_type + the single matching
@@ -287,17 +341,25 @@ export const api = {
         runId ? `&run_id=${encodeURIComponent(runId)}` : ""
       }`
     ),
-  traverseUpstream: (metricUid: string, maxDepth = 3) =>
+  traverseUpstream: (metricUid: string, maxDepth = 3, minConfidence?: number) =>
     getJSON<TraversePayload>(
       `/traverse/upstream?metric_uid=${encodeURIComponent(
         metricUid
-      )}&max_depth=${maxDepth}`
+      )}&max_depth=${maxDepth}${
+        minConfidence != null ? `&min_confidence=${minConfidence}` : ""
+      }`
     ),
-  traverseDownstream: (metricUid: string, maxDepth = 3) =>
+  traverseDownstream: (metricUid: string, maxDepth = 3, minConfidence?: number) =>
     getJSON<TraversePayload>(
       `/traverse/downstream?metric_uid=${encodeURIComponent(
         metricUid
-      )}&max_depth=${maxDepth}`
+      )}&max_depth=${maxDepth}${
+        minConfidence != null ? `&min_confidence=${minConfidence}` : ""
+      }`
+    ),
+  columnImpact: (column: string) =>
+    getJSON<ColumnImpactPayload>(
+      `/column-impact?column=${encodeURIComponent(column)}`
     ),
   metricChart: (metricUid: string) =>
     getJSON<MetricChartPayload>(
@@ -351,16 +413,22 @@ export function fetchEdgeDiff(
 
 export function traverseUpstream(
   metricUid: string,
-  maxDepth = 3
+  maxDepth = 3,
+  minConfidence?: number
 ): Promise<TraversePayload> {
-  return api.traverseUpstream(metricUid, maxDepth)
+  return api.traverseUpstream(metricUid, maxDepth, minConfidence)
 }
 
 export function traverseDownstream(
   metricUid: string,
-  maxDepth = 3
+  maxDepth = 3,
+  minConfidence?: number
 ): Promise<TraversePayload> {
-  return api.traverseDownstream(metricUid, maxDepth)
+  return api.traverseDownstream(metricUid, maxDepth, minConfidence)
+}
+
+export function columnImpact(column: string): Promise<ColumnImpactPayload> {
+  return api.columnImpact(column)
 }
 
 // ---------------------------------------------------------------------------

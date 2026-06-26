@@ -10,6 +10,7 @@ import {
   traverseDownstream,
   traverseUpstream,
   type GraphNode,
+  type MetricProps,
   type TraversePath,
   type TraversePayload,
 } from "@/lib/api"
@@ -31,6 +32,22 @@ const HIDDEN_FIELDS = new Set([
 
 // Long-text fields get a full-width cell so they don't get cramped in the grid.
 const WIDE_FIELDS = new Set(["description", "summary", "formula_expression", "condition", "definition"])
+
+// Mart-lineage / SQL-provenance / data-quality keys surfaced by the dedicated
+// "Data lineage" panel (DataLineagePanel). Excluded from the generic Properties
+// grid for metric nodes so they aren't ALSO dumped raw (SQL especially).
+const LINEAGE_FIELDS = new Set([
+  "mart_sources",
+  "source_columns",
+  "sql_query_real",
+  "sql_query_canonical",
+  "history_start",
+  "history_end",
+  "n_periods",
+  "data_stale",
+  "formula_sql_mismatch",
+  "formula_sql_note",
+])
 
 function formatValue(value: unknown): string {
   if (value === null || value === undefined) return "—"
@@ -88,6 +105,11 @@ export function NodeDetail() {
   // Drives which traversal view leads (upstream / downstream); also gates the
   // canvas path highlight. The panel always shows all views, emphasizing this one.
   const traversalMode = useStore((s) => s.traversalMode)
+  // Read-time confidence floor for traverse calls. Lives in the store (persisted)
+  // so the canvas highlight + this inspector lineage share one value; surfaced as
+  // a slider in TraversalPanel below.
+  const traverseMinConfidence = useStore((s) => s.traverseMinConfidence)
+  const setTraverseMinConfidence = useStore((s) => s.setTraverseMinConfidence)
 
   // Lineage: signed upstream/downstream path payloads for the selected metric.
   // Only fetched for Metric nodes; keyed by metric_uid so it refreshes on change.
@@ -106,22 +128,32 @@ export function NodeDetail() {
     let cancelled = false
     setLineage(null)
     setLineageLoading(true)
-    Promise.all([traverseUpstream(metricUid), traverseDownstream(metricUid)])
-      .then(([up, down]) => {
-        if (cancelled) return
-        setLineage({ upstream: up, downstream: down })
-      })
-      .catch(() => {
-        if (!cancelled)
-          setLineage({ upstream: EMPTY_PAYLOAD, downstream: EMPTY_PAYLOAD })
-      })
-      .finally(() => {
-        if (!cancelled) setLineageLoading(false)
-      })
+    // Read-time confidence floor: 0 ⇒ omit the param (unchanged default). Debounced
+    // so dragging the slider doesn't fire a request per tick; the cleanup cancels
+    // any superseded fetch.
+    const minConf = traverseMinConfidence > 0 ? traverseMinConfidence : undefined
+    const handle = setTimeout(() => {
+      Promise.all([
+        traverseUpstream(metricUid, 3, minConf),
+        traverseDownstream(metricUid, 3, minConf),
+      ])
+        .then(([up, down]) => {
+          if (cancelled) return
+          setLineage({ upstream: up, downstream: down })
+        })
+        .catch(() => {
+          if (!cancelled)
+            setLineage({ upstream: EMPTY_PAYLOAD, downstream: EMPTY_PAYLOAD })
+        })
+        .finally(() => {
+          if (!cancelled) setLineageLoading(false)
+        })
+    }, 200)
     return () => {
       cancelled = true
+      clearTimeout(handle)
     }
-  }, [metricUid])
+  }, [metricUid, traverseMinConfidence])
 
   // Connections grouped by relation type (computed before any early return).
   const groups = useMemo(() => {
@@ -170,6 +202,7 @@ export function NodeDetail() {
     for (const [k, v] of Object.entries(props)) {
       if (HIDDEN_FIELDS.has(k)) continue
       if (isMetricNode && summaryKeys.has(k)) continue
+      if (isMetricNode && LINEAGE_FIELDS.has(k)) continue
       if (v === null || v === undefined || v === "") continue
       out.push([k, v])
     }
@@ -262,6 +295,10 @@ export function NodeDetail() {
           </div>
         )}
 
+        {/* data lineage: mart sources, warehouse columns, SQL provenance +
+            freshness (metric nodes only; the panel self-hides when absent) */}
+        {isMetric && <DataLineagePanel props={node.props} />}
+
         {/* properties */}
         <div>
           <div className="mb-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
@@ -331,9 +368,185 @@ export function NodeDetail() {
             mode={traversalMode}
             nodes={nodes}
             onNavigate={(id) => navigate(nodes.find((n) => n.id === id), id)}
+            minConfidence={traverseMinConfidence}
+            onMinConfidenceChange={setTraverseMinConfidence}
           />
         )}
       </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Data-lineage panel (Metric nodes).
+//
+// Surfaces a metric's mart/SQL provenance + data-quality signals — kept separate
+// from the generic Properties grid, which excludes these keys via LINEAGE_FIELDS
+// so SQL etc. isn't also dumped raw. Contents:
+//   • mart_sources / source_columns  — chip lists
+//   • sql_query_real / sql_query_canonical — collapsible monospace code blocks
+//   • freshness — history_start–history_end · n_periods, with a 'stale' badge
+//   • formula_sql_mismatch — a warning chip carrying formula_sql_note
+// The whole section is collapsible and self-hides when a metric carries none of
+// these fields, so metrics without lineage data are left undisturbed.
+// ---------------------------------------------------------------------------
+
+function DataLineagePanel({ props }: { props: Record<string, unknown> }) {
+  const [open, setOpen] = useState(true)
+
+  // MetricProps documents the typed lineage keys; n_periods / formula_sql_note
+  // aren't on it, so those are read defensively off the generic record.
+  const mp = props as MetricProps
+  const martSources = Array.isArray(mp.mart_sources) ? mp.mart_sources : []
+  const sourceColumns = Array.isArray(mp.source_columns) ? mp.source_columns : []
+  const sqlReal = typeof mp.sql_query_real === "string" ? mp.sql_query_real : ""
+  const sqlCanonical =
+    typeof mp.sql_query_canonical === "string" ? mp.sql_query_canonical : ""
+  const historyStart = typeof mp.history_start === "string" ? mp.history_start : ""
+  const historyEnd = typeof mp.history_end === "string" ? mp.history_end : ""
+  const nPeriods = props.n_periods
+  const dataStale = mp.data_stale === true
+  const mismatch = mp.formula_sql_mismatch === true
+  const mismatchNote =
+    typeof props.formula_sql_note === "string" ? props.formula_sql_note : ""
+
+  const hasFreshness = !!(historyStart || historyEnd || nPeriods != null || dataStale)
+  const hasAnything =
+    martSources.length > 0 ||
+    sourceColumns.length > 0 ||
+    !!sqlReal ||
+    !!sqlCanonical ||
+    hasFreshness ||
+    mismatch
+  if (!hasAnything) return null
+
+  return (
+    <div>
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="mb-2 flex w-full items-center gap-1.5 text-left text-[11px] font-medium tracking-wide text-muted-foreground uppercase hover:text-foreground"
+      >
+        <span>{open ? "▾" : "▸"}</span>
+        <span>Data lineage</span>
+        {mismatch && (
+          <span
+            className="ml-auto rounded bg-red-500/15 px-1.5 py-0.5 text-[10px] font-medium normal-case text-red-600 dark:text-red-400"
+            title={mismatchNote || "formula_text disagrees with sql_query_real"}
+          >
+            ⚠ formula ≠ SQL
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <div className="space-y-3">
+          {/* QA: formula vs SQL mismatch note */}
+          {mismatch && mismatchNote && (
+            <div className="rounded-md border border-red-500/30 bg-red-500/10 px-2 py-1.5 text-xs text-red-600 dark:text-red-400">
+              {mismatchNote}
+            </div>
+          )}
+
+          {/* freshness */}
+          {hasFreshness && (
+            <div>
+              <div className="mb-1 font-mono text-[10px] text-muted-foreground">
+                freshness
+              </div>
+              <div className="flex flex-wrap items-center gap-1.5 text-xs text-foreground">
+                {(historyStart || historyEnd) && (
+                  <span className="tabular-nums">
+                    {historyStart || "?"} – {historyEnd || "?"}
+                  </span>
+                )}
+                {nPeriods != null && (
+                  <span className="tabular-nums text-muted-foreground">
+                    {String(nPeriods)} periods
+                  </span>
+                )}
+                {dataStale && (
+                  <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[10px] font-medium text-amber-600 dark:text-amber-400">
+                    stale
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* mart sources */}
+          {martSources.length > 0 && (
+            <ChipList label="mart_sources" items={martSources} />
+          )}
+
+          {/* warehouse source columns (drive /api/column-impact) */}
+          {sourceColumns.length > 0 && (
+            <ChipList label="source_columns" items={sourceColumns} mono />
+          )}
+
+          {/* SQL provenance — collapsed by default (can be large) */}
+          {sqlReal && <SqlBlock label="sql_query_real" sql={sqlReal} />}
+          {sqlCanonical && (
+            <SqlBlock label="sql_query_canonical" sql={sqlCanonical} />
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// A wrapped chip list for a string[] lineage field (mart sources / columns).
+function ChipList({
+  label,
+  items,
+  mono,
+}: {
+  label: string
+  items: string[]
+  mono?: boolean
+}) {
+  return (
+    <div>
+      <div className="mb-1 font-mono text-[10px] text-muted-foreground">{label}</div>
+      <div className="flex flex-wrap gap-1">
+        {items.map((it, i) => (
+          <Badge
+            key={`${it}-${i}`}
+            variant="secondary"
+            className={mono ? "font-mono text-[10px]" : ""}
+            title={it}
+          >
+            {it}
+          </Badge>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// Collapsible, scrollable monospace SQL block. Closed by default — the verbatim
+// (sql_query_real) and canonical (sql_query_canonical) queries can be long.
+function SqlBlock({ label, sql }: { label: string; sql: string }) {
+  const [open, setOpen] = useState(false)
+  const lines = sql.split("\n").length
+  return (
+    <div className="rounded-md border border-border">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        className="flex w-full items-center gap-2 px-2.5 py-1.5 text-left hover:bg-accent/50"
+      >
+        <span className="text-muted-foreground">{open ? "▾" : "▸"}</span>
+        <span className="font-mono text-[10px] tracking-wide text-foreground">{label}</span>
+        <span className="ml-auto text-[10px] tabular-nums text-muted-foreground">
+          {lines} line{lines === 1 ? "" : "s"}
+        </span>
+      </button>
+      {open && (
+        <pre className="max-h-64 overflow-auto border-t border-border bg-muted/40 px-2 py-1.5 font-mono text-[11px] whitespace-pre text-foreground">
+          {sql}
+        </pre>
+      )}
     </div>
   )
 }
@@ -383,6 +596,8 @@ function TraversalPanel({
   mode,
   nodes,
   onNavigate,
+  minConfidence,
+  onMinConfidenceChange,
 }: {
   loading: boolean
   upstream: TraversePayload
@@ -390,6 +605,8 @@ function TraversalPanel({
   mode: "off" | "upstream" | "downstream"
   nodes: GraphNode[]
   onNavigate: (uid: string) => void
+  minConfidence: number
+  onMinConfidenceChange: (value: number) => void
 }) {
   // Causal-path = downstream acyclic paths that traverse at least one causal hop.
   const causalPaths = useMemo(
@@ -413,6 +630,25 @@ function TraversalPanel({
     <div className="space-y-1">
       <div className="text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
         Lineage traversal
+      </div>
+      {/* Read-time confidence floor for the traverse calls (also honored by the
+          canvas highlight via the store). 0 = unfiltered. */}
+      <div className="flex items-center gap-2 pb-1">
+        <span className="shrink-0 text-[10px] text-muted-foreground">min conf</span>
+        <input
+          type="range"
+          min={0}
+          max={1}
+          step={0.05}
+          value={minConfidence}
+          onChange={(e) => onMinConfidenceChange(Number(e.target.value))}
+          className="h-1 flex-1 accent-primary"
+          aria-label="Minimum edge confidence for lineage traversal"
+          title="Only traverse edges with confidence ≥ this (read-time filter)"
+        />
+        <span className="w-7 shrink-0 text-right font-mono text-[10px] tabular-nums text-muted-foreground">
+          {minConfidence.toFixed(2)}
+        </span>
       </div>
       <PathSection
         title="Upstream"

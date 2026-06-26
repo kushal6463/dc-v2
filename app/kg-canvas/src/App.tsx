@@ -20,7 +20,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { subscribeEvents, type CoveragePayload, type GraphEdge } from "@/lib/api"
-import { edgeStyle, edgeVisual } from "@/lib/graphTheme"
+import { CROSS_DOMAIN_COLOR, edgeIsCrossDomain, edgeStyle, edgeVisual } from "@/lib/graphTheme"
 import { useStore, type SidebarTab } from "@/store"
 
 const TABS: { key: SidebarTab; label: string }[] = [
@@ -71,6 +71,7 @@ const EDGE_DETAIL_FIELDS: { key: keyof GraphEdge; label: string }[] = [
   { key: "confidence", label: "confidence" },
   { key: "evidence_mass", label: "evidence_mass" },
   { key: "temporal_lag", label: "temporal_lag" },
+  { key: "lag_plausibility", label: "lag_plausibility" },
   { key: "scoring_policy", label: "scoring_policy" },
   { key: "review_state", label: "review_state" },
   { key: "status", label: "status" },
@@ -101,6 +102,7 @@ function EdgeDetail() {
 
   const visual = edgeVisual(edge.type)
   const style = edgeStyle(edge)
+  const crossDomain = edgeIsCrossDomain(edge)
   const mechanism =
     edge.mechanism ??
     ((edge.props as Record<string, unknown> | undefined)?.mechanism as
@@ -126,6 +128,18 @@ function EdgeDetail() {
             style={{ background: style.stroke, opacity: style.opacity }}
           />
           {visual.label}
+          {crossDomain && (
+            <span
+              className="ml-auto rounded px-1.5 py-0.5 text-[9px] font-semibold normal-case"
+              style={{
+                color: CROSS_DOMAIN_COLOR,
+                backgroundColor: `${CROSS_DOMAIN_COLOR}22`,
+              }}
+              title="Cross-domain edge: this relation spans two metric domains"
+            >
+              ⬡ cross-domain
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-1.5 text-xs">
           <span className="truncate text-foreground">{titleOf(edge.source)}</span>
