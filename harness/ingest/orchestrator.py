@@ -24,7 +24,7 @@ M1 arbitration writer remains the single graph writer, reached later via
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import Any
 
 from harness.ingest.proposer import propose_for_dashboard_with_cost
@@ -42,6 +42,12 @@ DEFAULT_CONCURRENCY: int = 6
 
 #: Type of the optional live-canvas emit hook: ``emit(type, run_id=..., **data)``.
 EmitHook = Callable[..., None]
+
+#: Signature of a per-dashboard proposer: ``(dashboard_id, *, db) ->
+#: (proposals, cost_usd)``. Defaults to the metric/UIComponent proposer; the
+#: dashboard-surface ingestion passes
+#: :func:`harness.ingest.dashboard_proposer.propose_dashboard_with_cost`.
+ProposeFn = Callable[..., Awaitable[tuple[list[dict], float]]]
 
 
 def get_spine_context(db: Any = None) -> dict:
@@ -120,6 +126,7 @@ async def _propose_one(
     db: Any,
     errors: list[dict[str, Any]],
     progress: dict[str, int],
+    propose_fn: ProposeFn = propose_for_dashboard_with_cost,
     emit: EmitHook | None = None,
 ) -> tuple[int, float]:
     """Propose + persist one dashboard under the concurrency semaphore.
@@ -156,9 +163,7 @@ async def _propose_one(
                 message=f"Proposing for {dashboard_id}",
             )
         try:
-            proposals, cost_usd = await propose_for_dashboard_with_cost(
-                dashboard_id, db=db
-            )
+            proposals, cost_usd = await propose_fn(dashboard_id, db=db)
         except Exception as exc:  # noqa: BLE001 — isolate per-dashboard failures
             errors.append({"dashboard_id": dashboard_id, "error": str(exc)})
             append_event(
@@ -217,6 +222,7 @@ async def ingest_dashboards(
     concurrency: int = DEFAULT_CONCURRENCY,
     run_id: str | None = None,
     db: Any = None,
+    propose_fn: ProposeFn = propose_for_dashboard_with_cost,
     emit: EmitHook | None = None,
 ) -> dict:
     """Propose for many dashboards concurrently, persisting one run.
@@ -234,6 +240,10 @@ async def ingest_dashboards(
             ``None``.
         db: Optional shared :class:`~harness.kg.driver.GraphDB`; the singleton is
             used when ``None``.
+        propose_fn: The per-dashboard proposer coroutine ``(dashboard_id, *, db)
+            -> (proposals, cost_usd)``. Defaults to the metric/UIComponent
+            proposer; the dashboard-surface ingestion passes
+            :func:`harness.ingest.dashboard_proposer.propose_dashboard_with_cost`.
         emit: Optional live-canvas emit hook ``emit(type, run_id=..., **data)``.
             When ``None`` (the default, used by the CLI) no canvas events fire and
             behaviour is unchanged. When supplied it publishes ``run_started``,
@@ -270,6 +280,7 @@ async def ingest_dashboards(
                 db=graph,
                 errors=errors,
                 progress=progress,
+                propose_fn=propose_fn,
                 emit=emit,
             )
             for dashboard_id in dashboard_ids

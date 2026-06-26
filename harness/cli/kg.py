@@ -58,7 +58,7 @@ from harness.agent import engine
 from harness.ingest import apply as apply_mod
 from harness.ingest import dashboard_prepass as dashboard_prepass_mod
 from harness.ingest import prepass as prepass_mod
-from harness.ingest.dashboard_proposer import propose_dashboard_with_cost
+from harness.ingest.dashboard_proposer import propose_dashboard_with_cost, prune_shown_on
 from harness.ingest.orchestrator import DEFAULT_CONCURRENCY, ingest_dashboards
 from harness.kg import arbitration
 from harness.kg import reconcile as reconcile_mod
@@ -541,15 +541,18 @@ def cmd_ingest_all(args: argparse.Namespace) -> int:
 def cmd_ingest_dashboards(args: argparse.Namespace) -> int:
     """Ingest Dashboard surfaces over the existing live metrics.
 
-    Deterministically merges the in-repo chart registry + metric catalog into the
-    full dashboard set and the ground-truth ``SHOWN_ON`` edges (every edge targets
-    one of the live 317 metric uids), then fans out one LLM proposer subagent per
-    dashboard (bounded concurrency) to enrich the descriptive fields. The LLM
-    cannot add or retarget edges. With ``--auto-approve`` the run is approved and
-    applied through the single arbitration writer.
+    Deterministically derives, per dashboard, the genuinely-shown *floor* metrics
+    (a chart's own ``metric_key`` ∪ the metric's declared ``dashboards``), and
+    keeps the ``depends_on``-only *intermediate* metrics as separate candidates.
+    It then fans out one LLM proposer subagent per dashboard (bounded concurrency)
+    to (a) enrich the descriptive Dashboard fields and (b) adjudicate the
+    intermediate candidates — by default an intermediate is NOT mapped onto the
+    surface. Every ``SHOWN_ON`` edge targets one of the live 317 metric uids; the
+    LLM can never invent a metric. With ``--auto-approve`` the run is approved and
+    applied, then the graph is **pruned** to the curated set (any stale
+    intermediate ``SHOWN_ON`` edge from an earlier run is deleted).
 
-    ``--dry-run`` prints the deterministic plan counts (dashboards / edges /
-    metrics covered) without calling the LLM or touching Neo4j.
+    ``--dry-run`` prints the deterministic plan counts without LLM/Neo4j.
 
     Returns:
         Process exit code (0 on success).
@@ -559,7 +562,8 @@ def cmd_ingest_dashboards(args: argparse.Namespace) -> int:
     if args.dry_run:
         rows = [
             ("dashboards", str(counts["dashboards"])),
-            ("edges (SHOWN_ON)", str(counts["edges"])),
+            ("floor edges (shown)", str(counts["floor_edges"])),
+            ("intermediate candidates", str(counts["dependency_candidates"])),
             ("metrics_covered", f"{counts['metrics_covered']}/{counts['live_metrics']}"),
             ("unlinked_dashboards", str(counts["unlinked_dashboards"])),
         ]
@@ -587,6 +591,16 @@ def cmd_ingest_dashboards(args: argparse.Namespace) -> int:
 
     if args.auto_approve:
         _auto_approve_and_apply(db, summary["run_id"])
+        # Reconcile: delete any SHOWN_ON edge not in the curated proposal set
+        # (removes stale intermediate mappings from any earlier un-curated run).
+        desired = {
+            (str(rel.get("from_id")), str(rel.get("to_id")))
+            for proposal in proposals_store.load_proposals(run_id=summary["run_id"])
+            for rel in (proposal.get("relationship_payloads") or [])
+            if str(rel.get("type")) == "SHOWN_ON"
+        }
+        pruned = prune_shown_on(db, desired)
+        print(f"Pruned {pruned} stale intermediate SHOWN_ON edge(s).")
     return 0
 
 
