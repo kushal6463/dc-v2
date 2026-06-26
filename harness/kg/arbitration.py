@@ -395,7 +395,10 @@ def append_edge_evidence(
 
     Returns:
         The :func:`upsert_edge` result dict (``created`` / ``updated`` /
-        ``missing_endpoint`` / ``kept_reviewed``).
+        ``missing_endpoint`` / ``kept_reviewed``), or a ``skipped_structural_dup``
+        stub when the pair is already linked by a ``DECOMPOSES_INTO`` edge (the
+        formula edge subsumes the causal one, so no parallel ``INFLUENCES`` is
+        written).
 
     Raises:
         ValueError: If ``rel_type`` is not ``"INFLUENCES"``, or ``event`` has an
@@ -429,6 +432,36 @@ def append_edge_evidence(
     # are parameterized); the write below re-validates via upsert_edge.
     src_field = NODE_KEY_FIELDS[from_label]
     dst_field = NODE_KEY_FIELDS[to_label]
+
+    # Structural subsumes causal (FRD section 5.7 de-dup): if this pair is ALREADY
+    # linked by a DECOMPOSES_INTO edge (either direction), never stack a parallel
+    # INFLUENCES on it. The formula edge is definitional (pinned at confidence
+    # 1.0) and is already walked by causal traversal, so a second causal edge
+    # would double-count the same dependency. Skip the write and report it (no
+    # edge is fabricated; the call stays idempotent). ``from_label``/``to_label``
+    # were just validated via NODE_KEY_FIELDS above, so only an allowlisted label
+    # is interpolated; both identity values are parameterized.
+    struct_rows = db.read(
+        f"MATCH (a:{from_label} {{{src_field}: $fk}})"
+        f"-[d:DECOMPOSES_INTO]-(b:{to_label} {{{dst_field}: $tk}}) "
+        "RETURN count(d) AS n",
+        fk=from_key,
+        tk=to_key,
+    )
+    if struct_rows and int(struct_rows[0]["n"]) > 0:
+        result = {
+            "status": "skipped_structural_dup",
+            "rel_type": rel_type,
+            "from": {"label": from_label, "key": from_key},
+            "to": {"label": to_label, "key": to_key},
+            "reason": (
+                "pair already linked by DECOMPOSES_INTO; structural edges "
+                "subsume causal ones (no parallel INFLUENCES is written)"
+            ),
+        }
+        append_event({"type": "edge_upsert", **result})
+        return result
+
     ledger_rows = db.read(
         f"OPTIONAL MATCH (a:{from_label} {{{src_field}: $fk}})"
         f"-[r:{rel_type}]->(b:{to_label} {{{dst_field}: $tk}}) "

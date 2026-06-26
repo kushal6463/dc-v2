@@ -11,9 +11,17 @@ Verifies the core write discipline:
 
 from __future__ import annotations
 
+import json
 import uuid
 
-from harness.kg.arbitration import upsert_edge, upsert_node, write_node_model
+import pytest
+
+from harness.kg.arbitration import (
+    append_edge_evidence,
+    upsert_edge,
+    upsert_node,
+    write_node_model,
+)
 from harness.kg.driver import GraphDB
 from harness.kg.models import Domain
 from harness.store.jsonl import EVENTS_PATH
@@ -171,3 +179,130 @@ def test_upsert_edge_missing_endpoint(graphdb: GraphDB) -> None:
     assert result["status"] == "missing_endpoint"
     assert result["from"]["exists"] is False
     assert result["to"]["exists"] is False
+
+
+def _mk_metric(db: GraphDB, key: str) -> None:
+    """Create a minimal ``:Metric`` node (just enough to anchor an edge)."""
+    upsert_node(
+        db,
+        label="Metric",
+        key_field="metric_uid",
+        key_value=key,
+        props={"display_name": "T", "status": "active"},
+    )
+
+
+def test_append_edge_evidence_folds_and_is_idempotent(graphdb: GraphDB) -> None:
+    """First append creates a folded INFLUENCES edge; re-appending the SAME
+    event is idempotent (ledger length and confidence unchanged)."""
+    a = f"test-metric-{uuid.uuid4().hex[:8]}"
+    b = f"test-metric-{uuid.uuid4().hex[:8]}"
+    _mk_metric(graphdb, a)
+    _mk_metric(graphdb, b)
+    ev = {
+        "tier": "prior",
+        "direction": "supports",
+        "attribution": "test",
+        "timestamp": "2026-01-01T00:00:00Z",
+    }
+    try:
+        first = append_edge_evidence(
+            graphdb,
+            from_key=a,
+            to_key=b,
+            event=dict(ev),
+            edge_props={"relation": "llm_causal"},
+        )
+        assert first["status"] == "created"
+        rows = graphdb.read(
+            "MATCH (:Metric {metric_uid: $a})-[r:INFLUENCES]->(:Metric {metric_uid: $b}) "
+            "RETURN r.confidence AS c, r.evidence_mass AS m, r.evidence_ledger AS l",
+            a=a,
+            b=b,
+        )
+        # One PRIOR supports (weight 1.0) over Jeffreys -> 1.5 / 2.0 = 0.75, mass 2.0.
+        assert rows and abs(float(rows[0]["c"]) - 0.75) < 1e-6
+        assert abs(float(rows[0]["m"]) - 2.0) < 1e-6
+        assert len(json.loads(rows[0]["l"])) == 1
+
+        # Re-append the identical event -> event_id dedupe keeps it a no-op.
+        append_edge_evidence(
+            graphdb,
+            from_key=a,
+            to_key=b,
+            event=dict(ev),
+            edge_props={"relation": "llm_causal"},
+        )
+        rows2 = graphdb.read(
+            "MATCH (:Metric {metric_uid: $a})-[r:INFLUENCES]->(:Metric {metric_uid: $b}) "
+            "RETURN r.confidence AS c, r.evidence_ledger AS l",
+            a=a,
+            b=b,
+        )
+        assert len(json.loads(rows2[0]["l"])) == 1
+        assert abs(float(rows2[0]["c"]) - 0.75) < 1e-6
+    finally:
+        graphdb.write(
+            "MATCH (n:Metric) WHERE n.metric_uid IN [$a, $b] DETACH DELETE n",
+            a=a,
+            b=b,
+        )
+
+
+def test_append_edge_evidence_skips_structural_dup(graphdb: GraphDB) -> None:
+    """A causal append is REFUSED when the pair already has a DECOMPOSES_INTO
+    edge (structural subsumes causal) — no parallel INFLUENCES is written."""
+    a = f"test-metric-{uuid.uuid4().hex[:8]}"
+    b = f"test-metric-{uuid.uuid4().hex[:8]}"
+    _mk_metric(graphdb, a)
+    _mk_metric(graphdb, b)
+    try:
+        # Formula edge: A decomposes into B (B is A's numerator).
+        upsert_edge(
+            graphdb,
+            rel_type="DECOMPOSES_INTO",
+            from_label="Metric",
+            from_key=a,
+            to_label="Metric",
+            to_key=b,
+            props={"relation": "formula", "role": "numerator", "confidence": 1.0},
+        )
+        # A causal attempt in the REVERSE direction must be skipped, not stacked.
+        result = append_edge_evidence(
+            graphdb,
+            from_key=b,
+            to_key=a,
+            event={
+                "tier": "prior",
+                "direction": "supports",
+                "attribution": "test",
+                "timestamp": "2026-01-01T00:00:00Z",
+            },
+            edge_props={"relation": "llm_causal"},
+        )
+        assert result["status"] == "skipped_structural_dup"
+        rows = graphdb.read(
+            "MATCH (:Metric {metric_uid: $a})-[r:INFLUENCES]-(:Metric {metric_uid: $b}) "
+            "RETURN count(r) AS c",
+            a=a,
+            b=b,
+        )
+        assert int(rows[0]["c"]) == 0
+    finally:
+        graphdb.write(
+            "MATCH (n:Metric) WHERE n.metric_uid IN [$a, $b] DETACH DELETE n",
+            a=a,
+            b=b,
+        )
+
+
+def test_append_edge_evidence_rejects_non_influences(graphdb: GraphDB) -> None:
+    """The ledger is INFLUENCES-only; any other ``rel_type`` is rejected up front."""
+    with pytest.raises(ValueError):
+        append_edge_evidence(
+            graphdb,
+            from_key="x",
+            to_key="y",
+            event={"tier": "prior", "direction": "supports"},
+            rel_type="DECOMPOSES_INTO",
+        )
