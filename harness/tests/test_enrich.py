@@ -126,3 +126,24 @@ def test_build_enrich_candidates_excludes_structural(tmp_path) -> None:
     out2 = enrich.build_enrich_candidates(metrics, tmp_path, {frozenset(("a", "b"))})
     assert out2["candidates"] == []
     assert out2["counts"]["dropped_structural"] >= 1
+
+
+def test_clean_columns_filters_sql_junk() -> None:
+    """SQL types/functions/keywords + junk are dropped; real columns survive."""
+    raw = ["SPEND", "FLOAT", "NVL", "case", "REVENUE", "X", "123", "sum", "ad_id"]
+    assert enrich._clean_columns(raw) == ["AD_ID", "REVENUE", "SPEND"]
+    assert enrich._clean_columns([]) == []
+    assert enrich._clean_columns(None) == []
+
+
+def test_build_uses_shared_enrich() -> None:
+    """build() must route through the SAME deterministic-enrich functions as the
+    standalone enrich path (no drift) — asserted by source introspection."""
+    import inspect
+
+    from harness.agentic import orchestrator
+
+    src = inspect.getsource(orchestrator.build)
+    assert "run_deterministic_enrich" in src
+    assert "critique_dedupe" in src
+    assert "migrate_edge_ledger" in src
