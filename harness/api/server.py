@@ -501,15 +501,50 @@ def graph(limit: int = 2000, include_deprecated: bool = False) -> dict[str, Any]
 
 @app.get("/api/coverage")
 def coverage(tenant: str = "rare_seeds") -> dict[str, Any]:
-    """Return the parsed ``data/skeleton/coverage_report.<tenant>.json``.
+    """Return a LIVE coverage summary computed from the graph (Neo4j).
 
-    Returns ``{"error": ...}`` (not a raised 404) when the report is missing, so
-    the canvas can render an empty-state instead of a fetch failure.
+    The canvas CoverageBadge reads ``metric_nodes`` / ``metrics_with_formula``.
+    This previously returned the static ``data/skeleton/coverage_report.<tenant>``
+    artifact written by the (now-removed) deterministic skeleton build — which
+    went permanently stale after the LLM build replaced the graph (e.g. it still
+    reported the old 885-metric count). It now reflects the LIVE graph instead, so
+    the badge always matches what the canvas renders. Returns ``{"error": ...}``
+    (not a raised 5xx) when the graph is unreachable, so the canvas renders an
+    empty-state rather than a fetch failure.
     """
-    path = _artifact_path(f"coverage_report.{tenant}.json")
-    if not path.exists():
-        return {"error": f"coverage report not found for tenant {tenant!r}"}
-    return json.loads(path.read_text(encoding="utf-8"))
+    try:
+        db = get_db()
+        total = db.read("MATCH (m:Metric) RETURN count(m) AS n")[0]["n"]
+        with_formula = db.read(
+            "MATCH (m:Metric) WHERE m.formula_text IS NOT NULL "
+            "AND m.formula_text <> '' RETURN count(m) AS n"
+        )[0]["n"]
+        by_scope = {
+            r["s"]: r["n"]
+            for r in db.read(
+                "MATCH (m:Metric) RETURN coalesce(m.scope_key, '(none)') AS s, "
+                "count(m) AS n ORDER BY n DESC"
+            )
+        }
+        edges = {
+            r["t"]: r["n"]
+            for r in db.read(
+                "MATCH ()-[r]->() WHERE type(r) IN ['DECOMPOSES_INTO', 'INFLUENCES'] "
+                "RETURN type(r) AS t, count(r) AS n"
+            )
+        }
+    except Exception as exc:  # noqa: BLE001 — surface as empty-state, not a 5xx
+        return {"error": f"live coverage unavailable: {exc}"}
+    return {
+        "tenant": tenant,
+        "metric_nodes": int(total),
+        "metrics_with_formula": int(with_formula),
+        "metrics_without_formula": int(total) - int(with_formula),
+        "metrics_by_scope": by_scope,
+        "structural_edges": int(edges.get("DECOMPOSES_INTO", 0)),
+        "causal_edges": int(edges.get("INFLUENCES", 0)),
+        "source": "live_graph",
+    }
 
 
 @app.get("/api/edge-diff")
