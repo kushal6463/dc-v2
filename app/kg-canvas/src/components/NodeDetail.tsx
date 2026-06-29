@@ -4,11 +4,12 @@
 
 import { useEffect, useMemo, useState } from "react"
 
-import { useStore } from "@/store"
+import { ACTIVE_CAMPAIGN_ANCHORS, useStore } from "@/store"
 import { edgeVisual, labelStyle, provenanceColor } from "@/lib/graphTheme"
 import {
   traverseDownstream,
   traverseUpstream,
+  type ActiveCampaignBreakdownPayload,
   type GraphNode,
   type MetricProps,
   type TraversePath,
@@ -331,6 +332,18 @@ export function NodeDetail() {
           </div>
         )}
 
+        {/* active-campaign breakdown (RUNTIME overlay — never persisted): only
+            for the platform active_campaigns anchors (blended/google_ads/meta_ads).
+            KPI headline + per-platform counts (which sum to it) + a clearly-
+            labelled NON-ADDITIVE dimension section. */}
+        {isMetric && ACTIVE_CAMPAIGN_ANCHORS.has(node.id) && (
+          <ActiveCampaignsBreakdownPanel
+            metricUid={node.id}
+            nodes={nodes}
+            onNavigate={(id) => navigate(nodes.find((n) => n.id === id), id)}
+          />
+        )}
+
         {/* data lineage: mart sources, warehouse columns, SQL provenance +
             freshness (metric nodes only; the panel self-hides when absent) */}
         {isMetric && <DataLineagePanel props={node.props} />}
@@ -414,6 +427,215 @@ export function NodeDetail() {
         )}
           </>
         )}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Active-campaign breakdown panel (blended/google_ads/meta_ads .active_campaigns).
+//
+// A RUNTIME overlay (never persisted): the platform metric's active-campaign
+// COUNT decomposition for a user-chosen date range, fetched from
+// /api/active-campaign-breakdown into the store (the canvas triggers the fetch on
+// selection; this panel reads the same payload). Shows the KPI headline + the
+// per-platform counts (which SUM to the headline) and, clearly separated, the
+// NON-ADDITIVE dimension cuts (ad-network-type / objective) that DO NOT sum to the
+// count. The date control re-fetches counts ONLY — it never touches the graph.
+// ---------------------------------------------------------------------------
+
+const NON_ADDITIVE_DIMS: { key: "ad_network_type" | "objective"; label: string }[] = [
+  { key: "ad_network_type", label: "Ad network type" },
+  { key: "objective", label: "Objective" },
+]
+
+function ActiveCampaignsBreakdownPanel({
+  metricUid,
+  nodes,
+  onNavigate,
+}: {
+  metricUid: string
+  nodes: GraphNode[]
+  onNavigate: (uid: string) => void
+}) {
+  const breakdown = useStore((s) => s.breakdown)
+  const loading = useStore((s) => s.breakdownLoading)
+  const range = useStore((s) => s.breakdownRange)
+  const setRange = useStore((s) => s.setBreakdownRange)
+
+  // The store loads the overlay when this anchor is selected (see CanvasView); only
+  // render its data once the loaded payload's anchor matches THIS metric.
+  const ready = breakdown != null && breakdown.anchor_metric_uid === metricUid
+
+  const titleFor = (uid: string): string => {
+    const n = nodes.find((x) => x.id === uid)
+    return n ? n.title || n.id : uid
+  }
+
+  const headline = ready ? breakdown.counts_by_metric_uid[metricUid] : undefined
+  const children = useMemo(() => {
+    if (!ready) return [] as { uid: string; count: number }[]
+    return Object.entries(breakdown.counts_by_metric_uid)
+      .filter(([uid]) => uid !== metricUid)
+      .map(([uid, count]) => ({ uid, count: Number(count) }))
+      .sort((a, b) => b.count - a.count || a.uid.localeCompare(b.uid))
+  }, [ready, breakdown, metricUid])
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+        Active campaigns
+        {ready && breakdown.stale && (
+          <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-[9px] font-medium normal-case text-amber-600 dark:text-amber-400">
+            stale
+          </span>
+        )}
+        <span className="ml-auto text-[9px] font-normal normal-case text-muted-foreground">
+          runtime · not persisted
+        </span>
+      </div>
+
+      {/* date range — drives setBreakdownRange (re-fetch counts only; never the graph) */}
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs">
+        <label className="flex items-center gap-1">
+          <span className="text-[10px] text-muted-foreground">from</span>
+          <input
+            type="date"
+            value={range.date_from}
+            max={range.date_to}
+            onChange={(e) => setRange({ ...range, date_from: e.target.value })}
+            className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px]"
+            aria-label="Active-campaign breakdown start date"
+          />
+        </label>
+        <label className="flex items-center gap-1">
+          <span className="text-[10px] text-muted-foreground">to</span>
+          <input
+            type="date"
+            value={range.date_to}
+            min={range.date_from}
+            onChange={(e) => setRange({ ...range, date_to: e.target.value })}
+            className="rounded border border-border bg-background px-1.5 py-0.5 text-[11px]"
+            aria-label="Active-campaign breakdown end date"
+          />
+        </label>
+      </div>
+
+      {loading && !ready ? (
+        <div className="text-xs text-muted-foreground">Loading active-campaign counts…</div>
+      ) : !ready ? (
+        <div className="text-xs text-muted-foreground">No active-campaign counts loaded.</div>
+      ) : breakdown.stale ? (
+        <div className="rounded-md border border-amber-500/30 bg-amber-500/10 px-2 py-1.5 text-xs text-amber-700 dark:text-amber-400">
+          Warehouse counts are unavailable right now (stale)
+          {breakdown.freshness_notes ? ` — ${breakdown.freshness_notes}` : "."}
+        </div>
+      ) : (
+        <>
+          {/* KPI headline */}
+          <div className="mb-3 flex items-baseline gap-2">
+            <span className="text-2xl font-semibold tabular-nums text-foreground">
+              {headline != null ? headline.toLocaleString() : "—"}
+            </span>
+            <span className="text-[11px] text-muted-foreground">
+              active campaigns · {range.date_from} → {range.date_to}
+            </span>
+          </div>
+
+          {/* per-platform counts — these SUM to the headline (additive). */}
+          {children.length > 0 && (
+            <div className="mb-3">
+              <div className="mb-1 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+                By platform · sums to {headline != null ? headline.toLocaleString() : "—"}
+              </div>
+              <ul className="space-y-1">
+                {children.map((c) => {
+                  const isZero = breakdown.zero_count_metric_uids.includes(c.uid)
+                  return (
+                    <li key={c.uid}>
+                      <button
+                        onClick={() => onNavigate(c.uid)}
+                        className={`flex w-full items-center gap-2 rounded-md border border-border px-2 py-1 text-left text-xs hover:bg-accent ${
+                          isZero ? "opacity-60" : ""
+                        }`}
+                        title={c.uid}
+                      >
+                        <span className="truncate text-foreground">{titleFor(c.uid)}</span>
+                        <span className="ml-auto shrink-0 tabular-nums text-foreground">
+                          {c.count.toLocaleString()}
+                        </span>
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+            </div>
+          )}
+
+          {/* NON-ADDITIVE dimension cuts — explicitly separated from the count. */}
+          <NonAdditiveDims dims={breakdown.overlay_dims} />
+
+          {/* provenance / freshness */}
+          {(breakdown.source_marts.length > 0 || breakdown.freshness_notes) && (
+            <div className="mt-3 text-[10px] text-muted-foreground">
+              {breakdown.freshness_notes}
+              {breakdown.source_marts.length > 0
+                ? ` · ${breakdown.source_marts.join(", ")}`
+                : ""}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+// The non-additive dimension cuts (ad-network-type / objective). Rendered in a
+// dashed, muted box under an explicit "does not sum to the count" heading so the
+// overlay can never be mistaken for an additive decomposition (plan FR-ARCH-001:
+// these stay in the overlay, never as graph nodes/edges). Self-hides when empty.
+function NonAdditiveDims({
+  dims,
+}: {
+  dims: ActiveCampaignBreakdownPayload["overlay_dims"]
+}) {
+  const sections = NON_ADDITIVE_DIMS.map((d) => ({
+    label: d.label,
+    entries: Object.entries(dims?.[d.key] ?? {})
+      .map(([k, v]) => [k, Number(v)] as [string, number])
+      .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0])),
+  })).filter((s) => s.entries.length > 0)
+
+  if (sections.length === 0) return null
+
+  return (
+    <div className="rounded-md border border-dashed border-border bg-muted/30 p-2">
+      <div className="mb-1.5 flex flex-wrap items-center gap-1.5">
+        <span className="text-[10px] font-semibold tracking-wide text-muted-foreground uppercase">
+          Non-additive breakdown
+        </span>
+        <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] text-muted-foreground">
+          does not sum to the count
+        </span>
+      </div>
+      <div className="space-y-2">
+        {sections.map((s) => (
+          <div key={s.label}>
+            <div className="mb-1 text-[10px] font-medium text-muted-foreground">{s.label}</div>
+            <div className="flex flex-wrap gap-1">
+              {s.entries.map(([k, v]) => (
+                <span
+                  key={k}
+                  className="flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-[10px] text-foreground"
+                  title={`${k}: ${v}`}
+                >
+                  <span className="truncate">{k}</span>
+                  <span className="tabular-nums text-muted-foreground">{v.toLocaleString()}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   )

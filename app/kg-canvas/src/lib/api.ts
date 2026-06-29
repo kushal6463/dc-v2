@@ -287,6 +287,41 @@ export interface DashboardChartsPayload {
 }
 
 // ---------------------------------------------------------------------------
+// Active-campaign breakdown (runtime overlay — never persisted).
+//
+// GET /api/active-campaign-breakdown?metric_uid=&date_from=&date_to= is a
+// read-only passthrough to the backend's BC_2 Snowflake mart reader. It returns
+// the per-child active-campaign COUNTS that decorate a platform metric's
+// DECOMPOSES_INTO fan-out at request time — keyed by dot-form `metric_uid` (==
+// graph node id) so they map straight onto canvas nodes — the zero-count buckets
+// to dim, and NON-ADDITIVE dimension cuts (ad_network_type / objective) that DO
+// NOT sum to the count. Counts are runtime-only: the canvas never persists them
+// and changing the date range only re-fetches counts (it never mutates an edge).
+// The reader is graceful — on a Snowflake outage it returns `stale: true` with
+// empty counts rather than erroring.
+// ---------------------------------------------------------------------------
+
+export interface ActiveCampaignBreakdownPayload {
+  anchor_metric_uid: string
+  date_from: string
+  date_to: string
+  /** Active-campaign count per metric_uid (== graph node id): the anchor + children. */
+  counts_by_metric_uid: Record<string, number>
+  /** Non-additive dimension cuts: each maps a bucket label to a count and does
+   *  NOT sum to `counts_by_metric_uid` (they are alternative slices, not addends). */
+  overlay_dims: {
+    ad_network_type: Record<string, number>
+    objective: Record<string, number>
+  }
+  /** metric_uids whose count is 0 in this window (dim on the canvas, never remove). */
+  zero_count_metric_uids: string[]
+  /** True when the warehouse is unconfigured / unreachable (counts then empty). */
+  stale: boolean
+  freshness_notes: string
+  source_marts: string[]
+}
+
+// ---------------------------------------------------------------------------
 // Governance — Policy & Threshold authoring (left-drawer wizard).
 //
 // POST /api/governance writes a Policy node + a Threshold node + the 3 governance
@@ -462,6 +497,14 @@ export const api = {
   dashboardCharts: (dashboardId: string) =>
     getJSON<DashboardChartsPayload>(
       `/dashboard-charts?dashboard_id=${encodeURIComponent(dashboardId)}`
+    ),
+  // Runtime active-campaign COUNT overlay for a platform metric over a date range.
+  // The frontend calls ONLY this — it never imports the backend reader.
+  activeCampaignBreakdown: (metricUid: string, dateFrom: string, dateTo: string) =>
+    getJSON<ActiveCampaignBreakdownPayload>(
+      `/active-campaign-breakdown?metric_uid=${encodeURIComponent(
+        metricUid
+      )}&date_from=${encodeURIComponent(dateFrom)}&date_to=${encodeURIComponent(dateTo)}`
     ),
   dashboards: () =>
     getJSON<{ dashboards: DashboardInfo[] }>("/dashboards"),

@@ -50,6 +50,14 @@ _POLICY: dict[str, tuple[float | None, float | None, str, bool, bool]] = {
     "INFLUENCES:statistical": (None, 1.0, "statistical_import_v1", True, False),
     "INFLUENCES:statistical_candidate": (None, 1.0, "statistical_candidate_v1", True, False),
     "INFLUENCES:promoted": (None, None, "promoted_v1", True, False),
+    # A mart-lineage candidate (two metrics share a mart/column, or one mart
+    # ref()-depends on the other) is only weak structural co-location evidence —
+    # NOT a measured causal link. It is pinned LOW (confidence 0.3, mass 2.0),
+    # always review=True (parked as a 'held' edge for the human queue), and
+    # NEVER deterministic/auto-safe. Without this row it fell through to the
+    # unknown_edge_class_v1 fallback; the explicit row makes the held/low-mass
+    # contract intentional and testable.
+    "INFLUENCES:mart_lineage": (0.3, 2.0, "mart_lineage_v1", True, False),
 }
 
 #: Default confidence when a policy row resolves from source_confidence but none

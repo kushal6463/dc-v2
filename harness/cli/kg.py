@@ -1097,10 +1097,11 @@ def cmd_enrich(args: argparse.Namespace) -> int:
     Runs the no-LLM enrichment against the LIVE graph (additive, idempotent):
     removes causal edges that parallel a formula edge (``critique_dedupe``),
     populates ``mart_sources`` / ``sql_query_real`` / ``source_columns`` /
-    freshness from BC_2 + the registry (``run_deterministic_enrich``), and folds
-    each legacy causal edge onto the Beta evidence ledger
-    (``migrate_edge_ledger``). No graph wipe; back up first with
-    ``python -m harness.store.backup export`` if desired.
+    freshness from BC_2 + the registry (``run_deterministic_enrich``), folds each
+    legacy causal edge onto the Beta evidence ledger (``migrate_edge_ledger``),
+    and promotes deterministic mart-lineage candidates to HELD ``INFLUENCES``
+    edges parked for human review (``promote_lineage_edges``). No graph wipe; back
+    up first with ``python -m harness.store.backup export`` if desired.
 
     Returns:
         Process exit code (0 on success).
@@ -1108,16 +1109,40 @@ def cmd_enrich(args: argparse.Namespace) -> int:
     from harness.agentic import enrich
 
     dry = bool(getattr(args, "dry_run", False))
+    limit = getattr(args, "limit", None)
     if not getattr(args, "no_dedupe", False):
         print("critique_dedupe:", json.dumps(enrich.critique_dedupe(dry_run=dry), default=str))
     print("enrich:", json.dumps(
-        enrich.run_deterministic_enrich(dry_run=dry, limit=getattr(args, "limit", None)),
+        enrich.run_deterministic_enrich(dry_run=dry, limit=limit),
         default=str,
     ))
     if not getattr(args, "no_migrate", False):
         print("migrate_edge_ledger:", json.dumps(
             enrich.migrate_edge_ledger(dry_run=dry), default=str
         ))
+    if not getattr(args, "no_lineage", False):
+        print("promote_lineage_edges:", json.dumps(
+            enrich.promote_lineage_edges(dry_run=dry, limit=limit), default=str
+        ))
+    return 0
+
+
+def cmd_audit_mart_drift(args: argparse.Namespace) -> int:
+    """Audit live metric mart bindings against the BC_2 dbt mart inventory.
+
+    Read-only: resolves every live ``:Metric``'s ``mart_sources`` to its dbt
+    ``*.sql`` model (reusing ``graph_server._mart_sql_path``) and reports any
+    binding that no longer resolves as drift. Writes nothing to the graph.
+
+    Returns:
+        Process exit code (0 on success).
+    """
+    from harness.agentic import enrich
+
+    print(json.dumps(
+        enrich.audit_mart_drift(limit=getattr(args, "limit", None)),
+        indent=2, default=str,
+    ))
     return 0
 
 
@@ -1360,8 +1385,9 @@ def build_parser() -> argparse.ArgumentParser:
         "enrich",
         help="Deterministically enrich metrics with mart_sources / SQL / columns / "
         "freshness (BC_2-grounded), remove causal edges that parallel a formula "
-        "edge, and migrate causal edges onto the Beta evidence ledger. Additive, "
-        "idempotent, no LLM.",
+        "edge, migrate causal edges onto the Beta evidence ledger, and promote "
+        "mart-lineage candidates to held INFLUENCES edges. Additive, idempotent, "
+        "no LLM.",
     )
     p_enrich.add_argument("--dry-run", action="store_true",
                           help="Compute + report only; write nothing.")
@@ -1371,7 +1397,18 @@ def build_parser() -> argparse.ArgumentParser:
                           help="Skip removing causal/structural parallel edges.")
     p_enrich.add_argument("--no-migrate", action="store_true",
                           help="Skip the evidence-ledger migration.")
+    p_enrich.add_argument("--no-lineage", action="store_true",
+                          help="Skip promoting mart-lineage candidates to held edges.")
     p_enrich.set_defaults(func=cmd_enrich)
+
+    p_audit_drift = subparsers.add_parser(
+        "audit-mart-drift",
+        help="Read-only: report live metrics whose mart_sources no longer resolve "
+        "to a BC_2 dbt mart SQL file (binding drift). Writes nothing.",
+    )
+    p_audit_drift.add_argument("--limit", type=int, default=None,
+                               help="Cap how many metrics are scanned.")
+    p_audit_drift.set_defaults(func=cmd_audit_mart_drift)
 
     p_seed_gov = subparsers.add_parser(
         "seed-governance",

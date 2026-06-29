@@ -50,6 +50,13 @@ discovery-gpu = [
     "tigramite>=5.2",
     "torch>=2.0",
 ]
+# Live read-only Snowflake reader for the runtime active_campaigns COUNT overlay
+# (harness.marts.snowflake_reader). Not a core dep — the reader imports the
+# connector lazily and degrades gracefully when absent. Install on demand:
+# uv sync --extra counts
+counts = [
+    "snowflake-connector-python>=3.6.0",
+]
 
 [project.scripts]
 kg = "harness.cli.kg:main"

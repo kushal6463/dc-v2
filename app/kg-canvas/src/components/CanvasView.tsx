@@ -32,7 +32,7 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 
-import { useStore } from "@/store"
+import { ACTIVE_CAMPAIGN_ANCHORS, useStore } from "@/store"
 import type { GraphEdge, GraphNode } from "@/lib/api"
 import {
   buildLayout,
@@ -178,6 +178,8 @@ function passesScopeDomain(
 
 // Governance badge color — matches the Policy node / GOVERNS edge (§) hue.
 const GOVERNANCE_COLOR = "#ef6f6f"
+// Runtime active-campaign-count KPI chip color (overlay; never persisted).
+const COUNT_COLOR = "#4ea8de"
 
 const KGNode = memo(function KGNode({ data }: NodeProps<FlowNode>) {
   const d = data as FlowNodeData
@@ -216,6 +218,14 @@ const KGNode = memo(function KGNode({ data }: NodeProps<FlowNode>) {
   // graph as a small chip, replacing the retired 4-division layout.
   const roleBadge =
     node.label === "Metric" ? causalRoleBadge(node.props?.causal_role) : null
+
+  // Runtime active-campaign-count KPI (overlay). `count` / `zero` ride on the
+  // FlowNodeData index signature, set by the styled pass in CanvasView from the
+  // store breakdown (keyed by node id); both are undefined/false when no overlay
+  // is loaded. Zero-count buckets are also dimmed (d.dim) — the chip shows "0".
+  const acCount = (d as { count?: unknown }).count
+  const hasCount = typeof acCount === "number"
+  const acZero = Boolean((d as { zero?: unknown }).zero)
 
   return (
     <div
@@ -292,6 +302,25 @@ const KGNode = memo(function KGNode({ data }: NodeProps<FlowNode>) {
               }}
             >
               {roleBadge.label}
+            </span>
+          )}
+          {hasCount && (
+            <span
+              title={`Active campaigns in the selected date range: ${Number(
+                acCount,
+              ).toLocaleString()} (runtime overlay — not persisted)`}
+              style={{
+                fontSize: 8.5,
+                fontWeight: 700,
+                lineHeight: 1,
+                padding: "2px 5px",
+                borderRadius: 99,
+                color: acZero ? sub : COUNT_COLOR,
+                border: `1px solid ${acZero ? `${sub}66` : `${COUNT_COLOR}66`}`,
+                background: acZero ? "transparent" : `${COUNT_COLOR}1a`,
+              }}
+            >
+              {Number(acCount).toLocaleString()}
             </span>
           )}
         </span>
@@ -438,6 +467,11 @@ export function CanvasView() {
   const traversalMode = useStore((s) => s.traversalMode)
   const traversalResult = useStore((s) => s.traversalResult)
 
+  // Runtime active-campaign breakdown overlay (counts/zero buckets by node id).
+  const breakdown = useStore((s) => s.breakdown)
+  const breakdownAnchorId = useStore((s) => s.breakdownAnchorId)
+  const loadActiveCampaignBreakdown = useStore((s) => s.loadActiveCampaignBreakdown)
+
   // Scope/domain facets + the transient locate request (search / review panel).
   const scopeFilter = useStore((s) => s.scopeFilter)
   const domainFilter = useStore((s) => s.domainFilter)
@@ -582,6 +616,25 @@ export function CanvasView() {
     return { leaf, loop }
   }, [base.nodes, base.edges])
 
+  // Runtime active-campaign overlay, keyed by node id (== metric_uid). When a
+  // breakdown is loaded the styled pass below stamps each node's count + a `zero`
+  // flag (zero buckets reuse the existing dim treatment). All maps are empty when
+  // no breakdown is loaded, so the canvas is byte-identical to before in that case.
+  const breakdownActive = breakdown != null
+  const breakdownCounts = useMemo(() => {
+    const m = new Map<string, number>()
+    if (breakdown) {
+      for (const [uid, c] of Object.entries(breakdown.counts_by_metric_uid)) {
+        if (typeof c === "number") m.set(uid, c)
+      }
+    }
+    return m
+  }, [breakdown])
+  const breakdownZero = useMemo(
+    () => new Set(breakdown?.zero_count_metric_uids ?? []),
+    [breakdown],
+  )
+
   // Final styling pass (no layout recompute): repaint each edge from
   // graphTheme.edgeStyle() so DECOMPOSES_INTO vs INFLUENCES and every relation
   // subtype read distinctly (deprecated → faded + dashed). Then overlay the
@@ -639,27 +692,53 @@ export function CanvasView() {
     // only when one of these flags actually changes (keeps identity stable so
     // React Flow / the memoized card skip re-rendering otherwise).
     const styledNodes: FlowNode[] = flowNodes.map((n) => {
-      const dimNow = traversal.active && !traversal.nodeIds.has(n.id)
+      // Zero-count buckets (overlay) reuse the existing dim treatment (opacity
+      // 0.28); traversal still dims everything off the active path.
+      const zeroNow = breakdownActive && breakdownZero.has(n.id)
+      const dimNow = (traversal.active && !traversal.nodeIds.has(n.id)) || zeroNow
       const flashNow = locateFlash.has(n.id)
       const leafNow = decoration.leaf.has(n.id)
       const loopNow = decoration.loop.has(n.id)
+      const countNow = breakdownActive ? breakdownCounts.get(n.id) : undefined
       const d = n.data as FlowNodeData
       if (
         d.dim === dimNow &&
         Boolean(d.flash) === flashNow &&
         Boolean(d.leaf) === leafNow &&
-        Boolean(d.loop) === loopNow
+        Boolean(d.loop) === loopNow &&
+        (d as { count?: unknown }).count === countNow &&
+        Boolean((d as { zero?: unknown }).zero) === zeroNow
       ) {
         return n
       }
       return {
         ...n,
-        data: { ...n.data, dim: dimNow, flash: flashNow, leaf: leafNow, loop: loopNow },
+        data: {
+          ...n.data,
+          dim: dimNow,
+          flash: flashNow,
+          leaf: leafNow,
+          loop: loopNow,
+          // Runtime overlay fields (carried on the FlowNodeData index signature).
+          count: countNow,
+          zero: zeroNow,
+        },
       }
     })
 
     return { nodes: styledNodes, edges: styledEdges }
-  }, [flowNodes, flowEdges, edgeById, selectedEdgeId, traversal, locateFlash, decoration])
+  }, [
+    flowNodes,
+    flowEdges,
+    edgeById,
+    selectedEdgeId,
+    traversal,
+    locateFlash,
+    decoration,
+    breakdownActive,
+    breakdownCounts,
+    breakdownZero,
+  ])
 
   const focusName = useMemo(
     () => (focus ? nodes.find((n) => n.id === focus)?.title ?? focus : null),
@@ -764,6 +843,22 @@ export function CanvasView() {
     window.addEventListener("keydown", onKey)
     return () => window.removeEventListener("keydown", onKey)
   }, [focus, setFocus])
+
+  // Runtime active-campaign overlay: when a breakdown-anchor metric
+  // (blended/google_ads/meta_ads .active_campaigns) is selected, fetch its
+  // per-child COUNTS — a decoration of the existing DECOMPOSES_INTO fan-out. This
+  // NEVER mutates the graph; the store owns the date range and a range change
+  // re-fetches counts only. Counts/zero flags are applied in the `styled` pass by
+  // node id; the panel in NodeDetail reads the same store payload.
+  useEffect(() => {
+    if (
+      selectedNodeId &&
+      ACTIVE_CAMPAIGN_ANCHORS.has(selectedNodeId) &&
+      selectedNodeId !== breakdownAnchorId
+    ) {
+      void loadActiveCampaignBreakdown(selectedNodeId)
+    }
+  }, [selectedNodeId, breakdownAnchorId, loadActiveCampaignBreakdown])
 
   const toggleLabel = (l: string) =>
     setHiddenLabels((prev) => {

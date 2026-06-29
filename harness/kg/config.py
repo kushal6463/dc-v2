@@ -39,6 +39,23 @@ class Settings(BaseSettings):
     neo4j_database: str = "neo4j"
     business_id: str = "rare-seeds"
 
+    # --- Snowflake (read-only marts overlay; optional ``counts`` extra) ---
+    # Credentials for the runtime active_campaigns COUNT overlay
+    # (:mod:`harness.marts.snowflake_reader`). They map from ``SNOWFLAKE_*`` env
+    # vars (case-insensitive) via the same ``.env`` chain as the Neo4j fields.
+    # All default to empty so the overlay degrades gracefully (``stale=True``)
+    # when Snowflake is unconfigured -- nothing here is ever persisted to Neo4j.
+    snowflake_account: str = ""
+    snowflake_user: str = ""
+    snowflake_password: str = ""
+    snowflake_role: str = ""
+    snowflake_warehouse: str = ""
+    snowflake_database: str = ""
+    # Schema where the dbt marts live (BC_2 ``snowflake_dbt_schema`` default).
+    snowflake_schema: str = "MARTS"
+    # Optional key-pair auth (PEM path). When set it supersedes the password.
+    snowflake_private_key_path: str = ""
+
 
 @lru_cache
 def get_settings() -> Settings:

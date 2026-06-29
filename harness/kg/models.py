@@ -1172,6 +1172,48 @@ EDGE_ROLES: frozenset[str] = frozenset(
     }
 )
 
+#: Edge ``review_state`` value that parks a causal edge in the human review
+#: queue. Such an edge is PERSISTED on the graph but MUST be excluded from active
+#: causal traversal / scoring until a human promotes it — mart-lineage candidates
+#: (:func:`harness.agentic.enrich.promote_lineage_edges`) land here. This is an
+#: *edge* review_state: a free string ('active' by default, plus the human-set
+#: 'approved'/'applied' the arbitration writer protects), distinct from the node
+#: :class:`ReviewState` pipeline above (which has no 'held' member).
+HELD_REVIEW_STATE: str = "held"
+
+
+def is_held_review_state(review_state: object) -> bool:
+    """Return ``True`` when an edge ``review_state`` parks it in the review queue.
+
+    A small predicate so callers test for the held state through one symbol
+    rather than re-spelling the :data:`HELD_REVIEW_STATE` literal.
+    """
+    return review_state == HELD_REVIEW_STATE
+
+
+def active_edge_predicate(rel_var: str = "r") -> str:
+    """Return the Cypher ``WHERE`` fragment selecting edges active for traversal.
+
+    The single source of truth every active causal traversal / scoring read
+    should AND into its ``WHERE`` so held and deprecated edges are filtered
+    identically: an edge counts as active only when it is neither soft-deleted
+    (``status <> 'deprecated'``) nor parked in the review queue
+    (``review_state <> 'held'``). A missing value defaults to active via
+    ``coalesce`` (so legacy edges without the property are kept).
+
+    Args:
+        rel_var: The bound relationship variable in the surrounding pattern
+            (e.g. ``"r"`` for ``-[r:INFLUENCES]->`` or a path's ``relationships``
+            comprehension variable).
+
+    Returns:
+        A Cypher boolean expression string (no leading/trailing ``WHERE``).
+    """
+    return (
+        f"coalesce({rel_var}.status, 'active') <> 'deprecated' "
+        f"AND coalesce({rel_var}.review_state, 'active') <> '{HELD_REVIEW_STATE}'"
+    )
+
 
 # ---------------------------------------------------------------------------
 # Arbitration proposal payload (schema section 8)

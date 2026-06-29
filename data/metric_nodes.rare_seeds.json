@@ -2,13 +2,13 @@
   "_meta": {
     "purpose": "Source-of-truth metric definitions for future knowledge-graph ingestion. NOT a graph itself (no synthetic nodes / roll-up edges); each metric lists its code-grounded input dependencies.",
     "generated_from": "unique_metrics_catalog.csv (325 LLM-deduped metrics) + per-metric full-codebase dependency derivation (LLM subagents)",
-    "metric_count": 325,
+    "metric_count": 337,
     "metric_node_types": {
-      "metric": 317,
+      "metric": 329,
       "operational": 8
     },
     "is_ml_metrics": 149,
-    "derived_metrics": 199,
+    "derived_metrics": 211,
     "input_node_count": 161,
     "input_node_types": {
       "source_field": 96,
@@ -132,26 +132,25 @@
       "is_derived": true,
       "is_kpi": true,
       "is_ml": false,
-      "formula_human": "COUNT(DISTINCT CAMPAIGN_ID) in MART_CAMPAIGN_MATRIX where SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0, over the period (Google + Meta; Klaviyo counted separately in context).",
+      "formula_human": "Active Campaigns = google_ads.active_campaigns + meta_ads.active_campaigns + klaviyo.active_campaigns (sum of the per-platform distinct active-campaign counts). Equivalent to COUNT(DISTINCT CAMPAIGN_ID) in MART_CAMPAIGN_MATRIX WHERE SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0, over the period (Google Ads + Meta Ads + Klaviyo).",
       "formula_explanation": "Total count of distinct campaigns with activity in the period across Google Ads, Meta Ads, and Klaviyo. Only campaigns with spend, revenue, impressions, or clicks are counted.",
       "depends_on": [
-        "google_ads.spend",
-        "meta_ads.spend",
-        "google_ads.conversion_value",
-        "meta_ads.conversion_value",
-        "google_ads.impressions",
-        "meta_ads.impressions",
-        "google_ads.clicks",
-        "meta_ads.clicks"
+        "google_ads.active_campaigns",
+        "meta_ads.active_campaigns",
+        "klaviyo.active_campaigns"
       ],
       "formula_components": [
         {
-          "role": "campaign_universe_google",
-          "node_id": "google_ads.spend"
+          "role": "addend",
+          "node_id": "google_ads.active_campaigns"
         },
         {
-          "role": "campaign_universe_meta",
-          "node_id": "meta_ads.spend"
+          "role": "addend",
+          "node_id": "meta_ads.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "klaviyo.active_campaigns"
         }
       ],
       "aliases": [],
@@ -166,7 +165,7 @@
       "ml_entity": "",
       "source_code_ref": "backend/app/repositories/campaign_matrix.py:281-368 (_fetch_period_summary: COUNT(DISTINCT CAMPAIGN_ID), WHERE SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0), :601-631 (_build_active_campaigns_metric)",
       "dependency_confidence": "high",
-      "description": "Total count of distinct campaigns with any activity in the period across Google Ads and Meta Ads (Klaviyo shown in the context split). Only campaigns with spend, revenue, impressions, or clicks are counted."
+      "description": "Total count of distinct campaigns with any activity in the period - the sum of the Google Ads, Meta Ads, and Klaviyo active-campaign counts. Only campaigns with spend, revenue, impressions, or clicks are counted."
     },
     "blended.audience_conversions": {
       "metric_id": "blended.audience_conversions",
@@ -2862,6 +2861,77 @@
       "dependency_confidence": "high",
       "description": "Total unique users who visited over the period, summed as SUM(USERS) from MART_WEBSITE_PERFORMANCE (GA4 sourced). Measures audience reach."
     },
+    "google_ads.active_campaigns": {
+      "metric_id": "google_ads.active_campaigns",
+      "node_type": "metric",
+      "title": "Google Ads Active Campaigns",
+      "source": "google_ads",
+      "platform": "Google Ads",
+      "sub_platform": "",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count_distinct",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = google_search.active_campaigns + google_youtube.active_campaigns + google_shopping.active_campaigns + google_display.active_campaigns + google_demand_gen.active_campaigns + google_pmax.active_campaigns + google_other.active_campaigns (sum of the per-campaign-type distinct active-campaign counts). Equivalent to COUNT(DISTINCT CAMPAIGN_ID) WHERE PLATFORM='Google Ads' AND (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) in MART_CAMPAIGN_MATRIX.",
+      "formula_explanation": "",
+      "depends_on": [
+        "google_search.active_campaigns",
+        "google_youtube.active_campaigns",
+        "google_shopping.active_campaigns",
+        "google_display.active_campaigns",
+        "google_demand_gen.active_campaigns",
+        "google_pmax.active_campaigns",
+        "google_other.active_campaigns"
+      ],
+      "formula_components": [
+        {
+          "role": "addend",
+          "node_id": "google_search.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "google_youtube.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "google_shopping.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "google_display.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "google_demand_gen.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "google_pmax.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "google_other.active_campaigns"
+        }
+      ],
+      "aliases": [],
+      "dashboards": [
+        "google-overview"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "backend/app/repositories/campaign_matrix.py:328 (COUNT(DISTINCT CASE WHEN PLATFORM='Google Ads' THEN CAMPAIGN_ID END) as GOOGLE_COUNT); decomposed by CAMPAIGN_TYPE over MART_GOOGLE_CAMPAIGN_PERFORMANCE",
+      "dependency_confidence": "high",
+      "description": "Distinct count of active Google Ads campaigns in the period - the sum of the per-campaign-type active-campaign counts (Search, YouTube, Shopping, Display, Demand Gen, Performance Max, and other). A campaign is active when it recorded spend, revenue, impressions, or clicks."
+    },
     "google_ads.below_top_impression_rate": {
       "metric_id": "google_ads.below_top_impression_rate",
       "node_type": "metric",
@@ -3252,6 +3322,149 @@
       "dependency_confidence": "high",
       "description": "Impression-weighted percentage of Google Ads impressions in top position (above organic results), from MART_COMPETITIVE_INTELLIGENCE. Computed as the impression-weighted average of TOP_POSITION_PCT; higher indicates stronger ad placement."
     },
+    "google_demand_gen.active_campaigns": {
+      "metric_id": "google_demand_gen.active_campaigns",
+      "node_type": "metric",
+      "title": "Demand Gen Active Campaigns",
+      "source": "google_ads",
+      "platform": "Google Ads",
+      "sub_platform": "demand_gen",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) WHERE CAMPAIGN_TYPE='DEMAND_GEN' AND (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_GOOGLE_CAMPAIGN_PERFORMANCE.",
+      "formula_explanation": "",
+      "depends_on": [],
+      "formula_components": [],
+      "aliases": [],
+      "dashboards": [
+        "google-overview"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_GOOGLE_CAMPAIGN_PERFORMANCE WHERE CAMPAIGN_TYPE='DEMAND_GEN' AND active-predicate",
+      "dependency_confidence": "medium",
+      "description": "Distinct count of active Google Demand Gen campaigns (CAMPAIGN_TYPE='DEMAND_GEN', formerly Discovery) in the period - campaigns with spend, revenue, impressions, or clicks. Sub-channel component of Google Ads active campaigns."
+    },
+    "google_display.active_campaigns": {
+      "metric_id": "google_display.active_campaigns",
+      "node_type": "metric",
+      "title": "Display Active Campaigns",
+      "source": "google_ads",
+      "platform": "Google Ads",
+      "sub_platform": "display",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) WHERE CAMPAIGN_TYPE='DISPLAY' AND (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_GOOGLE_CAMPAIGN_PERFORMANCE.",
+      "formula_explanation": "",
+      "depends_on": [],
+      "formula_components": [],
+      "aliases": [],
+      "dashboards": [
+        "google-overview"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_GOOGLE_CAMPAIGN_PERFORMANCE WHERE CAMPAIGN_TYPE='DISPLAY' AND active-predicate",
+      "dependency_confidence": "medium",
+      "description": "Distinct count of active Google Display campaigns (CAMPAIGN_TYPE='DISPLAY') in the period - campaigns with spend, revenue, impressions, or clicks. Sub-channel component of Google Ads active campaigns."
+    },
+    "google_other.active_campaigns": {
+      "metric_id": "google_other.active_campaigns",
+      "node_type": "metric",
+      "title": "Other Google Active Campaigns",
+      "source": "google_ads",
+      "platform": "Google Ads",
+      "sub_platform": "other",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) for Google campaign types not covered by Search/YouTube/Shopping/Display/Demand Gen/Performance Max (e.g. App, Local, Smart) WHERE (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_GOOGLE_CAMPAIGN_PERFORMANCE.",
+      "formula_explanation": "",
+      "depends_on": [],
+      "formula_components": [],
+      "aliases": [],
+      "dashboards": [
+        "google-overview"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_GOOGLE_CAMPAIGN_PERFORMANCE WHERE CAMPAIGN_TYPE NOT IN ('SEARCH','VIDEO','SHOPPING','DISPLAY','DEMAND_GEN','PERFORMANCE_MAX') AND active-predicate",
+      "dependency_confidence": "medium",
+      "description": "Distinct count of active Google campaigns of any other type (App, Local, Smart, etc.) in the period - campaigns with spend, revenue, impressions, or clicks. Catch-all sub-channel component of Google Ads active campaigns."
+    },
+    "google_pmax.active_campaigns": {
+      "metric_id": "google_pmax.active_campaigns",
+      "node_type": "metric",
+      "title": "Performance Max Active Campaigns",
+      "source": "google_ads",
+      "platform": "Google Ads",
+      "sub_platform": "performance_max",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) WHERE CAMPAIGN_TYPE='PERFORMANCE_MAX' AND (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_GOOGLE_CAMPAIGN_PERFORMANCE.",
+      "formula_explanation": "",
+      "depends_on": [
+        "google_pmax.spend"
+      ],
+      "formula_components": [
+        {
+          "role": "input",
+          "node_id": "google_pmax.spend"
+        }
+      ],
+      "aliases": [],
+      "dashboards": [
+        "google-pmax"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_GOOGLE_CAMPAIGN_PERFORMANCE WHERE CAMPAIGN_TYPE='PERFORMANCE_MAX' AND active-predicate; cf. backend/app/repositories/google_pmax.py:_build_spend_metric (PMAX_FILTER)",
+      "dependency_confidence": "high",
+      "description": "Distinct count of active Google Performance Max campaigns (CAMPAIGN_TYPE='PERFORMANCE_MAX') in the period - campaigns with spend, revenue, impressions, or clicks. Sub-channel component of Google Ads active campaigns."
+    },
     "google_pmax.conversion_value": {
       "metric_id": "google_pmax.conversion_value",
       "node_type": "metric",
@@ -3466,6 +3679,47 @@
       "source_code_ref": "backend/app/repositories/google_pmax.py:_build_spend_metric (SUM(SPEND), PMAX_FILTER)",
       "dependency_confidence": "high",
       "description": "Total Performance Max spend over the selected period, summed from MART_GOOGLE_CAMPAIGN_PERFORMANCE (already in dollars) filtered to CAMPAIGN_TYPE='PERFORMANCE_MAX'."
+    },
+    "google_search.active_campaigns": {
+      "metric_id": "google_search.active_campaigns",
+      "node_type": "metric",
+      "title": "Search Active Campaigns",
+      "source": "google_ads",
+      "platform": "Google Ads",
+      "sub_platform": "search",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) WHERE CAMPAIGN_TYPE='SEARCH' AND (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_GOOGLE_CAMPAIGN_PERFORMANCE.",
+      "formula_explanation": "",
+      "depends_on": [
+        "google_search.spend"
+      ],
+      "formula_components": [
+        {
+          "role": "input",
+          "node_id": "google_search.spend"
+        }
+      ],
+      "aliases": [],
+      "dashboards": [
+        "google-search"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_GOOGLE_CAMPAIGN_PERFORMANCE WHERE CAMPAIGN_TYPE='SEARCH' AND active-predicate; cf. backend/app/repositories/google_search.py:_build_spend_metric (CAMPAIGN_TYPE='SEARCH')",
+      "dependency_confidence": "high",
+      "description": "Distinct count of active Google Search campaigns (CAMPAIGN_TYPE='SEARCH') in the period - campaigns with spend, revenue, impressions, or clicks. Sub-channel component of Google Ads active campaigns."
     },
     "google_search.clicks": {
       "metric_id": "google_search.clicks",
@@ -3850,6 +4104,47 @@
       "source_code_ref": "backend/app/repositories/google_shopping.py:_build_spend_metric (SUM(SPEND), CAMPAIGN_TYPE='SHOPPING')",
       "dependency_confidence": "high",
       "description": "Total spend on Shopping campaigns over the selected period, summed from MART_GOOGLE_CAMPAIGN_PERFORMANCE (already in dollars) filtered to CAMPAIGN_TYPE='SHOPPING'."
+    },
+    "google_youtube.active_campaigns": {
+      "metric_id": "google_youtube.active_campaigns",
+      "node_type": "metric",
+      "title": "YouTube Active Campaigns",
+      "source": "google_ads",
+      "platform": "Google Ads",
+      "sub_platform": "youtube",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) for YouTube/Video campaigns WHERE (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_GOOGLE_YOUTUBE_DAILY.",
+      "formula_explanation": "",
+      "depends_on": [
+        "google_youtube.spend"
+      ],
+      "formula_components": [
+        {
+          "role": "input",
+          "node_id": "google_youtube.spend"
+        }
+      ],
+      "aliases": [],
+      "dashboards": [
+        "google-youtube"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_GOOGLE_YOUTUBE_DAILY WHERE active-predicate; cf. backend/app/repositories/google_youtube.py:_build_spend_metric",
+      "dependency_confidence": "high",
+      "description": "Distinct count of active Google YouTube/Video campaigns in the period - campaigns with spend, revenue, impressions, or clicks. Sub-channel component of Google Ads active campaigns."
     },
     "google_youtube.conversion_value": {
       "metric_id": "google_youtube.conversion_value",
@@ -4513,6 +4808,40 @@
       "source_code_ref": "backend/app/features/churn_analysis/metrics/service.py:82-93 (unsubscribe-rate = unsubscribed_count / total_customers); backend/app/repositories/churn_analysis.py:275 (EMAIL_UNSUBSCRIBED from MART_KLAVIYO_LIST_HEALTH), :261 (TOTAL_CUSTOMERS = COUNT(*) MART_CUSTOMER_HEALTH)",
       "dependency_confidence": "high",
       "description": "Email unsubscribes from Klaviyo list health divided by total customer count, expressed as a percentage. Surfaced on the churn-analysis dashboard as an email-channel engagement-erosion signal. (Note: the klaviyo-email mart also exposes an email-internal unsubscribe_rate = TOTAL_UNSUBSCRIBES / TOTAL_SENDS, but this metric_uid is registered on churn-analysis, so the customer-base denominator is authoritative.)"
+    },
+    "klaviyo.active_campaigns": {
+      "metric_id": "klaviyo.active_campaigns",
+      "node_type": "metric",
+      "title": "Klaviyo Active Campaigns",
+      "source": "klaviyo",
+      "platform": "Klaviyo",
+      "sub_platform": "",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) WHERE PLATFORM='Klaviyo' AND (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over the period (Klaviyo email/SMS campaigns from the dedicated campaign fact table).",
+      "formula_explanation": "",
+      "depends_on": [],
+      "formula_components": [],
+      "aliases": [],
+      "dashboards": [
+        "campaign-matrix"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "backend/app/repositories/campaign_matrix.py:230 (_fetch_klaviyo_campaigns), :330 (COUNT(DISTINCT CASE WHEN PLATFORM='Klaviyo' THEN CAMPAIGN_ID END) as KLAVIYO_COUNT)",
+      "dependency_confidence": "high",
+      "description": "Distinct count of active Klaviyo campaigns (email/SMS) in the period - campaigns that recorded activity (spend, revenue, impressions, or clicks). Sourced from the dedicated Klaviyo campaign fact table and combined into the cross-channel campaign matrix."
     },
     "sms.click_rate": {
       "metric_id": "sms.click_rate",
@@ -6814,6 +7143,57 @@
       "dependency_confidence": "high",
       "description": "Total product units sold over the period, summed from the Magento daily mart (SUM(TOTAL_UNITS_SOLD)), where total_units_sold = sum(total_qty_ordered) per order. It measures physical demand independent of price."
     },
+    "meta_ads.active_campaigns": {
+      "metric_id": "meta_ads.active_campaigns",
+      "node_type": "metric",
+      "title": "Meta Ads Active Campaigns",
+      "source": "meta_ads",
+      "platform": "Meta Ads",
+      "sub_platform": "",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count_distinct",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = meta_prospecting.active_campaigns + meta_retargeting.active_campaigns + meta_other.active_campaigns (sum of the per-objective distinct active-campaign counts). Equivalent to COUNT(DISTINCT CAMPAIGN_ID) WHERE PLATFORM='Meta Ads' AND (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) in MART_CAMPAIGN_MATRIX.",
+      "formula_explanation": "",
+      "depends_on": [
+        "meta_prospecting.active_campaigns",
+        "meta_retargeting.active_campaigns",
+        "meta_other.active_campaigns"
+      ],
+      "formula_components": [
+        {
+          "role": "addend",
+          "node_id": "meta_prospecting.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "meta_retargeting.active_campaigns"
+        },
+        {
+          "role": "addend",
+          "node_id": "meta_other.active_campaigns"
+        }
+      ],
+      "aliases": [],
+      "dashboards": [
+        "meta-overview"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "backend/app/repositories/campaign_matrix.py:329 (COUNT(DISTINCT CASE WHEN PLATFORM='Meta Ads' THEN CAMPAIGN_ID END) as META_COUNT); decomposed by objective over MART_META_CAMPAIGN_PERFORMANCE",
+      "dependency_confidence": "high",
+      "description": "Distinct count of active Meta Ads campaigns in the period - the sum of the prospecting, retargeting, and other (objective) active-campaign counts. A campaign is active when it recorded spend, revenue, impressions, or clicks."
+    },
     "meta_ads.cpm": {
       "metric_id": "meta_ads.cpm",
       "node_type": "metric",
@@ -7256,6 +7636,81 @@
       "dependency_confidence": "high",
       "description": "Total number of unique Meta creative assets used in ads during the selected period - the breadth of the creative library actually in market."
     },
+    "meta_other.active_campaigns": {
+      "metric_id": "meta_other.active_campaigns",
+      "node_type": "metric",
+      "title": "Other Meta Active Campaigns",
+      "source": "meta_ads",
+      "platform": "Meta Ads",
+      "sub_platform": "other",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) for Meta campaigns not classified as prospecting or retargeting WHERE (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_META_CAMPAIGN_PERFORMANCE.",
+      "formula_explanation": "",
+      "depends_on": [],
+      "formula_components": [],
+      "aliases": [],
+      "dashboards": [
+        "meta-overview"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_META_CAMPAIGN_PERFORMANCE for campaigns not classified prospecting/retargeting WHERE active-predicate",
+      "dependency_confidence": "medium",
+      "description": "Distinct count of active Meta campaigns not classified as prospecting or retargeting (other objectives) in the period - campaigns with spend, revenue, impressions, or clicks. Catch-all sub-channel component of Meta Ads active campaigns."
+    },
+    "meta_prospecting.active_campaigns": {
+      "metric_id": "meta_prospecting.active_campaigns",
+      "node_type": "metric",
+      "title": "Meta Prospecting Active Campaigns",
+      "source": "meta_ads",
+      "platform": "Meta Ads",
+      "sub_platform": "prospecting",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) for prospecting ad sets WHERE (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_META_CAMPAIGN_PERFORMANCE.",
+      "formula_explanation": "",
+      "depends_on": [
+        "meta_prospecting.spend"
+      ],
+      "formula_components": [
+        {
+          "role": "input",
+          "node_id": "meta_prospecting.spend"
+        }
+      ],
+      "aliases": [],
+      "dashboards": [
+        "meta-prospecting"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_META_CAMPAIGN_PERFORMANCE for prospecting campaigns WHERE active-predicate; cf. backend/app/repositories/meta_prospecting.py",
+      "dependency_confidence": "high",
+      "description": "Distinct count of active Meta prospecting campaigns (targeting new, non-customer audiences) in the period - campaigns with spend, revenue, impressions, or clicks. Sub-channel component of Meta Ads active campaigns."
+    },
     "meta_prospecting.cost_per_1k_reach": {
       "metric_id": "meta_prospecting.cost_per_1k_reach",
       "node_type": "metric",
@@ -7475,6 +7930,47 @@
       "source_code_ref": "backend/app/repositories/meta_prospecting.py:94 (SUM(SPEND) as TOTAL_SPEND); builder meta_prospecting.py:221,231 calculation 'SUM(SPEND)'",
       "dependency_confidence": "high",
       "description": "Total Meta advertising spend across all prospecting campaigns for the period - investment aimed at reaching brand-new, non-customer audiences. Raw sum of the SPEND mart column."
+    },
+    "meta_retargeting.active_campaigns": {
+      "metric_id": "meta_retargeting.active_campaigns",
+      "node_type": "metric",
+      "title": "Meta Retargeting Active Campaigns",
+      "source": "meta_ads",
+      "platform": "Meta Ads",
+      "sub_platform": "retargeting",
+      "product": "MarketingIQ",
+      "domain": "marketing",
+      "concept": "active_campaigns",
+      "unit": "count",
+      "aggregation": "count",
+      "polarity": "neutral",
+      "is_derived": true,
+      "is_kpi": true,
+      "is_ml": false,
+      "formula_human": "Active Campaigns = COUNT(DISTINCT CAMPAIGN_ID) for retargeting ad sets WHERE (SPEND>0 OR CONVERSION_VALUE>0 OR IMPRESSIONS>0 OR CLICKS>0) over MART_META_RETARGETING_DAILY.",
+      "formula_explanation": "",
+      "depends_on": [
+        "meta_retargeting.spend"
+      ],
+      "formula_components": [
+        {
+          "role": "input",
+          "node_id": "meta_retargeting.spend"
+        }
+      ],
+      "aliases": [],
+      "dashboards": [
+        "meta-retargeting"
+      ],
+      "in_chart_registry": false,
+      "in_dc_kg": false,
+      "dc_kg_node_id": "",
+      "ml_model": "",
+      "ml_task": "",
+      "ml_entity": "",
+      "source_code_ref": "Derived KG node: COUNT(DISTINCT CAMPAIGN_ID) over MART_META_RETARGETING_DAILY WHERE active-predicate; cf. backend/app/repositories/meta_retargeting.py",
+      "dependency_confidence": "high",
+      "description": "Distinct count of active Meta retargeting campaigns (re-engaging prior visitors/customers) in the period - campaigns with spend, revenue, impressions, or clicks. Sub-channel component of Meta Ads active campaigns."
     },
     "meta_retargeting.ctr": {
       "metric_id": "meta_retargeting.ctr",

@@ -29,6 +29,7 @@ from __future__ import annotations
 import csv
 import json
 import re
+from collections.abc import Callable, Mapping, Sequence
 from datetime import date, datetime
 from pathlib import Path
 from typing import Any
@@ -660,3 +661,207 @@ def migrate_edge_ledger(*, dry_run: bool = False) -> dict[str, Any]:
         "skipped_structural": skipped,
         "dry_run": dry_run,
     }
+
+
+#: Fixed timestamp for the one-time mart-lineage promotion, so re-running it is a
+#: no-op (the derived ``event_id`` stays stable -> the ledger append dedupes).
+_LINEAGE_TS: str = "2026-06-26T00:00:00Z"
+
+
+def promote_lineage_edges(
+    *, dry_run: bool = False, limit: int | None = None
+) -> dict[str, Any]:
+    """Promote deterministic mart-lineage candidates to HELD ``INFLUENCES`` edges.
+
+    Reads every live ``:Metric`` (its ``mart_sources`` / ``source_columns`` /
+    ``domain_ids`` from the deterministic enrichment pass), runs the pure
+    candidate producers — :func:`harness.marts.lineage.shared_mart_candidates`,
+    :func:`~harness.marts.lineage.shared_column_candidates`, and
+    :func:`~harness.marts.lineage.lineage_candidates` (orchestrated via
+    :func:`build_enrich_candidates`) — drops any pair already linked by a formula
+    (``DECOMPOSES_INTO``) edge, and writes the survivors as causal *candidates*:
+    ``INFLUENCES`` edges with ``relation='mart_lineage'`` and
+    ``review_state='held'`` so they are PARKED for human review and excluded from
+    active causal traversal (see :func:`harness.kg.models.active_edge_predicate`).
+
+    Each held edge is seeded with a low-mass PRIOR
+    (:func:`harness.kg.evidence.seed_prior_event` at the FIXED
+    :data:`_LINEAGE_TS`, so the derived ``event_id`` is stable) and folded onto
+    the Beta ledger via :func:`harness.kg.arbitration.append_edge_evidence` —
+    exactly mirroring :func:`migrate_edge_ledger`, so re-running adds no duplicate
+    evidence (idempotent). A pair that already carries a NON-held ``INFLUENCES``
+    edge (a human-approved / measured causal link) is left untouched; the writer's
+    structural-dedup guard additionally skips any formula-subsumed pair.
+
+    ``dry_run`` counts what would be written without touching the graph.
+
+    Returns:
+        ``{"candidates", "written", "skipped_existing", "skipped_structural",
+        "skipped_hubs", "dry_run"}``.
+    """
+    from harness.ingest import edge_scoring
+    from harness.kg import arbitration, evidence
+    from harness.kg.driver import get_db
+    from harness.kg.models import HELD_REVIEW_STATE
+
+    db = get_db()
+    rows = db.read(
+        "MATCH (m:Metric) RETURN m.metric_uid AS metric_uid, "
+        "m.mart_sources AS mart_sources, m.source_columns AS source_columns, "
+        "m.domain_ids AS domain_ids ORDER BY metric_uid"
+    )
+    if limit is not None:
+        rows = rows[:limit]
+    metrics = [dict(row) for row in rows]
+
+    struct = db.read(
+        "MATCH (a:Metric)-[:DECOMPOSES_INTO]-(b:Metric) "
+        "RETURN a.metric_uid AS f, b.metric_uid AS t"
+    )
+    structural_pairs = structural_pairs_from_edges([(r["f"], r["t"]) for r in struct])
+    built = build_enrich_candidates(metrics, _MARTS_DIR, structural_pairs)
+
+    # Collapse the per-basis candidates to one directed pair (keep the first
+    # basis seen) so a pair shared via BOTH mart and column is written once.
+    pairs: dict[tuple[str, str], dict[str, Any]] = {}
+    for cand in built["candidates"]:
+        f, t = cand.get("from"), cand.get("to")
+        if f and t:
+            pairs.setdefault((f, t), cand)
+
+    # Never clobber a non-held (active / human-blessed) causal edge; a pair that
+    # is already our own 'held' edge re-folds idempotently (the fixed-timestamp
+    # event dedupes in the ledger).
+    existing = db.read(
+        "MATCH (a:Metric)-[r:INFLUENCES]->(b:Metric) "
+        "RETURN a.metric_uid AS f, b.metric_uid AS t, r.review_state AS rs"
+    )
+    existing_state = {(r["f"], r["t"]): r.get("rs") for r in existing}
+
+    score = edge_scoring.score_edge("INFLUENCES:mart_lineage")
+    written = skipped_existing = 0
+    for (f, t), cand in pairs.items():
+        if (f, t) in existing_state and existing_state[(f, t)] != HELD_REVIEW_STATE:
+            skipped_existing += 1
+            continue
+        if dry_run:
+            written += 1
+            continue
+        events = evidence.seed_prior_event(
+            score.confidence,
+            attribution="promote:mart_lineage",
+            timestamp=_LINEAGE_TS,
+            prior_mass=score.evidence_mass,
+        )
+        edge_props = {
+            "relation": "mart_lineage",
+            "review_state": HELD_REVIEW_STATE,
+            "source_kind": "mart_lineage",
+            "candidate_basis": cand.get("basis"),
+            "cross_domain": cand.get("cross_domain"),
+        }
+        result: dict[str, Any] | None = None
+        for event in events:
+            result = arbitration.append_edge_evidence(
+                db, from_key=f, to_key=t, event=event, edge_props=edge_props
+            )
+        if result and result.get("status") in ("skipped_structural_dup", "missing_endpoint"):
+            skipped_existing += 1
+        else:
+            written += 1
+
+    return {
+        "candidates": len(pairs),
+        "written": 0 if dry_run else written,
+        "skipped_existing": skipped_existing,
+        "skipped_structural": built["counts"].get("dropped_structural", 0),
+        "skipped_hubs": len(built["skipped_hubs"]),
+        "dry_run": dry_run,
+    }
+
+
+# ---------------------------------------------------------------------------
+# Mart-binding drift audit (read-only; reuses graph_server._mart_sql_path)
+# ---------------------------------------------------------------------------
+
+
+def _mart_drift_rows(
+    metric_marts: Mapping[str, Sequence[str]],
+    resolver: Callable[[str], object],
+) -> dict[str, Any]:
+    """Pure mart-drift computation: which declared marts no longer resolve to SQL.
+
+    For each ``{metric_uid: [mart, ...]}`` entry, every declared mart (a canonical
+    ``MARTS.<table>`` or bare token) is resolved through ``resolver`` — a
+    ``token -> path-or-None`` callable (e.g.
+    :func:`harness.mcp.graph_server._mart_sql_path`). A mart that resolves to
+    ``None`` is DRIFT: the dbt model the metric claims to read no longer exists in
+    the BC_2 mart inventory. Pure — no DB and no filesystem of its own (the
+    lookup lives entirely inside ``resolver``), so it is unit-testable with a fake
+    resolver.
+
+    Args:
+        metric_marts: ``{metric_uid: declared mart identifiers}``. ``None``/empty
+            mart lists are skipped (the metric is not counted).
+        resolver: Maps a bare mart table token to a truthy path (resolved) or
+            ``None`` (drift).
+
+    Returns:
+        ``{metrics_checked, marts_checked, resolved, drifted, drift}`` where
+        ``drift`` is a sorted list of ``{metric_uid, mart}`` unresolved bindings.
+    """
+    drift: list[dict[str, str]] = []
+    metrics_checked = marts_checked = resolved = 0
+    for uid in sorted(metric_marts):
+        marts = [m for m in (metric_marts[uid] or []) if m]
+        if not marts:
+            continue
+        metrics_checked += 1
+        for mart in marts:
+            marts_checked += 1
+            # _mart_sql_path keys off the bare table stem; live nodes store the
+            # canonical ``MARTS.<table>`` form, so strip the schema qualifier.
+            token = str(mart).rsplit(".", 1)[-1]
+            if resolver(token) is None:
+                drift.append({"metric_uid": uid, "mart": str(mart)})
+            else:
+                resolved += 1
+    return {
+        "metrics_checked": metrics_checked,
+        "marts_checked": marts_checked,
+        "resolved": resolved,
+        "drifted": len(drift),
+        "drift": sorted(drift, key=lambda d: (d["metric_uid"], d["mart"])),
+    }
+
+
+def audit_mart_drift(*, limit: int | None = None) -> dict[str, Any]:
+    """Audit live metric mart bindings against the BC_2 dbt mart inventory.
+
+    Read-only drift check: every live ``:Metric``'s ``mart_sources`` is resolved
+    to its dbt ``*.sql`` model via
+    :func:`harness.mcp.graph_server._mart_sql_path` (reused, not re-implemented).
+    A binding that no longer resolves is reported as DRIFT — the metric points at
+    a mart model that was renamed/removed in BC_2, so its runtime count overlay
+    would silently break. Never writes the graph (counts are a runtime overlay;
+    this only inspects the stored bindings).
+
+    ``limit`` caps the number of metrics scanned (ordered by ``metric_uid``).
+
+    Returns:
+        The :func:`_mart_drift_rows` summary plus a ``stamped_at`` timestamp.
+    """
+    from harness.kg.driver import get_db
+    from harness.mcp.graph_server import _mart_sql_path
+
+    db = get_db()
+    rows = db.read(
+        "MATCH (m:Metric) WHERE m.mart_sources IS NOT NULL "
+        "RETURN m.metric_uid AS uid, m.mart_sources AS marts ORDER BY uid"
+    )
+    if limit is not None:
+        rows = rows[:limit]
+    metric_marts = {r["uid"]: (r.get("marts") or []) for r in rows}
+    summary = _mart_drift_rows(metric_marts, _mart_sql_path)
+    summary["stamped_at"] = datetime.now().astimezone().isoformat(timespec="seconds")
+    return summary

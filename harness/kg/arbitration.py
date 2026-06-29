@@ -30,7 +30,12 @@ from harness.kg import evidence
 from harness.store.jsonl import append_event
 
 from .driver import GraphDB
-from .models import EDGE_TYPES, NODE_KEY_FIELDS, NODE_LABELS
+from .models import (
+    EDGE_TYPES,
+    NODE_KEY_FIELDS,
+    NODE_LABELS,
+    active_edge_predicate,
+)
 
 
 def _validate_label(label: str) -> None:
@@ -496,6 +501,68 @@ def append_edge_evidence(
         to_key=to_key,
         props=props,
     )
+
+
+def read_active_causal_edges(
+    db: GraphDB,
+    metric_uid: str,
+    *,
+    upstream: bool = False,
+    from_label: str = "Metric",
+    to_label: str = "Metric",
+) -> list[dict[str, Any]]:
+    """Read a metric's ACTIVE direct causal (``INFLUENCES``) edges.
+
+    The kg-layer held-aware causal read: returns the metric's 1-hop
+    ``INFLUENCES`` neighbours with edges parked in the review queue
+    (``review_state == 'held'``) and soft-deleted edges (``status ==
+    'deprecated'``) EXCLUDED via
+    :func:`~harness.kg.models.active_edge_predicate` — the single source of truth
+    every active causal traversal / scoring read filters through. (The
+    variable-length pathfinder ``harness.api.server._traverse`` and the
+    coverage / status counts in that module read causal edges too and should AND
+    the same predicate into their ``WHERE`` clauses; they are NOT in the kg layer
+    so they are not touched here.)
+
+    ``upstream`` reads edges INTO the metric (its causes / dependencies);
+    otherwise OUT of it (its effects / blast radius). Each row reports the edge's
+    actual endpoints (``from_id`` / ``to_id``) plus ``relation`` / ``confidence``
+    / ``evidence_mass`` / ``review_state``. Read-only.
+
+    Args:
+        db: A connected :class:`~harness.kg.driver.GraphDB`.
+        metric_uid: The anchor metric's identity value.
+        upstream: ``True`` to read INFLUENCES edges INTO the metric, ``False``
+            (default) for edges OUT of it.
+        from_label: Anchor node label (defaults to ``"Metric"``; allowlisted).
+        to_label: Neighbour node label (defaults to ``"Metric"``; allowlisted).
+
+    Returns:
+        A list of ``{from_id, to_id, relation, confidence, evidence_mass,
+        review_state}`` dicts for the metric's ACTIVE causal neighbours.
+
+    Raises:
+        KeyError: If ``from_label`` or ``to_label`` is not an allowlisted node
+            label (the ``NODE_KEY_FIELDS`` lookup is the injection guard).
+    """
+    # NODE_KEY_FIELDS raises on an unknown label, so only allowlisted labels are
+    # interpolated into the read (injection guard); the uid value is parameterized.
+    anchor_field = NODE_KEY_FIELDS[from_label]
+    NODE_KEY_FIELDS[to_label]  # validate the neighbour label too
+    # Direction: upstream walks (other)->(m); downstream walks (m)->(other).
+    if upstream:
+        pattern = f"(o:{to_label})-[r:INFLUENCES]->(m:{from_label} {{{anchor_field}: $uid}})"
+    else:
+        pattern = f"(m:{from_label} {{{anchor_field}: $uid}})-[r:INFLUENCES]->(o:{to_label})"
+    rows = db.read(
+        f"MATCH {pattern} "
+        f"WHERE {active_edge_predicate('r')} "
+        "RETURN startNode(r).metric_uid AS from_id, endNode(r).metric_uid AS to_id, "
+        "r.relation AS relation, r.confidence AS confidence, "
+        "r.evidence_mass AS evidence_mass, r.review_state AS review_state",
+        uid=metric_uid,
+    )
+    return [dict(row) for row in rows]
 
 
 def write_node_model(db: GraphDB, model: Any) -> dict[str, Any]:

@@ -5,6 +5,7 @@ import { persist } from "zustand/middleware"
 
 import {
   api,
+  type ActiveCampaignBreakdownPayload,
   type CanvasEvent,
   type CoveragePayload,
   type DashboardInfo,
@@ -86,6 +87,38 @@ export interface NodeSearchEntry {
   kind: string | null
 }
 
+// ---------------------------------------------------------------------------
+// Active-campaign breakdown overlay (runtime-only — counts NEVER persisted)
+// ---------------------------------------------------------------------------
+
+/** The platform metrics the runtime active-campaign COUNT overlay anchors on.
+ *  These ids ARE the dot-form metric_uids (== graph node ids), so the breakdown's
+ *  counts/zero buckets map straight onto canvas nodes. */
+export const ACTIVE_CAMPAIGN_ANCHORS = new Set<string>([
+  "blended.active_campaigns",
+  "google_ads.active_campaigns",
+  "meta_ads.active_campaigns",
+])
+
+/** Inclusive [date_from, date_to] window (ISO `YYYY-MM-DD`) for the overlay. */
+export interface BreakdownRange {
+  date_from: string
+  date_to: string
+}
+
+function isoDay(d: Date): string {
+  return d.toISOString().slice(0, 10)
+}
+
+/** Default query window: the trailing 30 days. A UI default ONLY — the user can
+ *  change it; it is not seeded graph data and never reaches Neo4j. */
+function defaultBreakdownRange(): BreakdownRange {
+  const to = new Date()
+  const from = new Date()
+  from.setDate(from.getDate() - 29)
+  return { date_from: isoDay(from), date_to: isoDay(to) }
+}
+
 const MAX_ACTIVITY = 200
 
 interface CanvasState {
@@ -122,6 +155,13 @@ interface CanvasState {
   traverseMinConfidence: number
   coverage: CoveragePayload | null
   edgeDiff: EdgeDiffPayload | null
+
+  // Active-campaign breakdown overlay (RUNTIME ONLY — counts never persisted to
+  // localStorage or Neo4j; only `breakdownRange` is persisted as a preference).
+  breakdown: ActiveCampaignBreakdownPayload | null
+  breakdownAnchorId: string | null
+  breakdownRange: BreakdownRange
+  breakdownLoading: boolean
 
   // Command/search palette + locate + scope/domain faceting.
   searchOpen: boolean
@@ -177,6 +217,11 @@ interface CanvasState {
   setTraverseMinConfidence: (value: number) => void
   loadCoverage: (tenant?: string) => Promise<void>
   loadEdgeDiff: (tenant?: string, runId?: string) => Promise<void>
+
+  // Active-campaign breakdown overlay actions (runtime-only).
+  loadActiveCampaignBreakdown: (metricUid: string) => Promise<void>
+  setBreakdownRange: (range: BreakdownRange) => void
+  clearActiveCampaignBreakdown: () => void
 
   // Command/search palette + locate + scope/domain faceting actions.
   setSearchOpen: (open: boolean) => void
@@ -337,6 +382,11 @@ export const useStore = create<CanvasState>()(
   traverseMinConfidence: 0,
   coverage: null,
   edgeDiff: null,
+
+  breakdown: null,
+  breakdownAnchorId: null,
+  breakdownRange: defaultBreakdownRange(),
+  breakdownLoading: false,
 
   searchOpen: false,
   locateRequest: null,
@@ -721,6 +771,40 @@ export const useStore = create<CanvasState>()(
     }
   },
 
+  // --- Active-campaign breakdown overlay (runtime-only) --------------------
+  // The counts are a RUNTIME decoration of the existing DECOMPOSES_INTO fan-out —
+  // keyed by metric_uid (== node id) — and are NEVER written to Neo4j. A date-range
+  // change re-fetches counts ONLY (it must never call loadGraph or otherwise
+  // create / mutate / deprecate an edge). The payload is held in memory and is not
+  // persisted (only `breakdownRange`, a preference, is — see partialize).
+  loadActiveCampaignBreakdown: async (metricUid) => {
+    const { date_from, date_to } = get().breakdownRange
+    set({ breakdownLoading: true, breakdownAnchorId: metricUid })
+    try {
+      const breakdown = await api.activeCampaignBreakdown(metricUid, date_from, date_to)
+      // Drop a response that lost the race to a newer anchor selection.
+      if (get().breakdownAnchorId !== metricUid) return
+      set({ breakdown })
+    } catch (err) {
+      if (get().breakdownAnchorId === metricUid) {
+        set({ breakdown: null, error: err instanceof Error ? err.message : String(err) })
+      }
+    } finally {
+      if (get().breakdownAnchorId === metricUid) set({ breakdownLoading: false })
+    }
+  },
+
+  // Update the overlay date range and re-fetch counts for the CURRENT anchor only
+  // (never the graph). No-ops the fetch when nothing is anchored yet.
+  setBreakdownRange: (range) => {
+    set({ breakdownRange: range })
+    const anchor = get().breakdownAnchorId
+    if (anchor) void get().loadActiveCampaignBreakdown(anchor)
+  },
+
+  clearActiveCampaignBreakdown: () =>
+    set({ breakdown: null, breakdownAnchorId: null, breakdownLoading: false }),
+
   setSearchOpen: (open) => set({ searchOpen: open }),
 
   // Select the target AND raise a transient locate request the canvas watches
@@ -890,6 +974,9 @@ export const useStore = create<CanvasState>()(
         filtersOpen: state.filtersOpen,
         governanceOpen: state.governanceOpen,
         traverseMinConfidence: state.traverseMinConfidence,
+        // The date-range PREFERENCE persists; the breakdown payload (counts) never
+        // does — it is runtime-only and re-fetched on demand.
+        breakdownRange: state.breakdownRange,
       }),
     }
   )

@@ -54,7 +54,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field, ValidationError
 from starlette.requests import Request
 
-from harness.agent import engine
 from harness.api.events import bus
 from harness.api.sse import event_stream
 from harness.ingest import apply as apply_mod
@@ -63,7 +62,15 @@ from harness.ingest.run_subprocess import EVENT_PREFIX
 from harness.kg.arbitration import upsert_edge, write_node_model
 from harness.kg.config import REPO_ROOT
 from harness.kg.driver import GraphDB, get_db
-from harness.kg.models import EDGE_ROLES, NODE_KEY_FIELDS, NODE_LABELS, Policy, Threshold
+from harness.kg.models import (
+    EDGE_ROLES,
+    NODE_KEY_FIELDS,
+    NODE_LABELS,
+    Policy,
+    Threshold,
+    active_edge_predicate,
+)
+from harness.marts.snowflake_reader import fetch_active_campaign_breakdown
 from harness.store.proposals import (
     approve_all_pending,
     latest_run_id,
@@ -633,6 +640,7 @@ def coverage(tenant: str = "rare_seeds") -> dict[str, Any]:
             r["t"]: r["n"]
             for r in db.read(
                 "MATCH ()-[r]->() WHERE type(r) IN ['DECOMPOSES_INTO', 'INFLUENCES'] "
+                f"AND {active_edge_predicate('r')} "
                 "RETURN type(r) AS t, count(r) AS n"
             )
         }
@@ -758,8 +766,7 @@ def _traverse(
     # within one path, so the traversal stays bounded by ``max_depth``.
     rows = db.read(
         f"MATCH p = {pattern} "
-        "WHERE ALL(r IN relationships(p) WHERE coalesce(r.status, 'active') "
-        "<> 'deprecated') "
+        f"WHERE ALL(r IN relationships(p) WHERE {active_edge_predicate('r')}) "
         "AND ALL(r IN relationships(p) "
         "WHERE coalesce(r.confidence, 1.0) >= $min_conf) "
         "RETURN [n IN nodes(p) | n.metric_uid] AS node_uids, "
@@ -1015,6 +1022,50 @@ def dashboard_charts(dashboard_id: str) -> dict[str, Any]:
             charts.append(entry)
     charts.sort(key=lambda e: str(e.get("chart_id") or e.get("canonical_id") or ""))
     return {"dashboard_id": dashboard_id, "count": len(charts), "charts": charts}
+
+
+# ---------------------------------------------------------------------------
+# Active-campaign breakdown (runtime overlay — never persisted)
+# ---------------------------------------------------------------------------
+
+
+@app.get("/api/active-campaign-breakdown")
+def active_campaign_breakdown(
+    metric_uid: str, date_from: str, date_to: str
+) -> dict[str, Any]:
+    """Return the runtime ``active_campaigns`` COUNT breakdown for a platform metric.
+
+    A read-only RUNTIME overlay for the canvas: it delegates to
+    :func:`harness.marts.snowflake_reader.fetch_active_campaign_breakdown`, which
+    reads the BC_2 Snowflake marts DIRECTLY (read-only) for the per-child
+    active-campaign counts that make up ``metric_uid`` over ``[date_from,
+    date_to]``, plus non-additive dimension cuts (ad-network-type / objective).
+    This NEVER touches Neo4j and NEVER persists anything — the counts decorate the
+    existing ``DECOMPOSES_INTO`` fan-out at request time, and changing the date
+    range only re-fetches counts (it never creates, mutates or deprecates an
+    edge). ``counts_by_metric_uid`` / ``zero_count_metric_uids`` are keyed by
+    dot-form ``metric_uid`` (== the canvas graph node id), so they map straight
+    onto nodes.
+
+    Args:
+        metric_uid: The anchor ``Metric.metric_uid`` (dot-form, e.g.
+            ``blended.active_campaigns``). Forwarded to the reader as
+            ``anchor_metric_uid`` (the HTTP param keeps the ``metric_uid`` name
+            shared by every other endpoint).
+        date_from: Inclusive ISO start date (``YYYY-MM-DD``).
+        date_to: Inclusive ISO end date (``YYYY-MM-DD``).
+
+    Returns:
+        ``{anchor_metric_uid, date_from, date_to, counts_by_metric_uid,
+        overlay_dims: {ad_network_type, objective}, zero_count_metric_uids,
+        stale, freshness_notes, source_marts}``. The reader is contractually
+        graceful: when Snowflake is unconfigured / unreachable it returns
+        ``stale=True`` with empty counts rather than raising, so this endpoint
+        never 5xx's on a warehouse outage (no try/except needed here).
+    """
+    return fetch_active_campaign_breakdown(
+        anchor_metric_uid=metric_uid, date_from=date_from, date_to=date_to
+    )
 
 
 @app.get("/api/dashboards")
