@@ -1,0 +1,640 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>dc-kg · System Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;450;500;600&display=swap" rel="stylesheet" />
+<style>
+/* ───────── palette (mirrors app/kg-canvas graphTheme.ts node colors) ───────── */
+:root{
+  --business:#e8b04b; --domain:#54d6c4; --product:#c98bff; --platform:#6ea8ff;
+  --metric:#7ee081; --dashboard:#f0a868; --component:#9aa7ff; --policy:#ef6f6f; --threshold:#d9a83b;
+  --decomposes:#7d93b8; --influences:#e8794b;
+  --det:#3b82f6; --agent:#a855f7; --human:#22c55e;
+  --accent:#86e08a; --accent2:#e8946b;
+  --font-display:'Fraunces',Georgia,serif;
+  --font-body:'IBM Plex Sans',system-ui,-apple-system,sans-serif;
+  --font-mono:'IBM Plex Mono',ui-monospace,'SF Mono',Menlo,monospace;
+  --maxw:980px;
+}
+[data-theme="dark"]{
+  --bg:#0a0d11; --bg2:#0c1015; --panel:#11161d; --panel2:#151b23;
+  --line:#1d242d; --line2:#2a333e; --ink:#e6ebf1; --ink-dim:#98a6b5; --ink-faint:#62707f;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 26px rgba(0,0,0,.30);
+}
+[data-theme="light"]{
+  --bg:#f3f1ea; --bg2:#efece3; --panel:#ffffff; --panel2:#f6f3ec;
+  --line:#e3ddd0; --line2:#d1c9b7; --ink:#1b232c; --ink-dim:#4d5a67; --ink-faint:#8a96a2;
+  --accent:#2c8a45; --accent2:#bf5f2c;
+  /* darkened node hues so accent-colored TITLES read on the cream bg
+     (swatch dots are tiny, so the extra contrast doesn't hurt them) */
+  --decomposes:#566b8e; --metric:#368a47; --domain:#1c8a80; --product:#8f4fc9;
+  --influences:#cc5d2d; --dashboard:#b9712a; --threshold:#a9821f; --business:#a87a1c;
+  --shadow:0 1px 2px rgba(60,50,30,.05),0 10px 30px rgba(60,50,30,.07);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background:var(--bg);color:var(--ink);font-family:var(--font-body);
+  font-size:15.5px;line-height:1.65;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+/* one calm, contained atmosphere wash — top-right, well away from the hero text */
+body::before{content:"";position:fixed;top:-30vh;right:-10vw;width:60vw;height:80vh;pointer-events:none;z-index:0;
+  background:radial-gradient(50% 50% at 50% 50%,color-mix(in srgb,var(--accent) 9%,transparent),transparent 70%);
+  filter:blur(30px)}
+.wrap{position:relative;z-index:1;display:grid;grid-template-columns:264px 1fr;min-height:100vh}
+
+/* ───────── sidebar ───────── */
+.side{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--bg2);
+  border-right:1px solid var(--line);padding:30px 20px 40px}
+.brand{display:flex;align-items:center;gap:12px;padding:0 8px;margin-bottom:6px}
+.brand .dot{width:11px;height:11px;border-radius:50%;background:var(--accent);flex-shrink:0;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
+.brand h1{font-family:var(--font-mono);font-size:16px;font-weight:600;letter-spacing:-.2px;margin:0}
+.brand small{display:block;font-family:var(--font-mono);font-size:9.5px;color:var(--ink-faint);letter-spacing:2.4px;margin-top:4px}
+nav{margin-top:30px;display:flex;flex-direction:column;gap:2px}
+nav a{display:flex;gap:13px;align-items:baseline;text-decoration:none;color:var(--ink-dim);
+  font-size:14px;padding:8px 12px;border-radius:8px;border-left:2px solid transparent;
+  margin-left:-2px;transition:color .15s,background .15s,border-color .15s}
+nav a .num{font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);min-width:16px;transition:color .15s}
+nav a:hover{color:var(--ink);background:var(--panel)}
+nav a.active{color:var(--ink);background:var(--panel);border-left-color:var(--accent);font-weight:500}
+nav a.active .num{color:var(--accent)}
+.side .meta{margin-top:34px;padding:18px 12px 0;border-top:1px solid var(--line);
+  font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);line-height:2}
+.side .meta b{color:var(--ink-dim);font-weight:500}
+
+/* ───────── main ───────── */
+main{min-width:0;padding:0 clamp(28px,5vw,72px) 140px}
+.inner{max-width:var(--maxw);margin:0 auto}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+  padding:16px 0 14px;margin-bottom:2px;background:linear-gradient(180deg,var(--bg) 72%,transparent)}
+.topbar .trail{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-faint);letter-spacing:.4px}
+.topbar .sp{flex:1}
+.btn{font-family:var(--font-mono);font-size:11.5px;color:var(--ink-dim);background:var(--panel);
+  border:1px solid var(--line2);border-radius:8px;padding:7px 13px;cursor:pointer;transition:.15s;letter-spacing:.3px}
+.btn:hover{color:var(--ink);border-color:color-mix(in srgb,var(--accent) 55%,var(--line2))}
+
+/* hero */
+.hero{padding:48px 0 36px;border-bottom:1px solid var(--line);margin-bottom:8px}
+.hero .kicker{font-family:var(--font-mono);font-size:11.5px;letter-spacing:2.5px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:22px}
+.hero h2{font-family:var(--font-display);font-size:clamp(38px,6vw,68px);font-weight:600;
+  line-height:1.04;letter-spacing:-1px;margin:0 0 22px;max-width:15ch;color:var(--ink)}
+.hero h2 em{font-style:italic;font-weight:500;color:var(--accent)}
+.hero p{font-size:18px;line-height:1.6;color:var(--ink-dim);max-width:62ch;margin:0}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:38px}
+@media(max-width:680px){.stats{grid-template-columns:1fr 1fr}}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 20px;
+  box-shadow:var(--shadow);position:relative;overflow:hidden}
+.stat::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:3px;border-radius:3px;background:var(--c,var(--accent))}
+.stat b{font-family:var(--font-display);font-size:34px;font-weight:600;display:block;letter-spacing:-1px;color:var(--ink);line-height:1}
+.stat span{font-family:var(--font-mono);font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:1.2px;display:block;margin-top:10px}
+
+/* sections */
+section{padding:36px 0;border-bottom:1px solid var(--line);scroll-margin-top:78px}
+section:last-of-type{border-bottom:none}
+.sec-head{display:flex;align-items:center;gap:15px;cursor:pointer;user-select:none}
+.sec-head .idx{font-family:var(--font-mono);font-size:12.5px;color:var(--accent);
+  border:1px solid var(--line2);border-radius:8px;padding:4px 9px;background:var(--panel);flex-shrink:0}
+.sec-head h3{font-family:var(--font-display);font-size:27px;font-weight:600;letter-spacing:-.4px;margin:0;flex:1}
+.sec-head .chev{color:var(--ink-faint);transition:transform .2s;font-size:13px}
+section.collapsed .chev{transform:rotate(-90deg)}
+section.collapsed .sec-body{display:none}
+.sec-body{padding-top:20px}
+.sec-body>p{color:var(--ink-dim)}
+h4{font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;
+  margin:30px 0 12px;color:var(--accent)}
+code{font-family:var(--font-mono);font-size:.84em;background:var(--panel2);
+  border:1px solid var(--line);border-radius:6px;padding:.08em .42em;color:var(--ink)}
+strong{color:var(--ink);font-weight:600}
+.lead{font-size:16.5px}
+
+/* callout */
+.note{display:flex;gap:14px;background:var(--panel);border:1px solid var(--line2);
+  border-left:3px solid var(--threshold);border-radius:12px;padding:16px 19px;margin:22px 0;font-size:14.5px;box-shadow:var(--shadow)}
+.note .ic{color:var(--threshold);font-family:var(--font-mono);font-weight:600;flex-shrink:0;font-size:13px}
+.note.good{border-left-color:var(--human)}.note.good .ic{color:var(--human)}
+
+/* pre / code blocks */
+pre{font-family:var(--font-mono);font-size:12.5px;line-height:1.75;background:var(--bg2);
+  border:1px solid var(--line);border-radius:14px;padding:22px 24px;overflow-x:auto;color:var(--ink-dim);box-shadow:var(--shadow)}
+pre b{color:var(--accent);font-weight:600}
+pre .c{color:var(--ink-faint)}
+pre .o{color:var(--dashboard)}
+
+/* tables */
+table{width:100%;border-collapse:collapse;margin:18px 0;font-size:14px}
+th,td{text-align:left;padding:11px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--font-mono);font-size:10px;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-faint);font-weight:600}
+tbody tr:hover td,table tr:hover td{background:color-mix(in srgb,var(--panel) 60%,transparent)}
+td code{white-space:nowrap}
+
+/* chips / legends */
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0}
+.chip{display:inline-flex;align-items:center;gap:9px;background:var(--panel);
+  border:1px solid var(--line);border-radius:999px;padding:7px 15px 7px 11px;font-size:13.5px;font-family:var(--font-mono)}
+.chip .sw{width:11px;height:11px;border-radius:50%;flex-shrink:0}
+.chip .sw.sq{border-radius:3px}
+.chip.off{opacity:.55}.chip .tag{font-size:9px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.6px}
+.edgelegend{display:flex;flex-direction:column;gap:9px;margin:18px 0}
+.edgelegend .row{display:flex;align-items:center;gap:14px;font-size:14px;color:var(--ink-dim)}
+.edgelegend svg{flex-shrink:0}
+
+/* flow diagram */
+.flow{display:flex;flex-direction:column;gap:0;margin:24px 0;max-width:680px}
+.flow .box{background:var(--panel);border:1px solid var(--line2);border-radius:13px;padding:15px 19px;box-shadow:var(--shadow)}
+.flow .box .t{font-family:var(--font-mono);font-weight:600;font-size:13.5px;margin-bottom:4px;color:var(--ink)}
+.flow .box .d{font-size:12.5px;color:var(--ink-dim);font-family:var(--font-mono);line-height:1.55}
+.flow .arr{align-self:center;color:var(--ink-faint);font-size:17px;padding:8px 0;line-height:1}
+.flow .box.writer{border-color:color-mix(in srgb,var(--metric) 55%,var(--line2))}
+.flow .box.writer .t{color:var(--metric)}
+.flow .split{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.flow .split{grid-template-columns:1fr}}
+
+/* phase timeline */
+.phases{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:22px 0}
+@media(max-width:720px){.phases{grid-template-columns:1fr 1fr}}
+.phase{padding:17px 16px;border:1px solid var(--line);background:var(--panel);border-radius:13px;
+  border-top:3px solid var(--c,var(--line2));box-shadow:var(--shadow)}
+.phase .p{font-family:var(--font-mono);font-size:9.5px;letter-spacing:1.4px;color:var(--ink-faint);text-transform:uppercase}
+.phase .n{font-family:var(--font-display);font-weight:600;font-size:18px;margin:7px 0 8px;color:var(--c,var(--ink));letter-spacing:-.3px}
+.phase .x{font-size:12.5px;color:var(--ink-dim);line-height:1.5}
+.barrier{text-align:center;font-family:var(--font-mono);font-size:10px;letter-spacing:2px;
+  color:var(--influences);margin:2px 0 0;padding:7px;text-transform:uppercase}
+
+/* module grid */
+.mods{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin:20px 0}
+.mod{background:var(--panel);border:1px solid var(--line);border-radius:13px;padding:16px 18px;transition:transform .15s,border-color .15s;box-shadow:var(--shadow)}
+.mod:hover{border-color:var(--line2);transform:translateY(-2px)}
+.mod .h{font-family:var(--font-mono);font-size:13px;color:var(--accent);margin-bottom:7px;font-weight:600}
+.mod p{margin:0;font-size:13px;color:var(--ink-dim);line-height:1.55}
+.tree b{color:var(--metric)}
+footer{padding:46px 0 0;font-family:var(--font-mono);font-size:11px;color:var(--ink-faint);line-height:1.8}
+.hl{color:var(--accent)}
+@media(max-width:880px){
+  .wrap{grid-template-columns:1fr}
+  .side{position:static;height:auto;border-right:none;border-bottom:1px solid var(--line)}
+  nav{flex-direction:row;flex-wrap:wrap;gap:4px}
+  nav a{border-left:none;border-radius:999px;padding:6px 12px}
+  nav a.active{border-left:none}
+  .side .meta{display:none}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ───────────── SIDEBAR ───────────── -->
+<aside class="side">
+  <div class="brand">
+    <span class="dot"></span>
+    <div><h1>dc&#8209;kg</h1><small>SYSTEM ARCHITECTURE</small></div>
+  </div>
+  <nav id="nav">
+    <a href="#overview"><span class="num">01</span> Overview</a>
+    <a href="#tree"><span class="num">02</span> Directory structure</a>
+    <a href="#inputs"><span class="num">03</span> Source-of-truth inputs</a>
+    <a href="#modules"><span class="num">04</span> Backend modules</a>
+    <a href="#ai"><span class="num">05</span> The AI layer</a>
+    <a href="#interfaces"><span class="num">06</span> API &amp; MCP</a>
+    <a href="#cli"><span class="num">07</span> CLI</a>
+    <a href="#model"><span class="num">08</span> Node &amp; edge model</a>
+    <a href="#frontend"><span class="num">09</span> Frontend canvas</a>
+    <a href="#flow"><span class="num">10</span> End-to-end flow</a>
+  </nav>
+  <div class="meta">
+    branch · <b>kg-llm-rebuild</b><br>
+    updated · <b>2026-06-28</b><br>
+    store · <b>neo4j</b><br>
+    builder · <b>claude-opus-4-8</b>
+  </div>
+</aside>
+
+<!-- ───────────── MAIN ───────────── -->
+<main>
+ <div class="inner">
+  <div class="topbar">
+    <span class="trail">~/dc-kg / ARCHITECTURE</span>
+    <span class="sp"></span>
+    <button class="btn" id="toggleAll">collapse all</button>
+    <button class="btn" id="theme">☾ theme</button>
+  </div>
+
+  <header class="hero">
+    <div class="kicker">ThoughtWire Causal Knowledge Graph</div>
+    <h2>A metric surface, rebuilt as a <em>signed causal graph</em>.</h2>
+    <p class="lead">dc&#8209;kg turns dashboards, metrics, formulas, ML models and governance rules into a directed
+      knowledge graph in Neo4j — populated by a fleet of Claude agents, written through a single
+      schema&#8209;enforcing gate, and explored on a live React&nbsp;Flow canvas.</p>
+    <div class="stats">
+      <div class="stat" style="--c:var(--metric)"><b>325</b><span>metrics + 161 inputs</span></div>
+      <div class="stat" style="--c:var(--domain)"><b>9</b><span>materialized labels</span></div>
+      <div class="stat" style="--c:var(--influences)"><b>4</b><span>agentic build phases</span></div>
+      <div class="stat" style="--c:var(--product)"><b>1</b><span>arbitration writer</span></div>
+    </div>
+  </header>
+
+  <!-- 01 -->
+  <section id="overview">
+    <div class="sec-head"><span class="idx">01</span><h3>Overview</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+      <p>A flat metric catalog can list numbers; it can't answer the questions that actually drive
+      decisions. The graph can:</p>
+      <table>
+        <tr><th>Question</th><th>Graph capability</th></tr>
+        <tr><td>If this warehouse column changes, which metrics break?</td><td>lineage / blast radius (<code>source_columns</code> scan)</td></tr>
+        <tr><td>What drives ROAS, and with what lag and sign?</td><td>signed causal upstream / downstream traversal</td></tr>
+        <tr><td>What is this metric made of?</td><td><code>DECOMPOSES_INTO</code> formula decomposition</td></tr>
+        <tr><td>Who governs this metric and what alerts on it?</td><td>Policy / Threshold governance overlay</td></tr>
+      </table>
+
+      <h4>What changed — skeletal → agentic</h4>
+      <p>The project began as a deterministic <strong>"skeleton" build</strong> (and earlier, an in-memory
+      NetworkX prototype). Those were scope-blind resolving formulas and additivity-blind rolling metrics
+      up. The system was <strong>rebuilt around an LLM agentic builder</strong> (<code>kg build</code>):
+      bounded-concurrent Claude Opus agents read the curated catalog and backend SQL, then create nodes and
+      draw edges through one schema-enforcing writer. The skeleton CSVs survive under <code>data/</code> as
+      <em>inputs and regenerable artifacts</em> — no longer the build mechanism. (Their historical design
+      docs now live in <code>docs/archive/</code>.)</p>
+
+      <h4>Stack</h4>
+      <table>
+        <tr><th>Layer</th><th>Technology</th></tr>
+        <tr><td>Graph store</td><td>Neo4j (bolt) · single-writer <code>MERGE</code> upserts</td></tr>
+        <tr><td>Build engine</td><td>Python + Claude Agent SDK (<code>claude-opus-4-8</code>)</td></tr>
+        <tr><td>Agent tools</td><td>MCP (FastMCP, stdio) — <code>mcp__graph__*</code></td></tr>
+        <tr><td>API</td><td>FastAPI + <code>sse-starlette</code> live event stream</td></tr>
+        <tr><td>CLI</td><td><code>kg</code> console script</td></tr>
+        <tr><td>Frontend</td><td>React 19 · Vite · Zustand · React Flow · dagre · shadcn / Tailwind 4</td></tr>
+      </table>
+    </div>
+  </section>
+
+  <!-- 02 -->
+  <section id="tree">
+    <div class="sec-head"><span class="idx">02</span><h3>Repository directory structure</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+<pre class="tree">dc-kg/
+├── <b>ARCHITECTURE.md / .html</b>            <span class="c">← this document — current source of truth</span>
+├── README.md                          <span class="c">quickstart + full rebuild runbook</span>
+├── INTEGRATION-ANALYSIS-claude.*       <span class="c">knowledgeGraph ↔ dc-kg integration</span>
+│
+├── <b>harness/</b>                          <span class="c">Python backend — the engine</span>
+│   ├── kg/        <span class="c">Neo4j driver · models · schema · SINGLE WRITER (arbitration)</span>
+│   ├── agentic/   <span class="c">LLM builder: orchestrator · runner · prompts · enrich</span>
+│   ├── agent/     <span class="c">shared LLM engine (structured output + MCP tool-loop)</span>
+│   ├── ingest/    <span class="c">dashboard ingestion: prepass · proposer · apply · scoring</span>
+│   ├── governance/<span class="c">LLM Policy/Threshold extraction from documents</span>
+│   ├── seed/      <span class="c">source-of-truth seed JSON (spine, platforms, components)</span>
+│   ├── mcp/       <span class="c">FastMCP graph server — mcp__graph__* tools</span>
+│   ├── api/       <span class="c">FastAPI + SSE server for the canvas</span>
+│   ├── cli/       <span class="c">the `kg` command</span>
+│   └── store/ · marts/ · stats/ · discovery/ · hooks/ · tests/
+│
+├── <b>app/kg-canvas/</b>                    <span class="c">React + Vite canvas (frontend)</span>
+│   └── src/
+│       ├── components/        <span class="c">Toolbar · CanvasView · NodeDetail · EdgeDetail · …</span>
+│       │   └── governance/    <span class="c">GovernancePanel — Policy/Threshold wizard</span>
+│       ├── lib/               <span class="c">api.ts · graphTheme.ts · graphLayout.ts · egoLayout.ts</span>
+│       ├── store.ts           <span class="c">Zustand state</span>
+│       └── App.tsx            <span class="c">layout shell</span>
+│
+├── <b>data/</b>                             <span class="c">inputs + build artifacts</span>
+│   ├── metric_nodes.rare_seeds.json   <span class="c">METRIC SOURCE OF TRUTH (325 + 161 inputs)</span>
+│   ├── metric_registry.rare_seeds.csv <span class="c">read during build · *_edges.csv = legacy/discovery, NOT read</span>
+│   ├── proposals/run-*/               <span class="c">per-dashboard proposal queue (JSONL)</span>
+│   └── build-report.&lt;runId&gt;.json · backups/ · events/ · skeleton/
+│
+├── <b>docs/</b>
+│   ├── final-schema-claude.md/.html   <span class="c">AUTHORITATIVE node/edge property contract</span>
+│   ├── graph-build-process.md · unique-metrics-and-ml-classification.md
+│   └── frd-docs/ · <b>archive/</b>           <span class="c">superseded design/schema docs (historical)</span>
+│
+└── BC_2  <span class="c">(sibling repo) external dbt backend — read-only SQL via MCP doc-tools</span></pre>
+    </div>
+  </section>
+
+  <!-- 03 -->
+  <section id="inputs">
+    <div class="sec-head"><span class="idx">03</span><h3>Source-of-truth / input files</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+      <p>The graph is constructed from a small set of curated inputs. Every node and edge traces back to
+      one of these — nothing is invented from nothing.</p>
+
+      <h4>Spine seeds — harness/seed/ (the deterministic backbone)</h4>
+      <table>
+        <tr><th>File</th><th>Contains</th></tr>
+        <tr><td><code>spine_seed.json</code></td><td>tri-axis spine: <code>business</code>, <code>domains[]</code>, <code>products[]</code> → Business / Domain / IntelligenceProduct</td></tr>
+        <tr><td><code>platforms.json</code></td><td>Platform nodes (ga4, google_ads, meta_ads, klaviyo, magento…) + sub-channels</td></tr>
+        <tr><td><code>component_types.json</code></td><td>the 17 generalized chart-type UIComponent nodes</td></tr>
+        <tr><td><code>governance.rare_seeds.json</code> · <code>governance_seed.py</code></td><td>demo Policy + Threshold + governance edges and their loader</td></tr>
+        <tr><td><code>concept_causal_rules</code> · <code>funnel_flow</code> · <code>identities</code> · <code>*_overrides</code> · <code>*_priors</code></td><td>enrichment priors/overrides consulted during build + enrich</td></tr>
+      </table>
+
+      <h4>Metric catalog — data/ (the metric source of truth)</h4>
+      <table>
+        <tr><th>File</th><th>Contains</th></tr>
+        <tr><td><code>metric_nodes.rare_seeds.json</code></td><td><strong>The metric source of truth.</strong> <code>_meta</code> + <strong>325 metrics</strong> (uid, canonical_id, formulas, deps, ML flags, scope) + <strong>161 input_nodes</strong>. This is what Phase-1 agents read.</td></tr>
+        <tr><td><code>metric_registry.rare_seeds.csv</code></td><td><strong>actively read during the build</strong> — OpenAPI registry: formula, <code>source_expr</code>, <code>mart_model</code>, dashboards. The doc-tool <code>get_metric_source</code> joins this row; <code>enrich.py</code> reads it for SQL/mart provenance.</td></tr>
+        <tr><td><code>unique_metrics_catalog.rare_seeds.csv</code></td><td>deduplicated, sub-platform-aware metric manifest</td></tr>
+        <tr><td><code>*_edges.rare_seeds.csv</code></td><td><strong>NOT consumed by the build.</strong> <code>structural / compositional / crossproduct / model</code> are dead skeleton outputs (no code reads them); <code>candidate / discovered</code> are I/O for the optional <code>kg discover</code> engine only. Edges are <strong>derived by the agents</strong> (§05), not imported.</td></tr>
+      </table>
+
+      <h4>External backend — BC_2 (read-only)</h4>
+      <p>The sibling dbt repo. Agents read its seed CSVs and SQL <strong>only through MCP doc-tools</strong>
+      (<code>get_metric_source</code>, <code>get_bc2_sql</code>, <code>inspect_bc2_sources</code>) — never by
+      writing into it. <code>harness/ingest/bc2_snapshot.py</code> hashes + caches the relevant slice.</p>
+
+      <h4>Proposal queue — data/proposals/run-*/</h4>
+      <p>Dashboard-ingestion output: one JSONL per dashboard, each line a review-state proposal (node +
+      relationship payloads). Reviewed, then <code>apply</code>-ed through arbitration.</p>
+    </div>
+  </section>
+
+  <!-- 04 -->
+  <section id="modules">
+    <div class="sec-head"><span class="idx">04</span><h3>Backend modules &amp; how they interact</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+      <div class="note good"><span class="ic">▶</span><div><strong><code>harness/kg/</code> is the only module that writes to Neo4j.</strong>
+        Every upsert — from agents, the API, seeds, or the CLI — funnels through
+        <code>arbitration.py</code>, which validates labels, enforces endpoint existence, strips nulls, and
+        appends an audit event. No other module issues writes.</div></div>
+      <div class="mods">
+        <div class="mod"><div class="h">harness/kg</div><p>driver · models · schema · <strong>arbitration (single writer)</strong> · evidence ledger · reconcile.</p></div>
+        <div class="mod"><div class="h">harness/agentic</div><p>the LLM builder. <code>orchestrator</code> slices metrics &amp; sequences phases; <code>runner</code> drives one agent; <code>prompts</code>; <code>enrich</code> (post-build dedupe + mart/SQL).</p></div>
+        <div class="mod"><div class="h">harness/agent</div><p>shared engine: <code>propose_structured()</code> + the MCP tool-loop used by ingestion &amp; governance.</p></div>
+        <div class="mod"><div class="h">harness/ingest</div><p>incremental dashboard ingestion: prepass → proposer → scoring → proposals → apply. OpenAPI &amp; BC_2 catalogs.</p></div>
+        <div class="mod"><div class="h">harness/governance</div><p>LLM <code>extract_governance()</code> — parses a document into draft Policy/Threshold to prefill the wizard (no writes).</p></div>
+        <div class="mod"><div class="h">harness/mcp</div><p>the agent tool surface — write + offline doc-read tools (§06).</p></div>
+        <div class="mod"><div class="h">harness/api</div><p>FastAPI + SSE canvas backend (§06).</p></div>
+        <div class="mod"><div class="h">harness/cli</div><p>the <code>kg</code> command (§07).</p></div>
+        <div class="mod"><div class="h">harness/seed</div><p>source-of-truth seed JSON (§03).</p></div>
+        <div class="mod"><div class="h">harness/store</div><p>backup / restore / wipe — the only safety net before a destructive build.</p></div>
+        <div class="mod"><div class="h">marts · stats · discovery</div><p>mart lineage, correlation stats, optional statistical causal discovery — feed enrich/proposals, never write directly.</p></div>
+        <div class="mod"><div class="h">harness/hooks</div><p>pre-tool permission guards for agent runs.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 -->
+  <section id="ai">
+    <div class="sec-head"><span class="idx">05</span><h3>The AI / LLM layer</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+      <p>Three LLM callsites — all Claude Opus 4.8, all writing only through the single arbitration writer.</p>
+
+      <h4>5.1 · Agentic build — kg build (the main one)</h4>
+      <p>Four phases, parallel within a phase, with a hard barrier before any edge is drawn:</p>
+      <div class="phases">
+        <div class="phase" style="--c:var(--metric)"><div class="p">phase 1</div><div class="n">Nodes</div><div class="x">~8–12 agents read their metric slice via doc-tools &amp; <code>create_metric_node</code>, attaching to the spine.</div></div>
+        <div class="phase" style="--c:var(--decomposes)"><div class="p">phase 2</div><div class="n">Structural</div><div class="x"><code>DECOMPOSES_INTO</code> edges from formulas via <code>draw_edge</code>.</div></div>
+        <div class="phase" style="--c:var(--influences)"><div class="p">phase 3</div><div class="n">Causal</div><div class="x"><code>INFLUENCES</code> edges from reasoning over metrics + BC_2 — confidence, sign, lag.</div></div>
+        <div class="phase" style="--c:var(--product)"><div class="p">phase 4</div><div class="n">Critique</div><div class="x">single agent finds loops / orphans / leaves, de-dupes, writes the build report.</div></div>
+      </div>
+      <div class="barrier">— barrier · asyncio.gather · every node exists before edges —</div>
+      <p style="margin-top:20px"><code>kg build --dry-plan</code> previews the plan fully offline (no SDK, no Neo4j).
+      <code>--smoke</code> builds only the <code>blended.*</code> ROAS chain and skips the destructive wipe.
+      A full build is destructive: Phase 0 exports a backup, wipes, and re-seeds the spine first.</p>
+
+      <h4>5.2 · Dashboard ingestion proposer</h4>
+      <p><code>harness/ingest/proposer.py</code> turns one dashboard's charts into <strong>proposals</strong>
+      (review-before-write) against a section-8 output schema — not direct graph writes.</p>
+
+      <h4>5.3 · Governance extraction</h4>
+      <p><code>harness/governance/extract.py</code> parses a governance document into draft Policy/Threshold
+      fields to prefill the canvas authoring wizard.</p>
+
+      <h4>Why this is safe</h4>
+      <div class="chips">
+        <span class="chip"><span class="sw sq" style="background:var(--metric)"></span>single writer</span>
+        <span class="chip"><span class="sw sq" style="background:var(--platform)"></span>sandboxed tools (no shell/web/fs)</span>
+        <span class="chip"><span class="sw sq" style="background:var(--human)"></span>idempotent MERGE + audit events</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 06 -->
+  <section id="interfaces">
+    <div class="sec-head"><span class="idx">06</span><h3>Interfaces — API &amp; MCP</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+      <h4>FastAPI server · harness/api/server.py — the canvas backend</h4>
+      <table>
+        <tr><th>Method · Path</th><th>Purpose</th></tr>
+        <tr><td><code>GET /api/health</code> · <code>/api/status</code></td><td>liveness · node/edge counts by label</td></tr>
+        <tr><td><code>GET /api/graph</code></td><td>full graph export for the canvas (<code>limit</code>, <code>include_deprecated</code>)</td></tr>
+        <tr><td><code>GET /api/coverage</code> · <code>/api/edge-diff</code></td><td>coverage summary · diff a proposal run vs live graph</td></tr>
+        <tr><td><code>GET /api/traverse/upstream</code> · <code>…/downstream</code></td><td>ranked <strong>signed</strong> lineage paths (acyclic + cyclic), per-hop sign &amp; lag</td></tr>
+        <tr><td><code>GET /api/column-impact</code></td><td>metrics whose <code>source_columns</code> include a warehouse column (blast radius)</td></tr>
+        <tr><td><code>GET /api/metric-chart</code> · <code>/api/dashboards</code></td><td>metric's chart type + registry slice (hydrates the shift-click <strong>Chart</strong> view node) · dashboard catalog</td></tr>
+        <tr><td><code>GET /api/dashboard-charts</code></td><td><strong>read-only</strong> chart-registry slice for one <code>dashboard_id</code> (every chart on it, <code>chart_type</code> joined from <code>chart_type_map.json</code>) — backs the shift-click-a-Dashboard reveal</td></tr>
+        <tr><td><code>GET /api/proposals</code> · <code>POST …/{id}/review</code> · <code>…/approve-all</code></td><td>proposal queue management</td></tr>
+        <tr><td><code>POST /api/ingest</code> · <code>/api/apply</code></td><td>trigger ingestion (async, streamed) · apply approved proposals</td></tr>
+        <tr><td><code>POST /api/governance</code> · <code>/api/governance/extract</code></td><td>author Policy+Threshold+edges · LLM-prefill the wizard</td></tr>
+        <tr><td><code>GET /api/events</code></td><td><strong>SSE</strong> live event stream (named frames)</td></tr>
+        <tr><td><code>POST /api/run-causal</code></td><td><strong>retired → 501</strong> (construction moved to <code>kg build</code>)</td></tr>
+      </table>
+
+      <h4>MCP graph server · harness/mcp/graph_server.py — the agent tool surface</h4>
+      <p>A stdio FastMCP server launched per agent. Three families:</p>
+      <div class="mods">
+        <div class="mod"><div class="h" style="color:var(--metric)">write → arbitration</div><p><code>create_business_node</code>, <code>create_domain_node</code>, <code>create_product_node</code>, <code>create_metric_node</code>, <code>create_policy_node</code>, <code>create_threshold_node</code>, <code>draw_edge</code>, <code>add_causal_edge</code></p></div>
+        <div class="mod"><div class="h" style="color:var(--platform)">graph read</div><p><code>lookup_node</code>, <code>search_nodes</code>, <code>kg_status</code></p></div>
+        <div class="mod"><div class="h" style="color:var(--dashboard)">offline doc read</div><p><code>list_metrics</code>, <code>list_metrics_by_domain</code>, <code>list_metrics_by_scope</code>, <code>get_metric_source</code>, <code>get_bc2_sql</code>, <code>inspect_bc2_sources</code>, <code>lookup_metric_notes</code>, <code>get_chart_registry_entry</code>, <code>validate_edge_candidate</code>, <code>explain_edge_candidate</code></p></div>
+      </div>
+      <p>These same tools back the Claude Code CLI skills (<code>kg-status</code>, <code>lookup-notes</code>, <code>validate-edge</code>, …).</p>
+    </div>
+  </section>
+
+  <!-- 07 -->
+  <section id="cli">
+    <div class="sec-head"><span class="idx">07</span><h3>CLI reference — kg …</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+<pre><span class="c"># Spine / schema</span>
+kg <b>schema-init</b>                 <span class="c">apply Neo4j constraints + indexes</span>
+kg <b>bootstrap-spine</b> <span class="o">[--dry-run]</span> <span class="c">seed Business/Domain/Product/Platform/UIComponent</span>
+kg <b>status</b>                      <span class="c">node/edge counts + spine health</span>
+kg <b>lookup</b> &lt;label&gt; &lt;key&gt;        <span class="c">fetch one node</span>
+
+<span class="c"># Agentic build + enrich (primary path)</span>
+kg <b>build</b> <span class="o">[--dry-plan] [--smoke] [--namespaces a|b] [--resume]</span>
+kg <b>enrich</b> <span class="o">[--dry-run] [--limit N] [--no-dedupe] [--no-migrate]</span>
+
+<span class="c"># Dashboard ingestion (incremental)</span>
+kg <b>prepass</b> <span class="o">[--json]</span>
+kg <b>ingest-dashboard</b> &lt;id&gt; <span class="o">[--auto-approve]</span>
+kg <b>ingest-all</b> / kg <b>ingest-dashboards</b> <span class="o">[--limit N] [--concurrency N] [--auto-approve]</span>
+kg <b>proposals</b> list|approve|reject <span class="o">[--run &lt;id&gt;]</span>
+kg <b>apply</b> <span class="o">[--run &lt;id&gt;]</span>   ·   kg <b>reconcile</b> <span class="o">[--label Metric] [--dry-run]</span>
+
+<span class="c"># Governance + maintenance</span>
+kg <b>seed-governance</b> <span class="o">[--dry-run]</span>
+kg <b>migrate-metric-edges</b> <span class="o">[--dry-run]</span>   <span class="c">fold legacy edge types onto the V1 model</span>
+kg <b>discover</b> <span class="o">[--mode synthetic|scan|pcmci]</span>   ·   kg <b>prune-empty</b>
+
+<span class="c"># Safety net (separate module)</span>
+python -m harness.store.backup <b>export|restore</b> …</pre>
+    </div>
+  </section>
+
+  <!-- 08 -->
+  <section id="model">
+    <div class="sec-head"><span class="idx">08</span><h3>Node &amp; edge model</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+      <h4>Node labels — 10 defined, 9 materialized</h4>
+      <div class="chips">
+        <span class="chip"><span class="sw" style="background:var(--business)"></span>Business</span>
+        <span class="chip"><span class="sw" style="background:var(--domain)"></span>Domain</span>
+        <span class="chip"><span class="sw" style="background:var(--product)"></span>IntelligenceProduct</span>
+        <span class="chip"><span class="sw" style="background:var(--platform)"></span>Platform</span>
+        <span class="chip"><span class="sw" style="background:var(--metric)"></span>Metric</span>
+        <span class="chip"><span class="sw" style="background:var(--dashboard)"></span>Dashboard</span>
+        <span class="chip"><span class="sw" style="background:var(--component)"></span>UIComponent</span>
+        <span class="chip"><span class="sw" style="background:var(--policy)"></span>Policy</span>
+        <span class="chip"><span class="sw" style="background:var(--threshold)"></span>Threshold</span>
+        <span class="chip off"><span class="sw" style="background:#8d99ad"></span>Role <span class="tag">reserved</span></span>
+        <span class="chip"><span class="sw" style="background:#5fb0d9"></span>Chart <span class="tag">synthetic · view-only</span></span>
+      </div>
+      <div class="note"><span class="ic">⚠ Role</span><div><strong>Schema-reserved, not materialized in V1.</strong>
+        <code>Role</code> has full schema support — uniqueness constraints (<code>role_id</code>, <code>role_key</code>),
+        a <code>seniority_rank</code> index, and a Pydantic model. But <strong>no code creates Role nodes</strong>:
+        there is no <code>create_role_node</code> tool, no seed emits one, and the canvas palette renders the
+        nine materialized labels (plus the synthetic <code>Chart</code> view node). RBAC is modeled in the schema but deferred. Treat <code>Role</code> as reserved.</div></div>
+      <p><code>Metric.node_kind</code> further classifies a metric node as <code>metric</code> /
+      <code>intermediary</code> / <code>input</code> / <code>constant</code>.</p>
+      <div class="note"><span class="ic">▦ Chart</span><div><strong>Synthetic view node — frontend-only, never in Neo4j.</strong>
+        Charts are <em>not</em> a graph node type (their fields are folded onto <code>Metric</code> / the chart-registry
+        per the M2 decision). The canvas renders a <code>Chart</code> node (<code>provenance: "synthetic"</code>,
+        id <code>chart::&lt;canonical_id&gt;</code>) only on shift-click, hydrated from <code>/api/metric-chart</code> or
+        <code>/api/dashboard-charts</code> and wired by a <code>RENDERED_BY</code> (metric→chart) or <code>SHOWN_ON</code>
+        (chart→dashboard) synthetic edge. It is excluded from search / apply / write paths (FR-CG-008).</div></div>
+
+      <h4>Edge model — metric ↔ metric is exactly two types</h4>
+      <div class="edgelegend">
+        <div class="row"><svg width="42" height="8"><line x1="1" y1="4" x2="41" y2="4" stroke="var(--decomposes)" stroke-width="2.5"/></svg> <span><code>DECOMPOSES_INTO</code> — structural: formula · component · identity · rollup · crossproduct · funnel</span></div>
+        <div class="row"><svg width="42" height="8"><line x1="1" y1="4" x2="41" y2="4" stroke="var(--influences)" stroke-width="2.5" stroke-dasharray="3 3"/></svg> <span><code>INFLUENCES</code> — causal: curated_rule · promoted · llm_verified · statistical · statistical_candidate</span></div>
+        <div class="row"><svg width="42" height="8"><line x1="1" y1="4" x2="41" y2="4" stroke="#e8556f" stroke-width="2.5"/></svg> <span>inverse hop — a <code>denominator</code>/<code>subtrahend</code> component (sign −1)</span></div>
+        <div class="row"><svg width="42" height="8"><line x1="1" y1="4" x2="41" y2="4" stroke="#b07be8" stroke-width="2.5" stroke-dasharray="7 4"/></svg> <span>cross-domain — spans two metric domains</span></div>
+        <div class="row"><svg width="42" height="8"><line x1="1" y1="4" x2="41" y2="4" stroke="#717c8c" stroke-width="2.5" stroke-dasharray="2 5"/></svg> <span>deprecated — never deleted, marked <code>status='deprecated'</code></span></div>
+      </div>
+      <p><strong>Spine / surface / governance</strong> edges: <code>HAS_DOMAIN</code>, <code>HAS_PRODUCT</code>,
+      <code>USES_PLATFORM</code>, <code>PART_OF_PRODUCT</code>, <code>SHOWN_ON</code>, <code>VISUALIZES</code>,
+      <code>GOVERNS</code>, <code>ENFORCES_THRESHOLD</code>, <code>HAS_THRESHOLD</code>. Edges carry an
+      <strong>evidence ledger</strong> (Beta confidence), <code>review_state</code>, <code>source_kind</code>,
+      and a <code>status</code> lifecycle.</p>
+
+      <h4>Provenance accent (canvas)</h4>
+      <div class="chips">
+        <span class="chip"><span class="sw sq" style="background:var(--det)"></span>deterministic</span>
+        <span class="chip"><span class="sw sq" style="background:var(--agent)"></span>agent</span>
+        <span class="chip"><span class="sw sq" style="background:var(--human)"></span>human</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 09 -->
+  <section id="frontend">
+    <div class="sec-head"><span class="idx">09</span><h3>Frontend — app/kg-canvas</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+      <p>A React 19 + Vite SPA. Graph rendering uses <strong>React Flow</strong> (<code>@xyflow/react</code>)
+      with a <strong>dagre</strong> layered layout and an ego/focus layout. State is a single
+      <strong>Zustand</strong> store; styling/legends are centralized in <code>lib/graphTheme.ts</code>;
+      API + SSE wrappers in <code>lib/api.ts</code>.</p>
+
+      <p><strong>Layout shell (<code>App.tsx</code>):</strong> CommandSearch + Toolbar + ProgressBar on top;
+      CanvasView fills the center; a left <strong>governance drawer</strong> and a right tabbed
+      <strong>inspector</strong> (Activity · Review · Node · Edge · Edge Diff) overlay the canvas.</p>
+      <table>
+        <tr><th>Component</th><th>Purpose</th></tr>
+        <tr><td><code>CanvasView</code></td><td>the React Flow graph — nodes, signed edges, focus/loop rings, layout. Overview toggle <strong>Spine · Tree · Map · Dashboards</strong> + shift-click drill-down</td></tr>
+        <tr><td><code>Toolbar</code></td><td>scope/domain/category filters · deprecated toggle · traversal toggle · Legend popover</td></tr>
+        <tr><td><code>NodeDetail</code></td><td>full metric inspector — formula, SQL, mart sources, lineage; renders <code>ChartDetail</code> for a selected <code>Chart</code> node</td></tr>
+        <tr><td><code>ChartDetail</code></td><td>chart body for a synthetic <code>Chart</code> node — canonical glyph per <code>chart_type</code>, chart_id/canonical_id, dashboard chips, formula, how-to-read, decisions, narration</td></tr>
+        <tr><td><code>EdgeDetail</code></td><td>selected-edge relation, score, lag, lifecycle, mechanism</td></tr>
+        <tr><td><code>ReviewQueue</code></td><td>approve / reject AI-proposed nodes &amp; edges</td></tr>
+        <tr><td><code>EdgeDiffReview</code></td><td>diff a proposal run against the live graph</td></tr>
+        <tr><td><code>governance/GovernancePanel</code></td><td>3-step Policy→Threshold authoring wizard with optional LLM "prefill from a document"</td></tr>
+        <tr><td><code>CommandSearch</code> · <code>ActivityFeed</code> · <code>ProgressBar</code></td><td>palette search · live SSE activity · progress</td></tr>
+      </table>
+      <div class="note good"><span class="ic">▶</span><div>The frontend is <strong>read-mostly</strong>: it visualizes the
+      graph and drives the review/approve and governance-authoring workflows. It never writes the graph
+      directly — every mutation goes through the API → arbitration. (<code>POST /api/run-causal</code> is
+      retired; construction is <code>kg build</code> only.)</div></div>
+
+      <h4>Overview modes &amp; shift-click drill-down (<code>graphLayout.ts</code> + <code>store.ts</code>)</h4>
+      <p>Four overview layouts: <strong>Spine</strong> (metrics under their Domain — default),
+      <strong>Tree</strong> (decomposition forest), <strong>Map</strong> (hub skeleton), and
+      <strong>Dashboards</strong> — the curated <em>main</em> dashboards (<code>dashboard_type ∈ {executive, review}</code>
+      or id ending <code>-overview</code>) clustered under their <strong>Product</strong>
+      (<code>dashboardGroupedLayout</code>). Filtering NODE KINDS to a non-spine label (Dashboard / Policy /
+      Threshold / Chart) now packs those nodes into a grid instead of blanking (the Spine layout falls back
+      when it finds no spine nodes).</p>
+      <p><strong>Shift-click drill-down</strong> dispatches by node kind and reveals <strong>synthetic, client-only</strong>
+      view nodes/edges (never persisted — FR-CG-008), which the focus ring clusters around the clicked node:</p>
+      <ul>
+        <li><strong>Metric</strong> → <code>revealMetricChart</code> — its specific <code>Chart</code> (<code>RENDERED_BY</code>), auto-selected for <code>ChartDetail</code>.</li>
+        <li><strong>Dashboard</strong> → <code>revealDashboardCharts</code> — every chart on it (<code>Chart -[SHOWN_ON]-&gt; Dashboard</code>, via <code>/api/dashboard-charts</code>) plus its real <code>SHOWN_ON</code> metrics.</li>
+        <li><strong>IntelligenceProduct</strong> → <code>revealProductDashboards</code> — that product's dashboards (<code>Dashboard -[PART_OF_PRODUCT]-&gt; Product</code>).</li>
+      </ul>
+      <p>Charts are surfaced this way because they are <strong>not</strong> a graph node type; the synthetic builder
+      (<code>makeChartNode</code>) merges the chart-registry slice with metric props, keyed by <code>canonical_id</code>
+      so the same chart dedupes whether reached via its metric or its dashboard.</p>
+    </div>
+  </section>
+
+  <!-- 10 -->
+  <section id="flow">
+    <div class="sec-head"><span class="idx">10</span><h3>End-to-end data flow</h3><span class="chev">▾</span></div>
+    <div class="sec-body">
+      <div class="flow">
+        <div class="box"><div class="t">Inputs</div><div class="d">seed/*.json · metric_nodes.rare_seeds.json (325+161) · metric_registry.csv · BC_2 SQL (read-only) — edges are DERIVED, no edge CSV imported</div></div>
+        <div class="arr">↓</div>
+        <div class="box"><div class="t">kg bootstrap-spine</div><div class="d">Business · Domain · Product · Platform · UIComponent</div></div>
+        <div class="arr">↓</div>
+        <div class="box"><div class="t">kg build · agentic · 4 phases</div><div class="d">nodes —barrier→ structural → causal → critique</div></div>
+        <div class="arr">↓</div>
+        <div class="box"><div class="t">kg enrich</div><div class="d">dedupe · mart/SQL/freshness · evidence-ledger migrate</div></div>
+        <div class="arr">↓</div>
+        <div class="box writer"><div class="t">harness/kg/arbitration.py — the single writer</div><div class="d">validates · MERGEs on identity key · appends event &nbsp;←&nbsp; also: ingest apply, governance authoring</div></div>
+        <div class="arr">↓</div>
+        <div class="box" style="border-color:color-mix(in srgb,var(--domain) 50%,var(--line2))"><div class="t" style="color:var(--domain)">Neo4j graph</div><div class="d">9 materialized labels · DECOMPOSES_INTO + INFLUENCES · evidence ledger</div></div>
+        <div class="arr">↓</div>
+        <div class="split">
+          <div class="box"><div class="t">FastAPI + SSE</div><div class="d">→ React Flow canvas (app/kg-canvas)</div></div>
+          <div class="box"><div class="t">MCP server</div><div class="d">→ Claude agents · Claude Code CLI skills</div></div>
+        </div>
+      </div>
+
+      <h4>Where to look next</h4>
+      <table>
+        <tr><th>You want…</th><th>Go to</th></tr>
+        <tr><td>Node/edge property contract (every field)</td><td><code>docs/final-schema-claude.md</code></td></tr>
+        <tr><td>Quickstart + full rebuild runbook</td><td><code>README.md</code></td></tr>
+        <tr><td>Latest build report (counts, loops, leaves)</td><td><code>docs/graph-build-process.md</code></td></tr>
+        <tr><td>Metric identity / ML classification</td><td><code>docs/unique-metrics-and-ml-classification.md</code></td></tr>
+        <tr><td>knowledgeGraph integration</td><td><code>INTEGRATION-ANALYSIS-claude.md</code></td></tr>
+        <tr><td>Historical schema / skeleton design docs</td><td><code>docs/archive/</code></td></tr>
+      </table>
+    </div>
+  </section>
+
+  <footer>dc-kg · ThoughtWire Causal Knowledge Graph · architecture reference · companion to <span class="hl">ARCHITECTURE.md</span></footer>
+ </div>
+</main>
+</div>
+
+<script>
+const root=document.documentElement, tbtn=document.getElementById('theme');
+tbtn.onclick=()=>{const d=root.getAttribute('data-theme')==='dark';root.setAttribute('data-theme',d?'light':'dark');tbtn.textContent=(d?'☀':'☾')+' theme';};
+document.querySelectorAll('.sec-head').forEach(h=>h.addEventListener('click',()=>h.parentElement.classList.toggle('collapsed')));
+const allBtn=document.getElementById('toggleAll');
+allBtn.onclick=()=>{const secs=[...document.querySelectorAll('section')];const anyOpen=secs.some(s=>!s.classList.contains('collapsed'));secs.forEach(s=>s.classList.toggle('collapsed',anyOpen));allBtn.textContent=anyOpen?'expand all':'collapse all';};
+const links=[...document.querySelectorAll('#nav a')];
+const map=new Map(links.map(a=>[a.getAttribute('href').slice(1),a]));
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.classList.remove('active'));map.get(e.target.id)?.classList.add('active');}});},{rootMargin:'-12% 0px -78% 0px'});
+document.querySelectorAll('section').forEach(s=>obs.observe(s));
+</script>
+</body>
+</html>

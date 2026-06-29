@@ -8,6 +8,7 @@ import {
   type CanvasEvent,
   type CoveragePayload,
   type DashboardInfo,
+  type DashboardChartsPayload,
   type EdgeDiffPayload,
   type GraphEdge,
   type GraphNode,
@@ -85,17 +86,6 @@ export interface NodeSearchEntry {
   kind: string | null
 }
 
-/**
- * The metric-chart panel state: the payload returned by `shiftClickMetric` plus
- * a loading flag. `null` payload = no chart open (charts are hidden otherwise).
- */
-export interface MetricChartState {
-  metricUid: string
-  title: string
-  loading: boolean
-  payload: MetricChartPayload | null
-}
-
 const MAX_ACTIVITY = 200
 
 interface CanvasState {
@@ -146,9 +136,8 @@ interface CanvasState {
   /** Pinned inspector tab, or null = follow selection (auto). */
   sidebarTab: SidebarTab | null
   filtersOpen: boolean
-
-  // Shift-click metric chart panel (one canonical chart per chart_type).
-  metricChart: MetricChartState | null
+  /** Left governance drawer (Add Policy wizard); always-collapsed, persisted. */
+  governanceOpen: boolean
 
   loadGraph: () => Promise<void>
   loadDashboards: () => Promise<void>
@@ -202,14 +191,117 @@ interface CanvasState {
   setSidebarTab: (tab: SidebarTab | null) => void
   setFiltersOpen: (open: boolean) => void
   toggleFiltersOpen: () => void
+  setGovernanceOpen: (open: boolean) => void
+  toggleGovernance: () => void
 
-  // Shift-click charts: fetch + open the canonical chart for a Metric, or close.
-  shiftClickMetric: (nodeId: string) => Promise<void>
-  closeMetricChart: () => void
+  // Shift-click reveals (synthetic, client-only VIEW nodes/edges — never written
+  // to the graph, FR-CG-008):
+  //   • Metric    → its specific chart (RENDERED_BY), then selects it.
+  //   • Dashboard → all its charts (Chart -[SHOWN_ON]-> Dashboard) clustered.
+  //   • Product   → its dashboards (Dashboard -[PART_OF_PRODUCT]-> Product).
+  // Each no-ops for the wrong label.
+  revealMetricChart: (nodeId: string) => Promise<void>
+  revealDashboardCharts: (nodeId: string) => Promise<void>
+  revealProductDashboards: (nodeId: string) => void
+  /** Metric → reveal its Policy/Threshold governance (full-ego focus). */
+  revealMetricGovernance: (nodeId: string) => void
 }
 
 function ts(): string {
   return new Date().toLocaleTimeString()
+}
+
+// --- Synthetic VIEW-node builders (shift-click reveals) ---------------------
+// These build client-only nodes/edges (marked `synthetic`) that visualize the
+// chart layer without ever writing to the graph (FR-CG-008). Shared by the
+// metric→chart and dashboard→charts reveals.
+
+type Rec = Record<string, unknown>
+
+/** Build a synthetic Chart node from a chart-registry entry, merging metric-prop
+ *  fallbacks (used by the metric reveal) for identity/lineage fields. Keyed by
+ *  canonical_id so the same chart dedupes whether reached via a metric or a
+ *  dashboard. */
+function makeChartNode(
+  entry: Rec,
+  opts: {
+    fallback?: Rec
+    chartType?: string | null
+    chartId?: string | null
+    seriesEndpoint?: string | null
+    metricUid?: string | null
+  } = {},
+): GraphNode {
+  const fb = opts.fallback ?? {}
+  const canonicalId =
+    (entry.canonical_id as string | undefined) ??
+    (fb.canonical_id as string | undefined) ??
+    null
+  const chartId =
+    opts.chartId ??
+    (entry.chart_id as string | undefined) ??
+    (fb.chart_id as string | undefined) ??
+    null
+  const id = `chart::${canonicalId ?? chartId ?? opts.metricUid ?? String(entry.id ?? "chart")}`
+  const dashboardId = (entry.dashboard_id as string | undefined) ?? null
+  const props: Rec = {
+    ...entry,
+    chart_type:
+      opts.chartType ??
+      (entry.chart_type as string | undefined) ??
+      (fb.chart_type as string | undefined) ??
+      null,
+    chart_id: chartId,
+    canonical_id: canonicalId,
+    dashboard_id: dashboardId,
+    dashboard_ids: fb.dashboard_ids ?? (dashboardId ? [dashboardId] : null),
+    series_endpoint:
+      opts.seriesEndpoint ??
+      (entry.series_endpoint as string | undefined) ??
+      (fb.series_endpoint as string | undefined) ??
+      null,
+    metric_uid: opts.metricUid ?? (fb.metric_uid as string | undefined) ?? null,
+    metric_key:
+      (fb.metric_key as string | undefined) ??
+      (entry.metric_key as string | undefined) ??
+      null,
+    synthetic: true,
+  }
+  const title =
+    (entry.title as string | undefined) ||
+    (fb.display_name as string | undefined) ||
+    chartId ||
+    (opts.metricUid as string | undefined) ||
+    id
+  return { id, label: "Chart", title, provenance: "synthetic", props }
+}
+
+/** Build a synthetic (client-only) edge. */
+function makeSynthEdge(source: string, target: string, type: string): GraphEdge {
+  return {
+    id: `syn::${type}::${source}->${target}`,
+    source,
+    target,
+    type,
+    props: {},
+    status: "active",
+    source_kind: "synthetic",
+  }
+}
+
+/** Merge synthetic nodes/edges into the current arrays, de-duplicating by id
+ *  (nodes replace in place; edges are kept once). */
+function mergeSynthetic(
+  nodes: GraphNode[],
+  edges: GraphEdge[],
+  addNodes: GraphNode[],
+  addEdges: GraphEdge[],
+): { nodes: GraphNode[]; edges: GraphEdge[] } {
+  const nodeById = new Map(nodes.map((n) => [n.id, n]))
+  for (const n of addNodes) nodeById.set(n.id, n)
+  const edgeById = new Map(edges.map((e) => [e.id, e]))
+  for (const e of addEdges) if (!edgeById.has(e.id)) edgeById.set(e.id, e)
+  return { nodes: [...nodeById.values()], edges: [...edgeById.values()] }
 }
 
 export const useStore = create<CanvasState>()(
@@ -255,8 +347,8 @@ export const useStore = create<CanvasState>()(
   inspectorOpen: false,
   sidebarTab: null,
   filtersOpen: false,
+  governanceOpen: false,
 
-  metricChart: null,
 
   loadGraph: async () => {
     try {
@@ -658,7 +750,11 @@ export const useStore = create<CanvasState>()(
   // Derived selector: flatten loaded nodes into palette rows. Scope is read off
   // props.scope_key; kind off props.category (falling back to the node label).
   listNodesForSearch: () =>
-    get().nodes.map((n) => ({
+    // Skip client-only synthetic VIEW nodes (e.g. shift-click Chart nodes) — they
+    // are not real graph nodes and must not appear in the command palette.
+    get()
+      .nodes.filter((n) => !n.props?.synthetic)
+      .map((n) => ({
       id: n.id,
       label: n.title || n.id,
       scope: (n.props?.scope_key as string | undefined) ?? null,
@@ -673,31 +769,110 @@ export const useStore = create<CanvasState>()(
   setSidebarTab: (tab) => set({ sidebarTab: tab }),
   setFiltersOpen: (open) => set({ filtersOpen: open }),
   toggleFiltersOpen: () => set((state) => ({ filtersOpen: !state.filtersOpen })),
+  setGovernanceOpen: (open) => set({ governanceOpen: open }),
+  toggleGovernance: () => set((state) => ({ governanceOpen: !state.governanceOpen })),
 
   // --- Shift-click charts ---------------------------------------------------
-  // Fetch the canonical chart for a Metric node and open it in the chart panel.
-  // No-ops for non-metric nodes. Runs ALONGSIDE the existing shift-click focus
-  // (the canvas still calls setFocus); this only manages the chart payload.
-  shiftClickMetric: async (nodeId) => {
+  // Reveal a Metric's specific chart as a synthetic VIEW node + RENDERED_BY edge,
+  // then select it (the inspector's Node tab renders ChartDetail). No-ops for
+  // non-metric / chart-less nodes. Runs ALONGSIDE the canvas shift-click focus.
+  //
+  // The chart's properties are merged from the chart-registry slice
+  // (/api/metric-chart) AND the source metric's folded props, so the node carries
+  // the full chart + dashboard property set. It is client-only — marked
+  // `synthetic` and never persisted to the graph (FR-CG-008); it is rebuilt on
+  // demand and disappears on the next graph reload.
+  revealMetricChart: async (nodeId) => {
     const node = get().nodes.find((n) => n.id === nodeId)
     if (!node || node.label !== "Metric") return
-    const metricUid = (node.props?.metric_uid as string | undefined) ?? node.id
-    const title = node.title || node.id
-    set({ metricChart: { metricUid, title, loading: true, payload: null } })
+    const mp = (node.props ?? {}) as Rec
+    const metricUid = (mp.metric_uid as string | undefined) ?? node.id
+    let payload: MetricChartPayload
     try {
-      const payload = await api.metricChart(metricUid)
-      // Guard against a newer shift-click having superseded this fetch.
-      if (get().metricChart?.metricUid !== metricUid) return
-      set({ metricChart: { metricUid, title, loading: false, payload } })
+      payload = await api.metricChart(metricUid)
     } catch (err) {
-      if (get().metricChart?.metricUid === metricUid) {
-        set({ metricChart: { metricUid, title, loading: false, payload: null } })
-      }
       set({ error: err instanceof Error ? err.message : String(err) })
+      return
     }
+    if (!payload.found) return
+    const entry = (payload.registry_entry ?? {}) as Rec
+    const chartNode = makeChartNode(entry, {
+      fallback: mp,
+      chartType: payload.chart_type,
+      chartId: payload.chart_id,
+      seriesEndpoint: payload.series_endpoint,
+      metricUid,
+    })
+    const edge = makeSynthEdge(node.id, chartNode.id, "RENDERED_BY")
+    set((s) => ({
+      ...mergeSynthetic(s.nodes, s.edges, [chartNode], [edge]),
+      selectedNodeId: chartNode.id,
+      selectedEdgeId: null,
+    }))
   },
 
-  closeMetricChart: () => set({ metricChart: null }),
+  revealDashboardCharts: async (nodeId) => {
+    const node = get().nodes.find((n) => n.id === nodeId)
+    if (!node || node.label !== "Dashboard") return
+    let payload: DashboardChartsPayload
+    try {
+      payload = await api.dashboardCharts(node.id)
+    } catch (err) {
+      set({ error: err instanceof Error ? err.message : String(err) })
+      return
+    }
+    const entries = payload.charts ?? []
+    if (entries.length === 0) return
+    const chartNodes = entries.map((e) => makeChartNode(e as Rec))
+    // Chart -[SHOWN_ON]-> Dashboard (reuses the existing themed relation).
+    const edges = chartNodes.map((cn) => makeSynthEdge(cn.id, node.id, "SHOWN_ON"))
+    set((s) => mergeSynthetic(s.nodes, s.edges, chartNodes, edges))
+  },
+
+  revealProductDashboards: (nodeId) => {
+    const node = get().nodes.find((n) => n.id === nodeId)
+    if (!node || node.label !== "IntelligenceProduct") return
+    const dashboards = get().nodes.filter(
+      (n) => n.label === "Dashboard" && String(n.props?.product_id ?? "") === node.id,
+    )
+    if (dashboards.length === 0) return
+    // Dashboard -[PART_OF_PRODUCT]-> Product synthetic edges so the focus ring
+    // pulls the product's dashboards in (no real Dashboard→Product edge exists).
+    const edges = dashboards.map((d) => makeSynthEdge(d.id, node.id, "PART_OF_PRODUCT"))
+    set((s) => mergeSynthetic(s.nodes, s.edges, [], edges))
+  },
+
+  revealMetricGovernance: (nodeId) => {
+    const { nodes, edges } = get()
+    const node = nodes.find((n) => n.id === nodeId)
+    if (!node || node.label !== "Metric") return
+    // The governance subgraph centers cleanly on the metric's Threshold node: a
+    // Threshold has no causal links, so focusing it lands on the full-ego ring —
+    // the Metric (via HAS_THRESHOLD) and every Policy (via ENFORCES_THRESHOLD),
+    // plus the GOVERNS edge between them. Focusing the *metric* instead would
+    // fail here: rankedNeighbors ranks DECOMPOSES_INTO (spine tier) above the
+    // governance edges (structural tier), so causal neighbors fill the ring cap
+    // and crowd the policy/threshold out. Fall back to a Policy if there is no
+    // threshold. Force "all" mode so the ego branch is taken regardless.
+    let anchor: string | undefined
+    for (const e of edges) {
+      if (e.type === "HAS_THRESHOLD" && e.source === nodeId) {
+        anchor = e.target
+        break
+      }
+    }
+    if (!anchor) {
+      for (const e of edges) {
+        if (e.type === "GOVERNS" && e.target === nodeId) {
+          anchor = e.source
+          break
+        }
+      }
+    }
+    if (!anchor) return
+    get().setFocus(anchor)
+    set({ selectedNodeId: anchor, selectedEdgeId: null, focusMode: "all", growKind: null })
+  },
     }),
     {
       name: "kg-canvas-state",
@@ -713,6 +888,7 @@ export const useStore = create<CanvasState>()(
         inspectorOpen: state.inspectorOpen,
         sidebarTab: state.sidebarTab,
         filtersOpen: state.filtersOpen,
+        governanceOpen: state.governanceOpen,
         traverseMinConfidence: state.traverseMinConfidence,
       }),
     }

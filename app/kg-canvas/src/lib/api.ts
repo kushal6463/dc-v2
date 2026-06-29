@@ -4,7 +4,9 @@
 // FastAPI backend at http://127.0.0.1:8000). The shapes here mirror the pinned
 // API contract exactly.
 
-export type Provenance = "deterministic" | "agent" | "human"
+// "synthetic" tags client-only VIEW nodes/edges (e.g. the shift-click Chart node)
+// that are never persisted to the graph — see store.revealMetricChart (FR-CG-008).
+export type Provenance = "deterministic" | "agent" | "human" | "synthetic"
 
 export interface GraphNode {
   id: string
@@ -275,6 +277,98 @@ export interface MetricChartPayload {
   series_endpoint: string | null
 }
 
+// All chart-registry entries for one dashboard (the shift-click-a-Dashboard
+// reveal). Each entry carries chart_id / canonical_id / chart_type / formula /
+// narrative; metric-less composite charts appear here too.
+export interface DashboardChartsPayload {
+  dashboard_id: string
+  count: number
+  charts: ChartRegistryEntry[]
+}
+
+// ---------------------------------------------------------------------------
+// Governance — Policy & Threshold authoring (left-drawer wizard).
+//
+// POST /api/governance writes a Policy node + a Threshold node + the 3 governance
+// edges against a metric. POST /api/governance/extract LLM-parses pasted/uploaded
+// text into a draft {policy, threshold} to PREFILL the wizard (it does not write).
+// Drafts are loose field maps mirroring the Pydantic Policy/Threshold fields;
+// unknown keys are dropped server-side, so the client stays forward-compatible.
+// ---------------------------------------------------------------------------
+
+/** Draft Policy fields the wizard collects / the extractor returns. */
+export interface PolicyDraft {
+  policy_name?: string
+  description?: string
+  policy_type?: string
+  condition_type?: string
+  condition_operator?: string
+  condition_value?: number
+  condition_value_high?: number
+  evaluation_window?: string
+  severity?: string
+  approval_required?: boolean
+}
+
+/** Draft Threshold fields: static bands + percentile distribution + industry. */
+export interface ThresholdDraft {
+  threshold_type?: string
+  operator?: string
+  direction?: string
+  unit?: string
+  severity?: string
+  warning_value_num?: number
+  critical_value_num?: number
+  target_value_num?: number
+  p95_val?: number
+  p85_val?: number
+  p75_val?: number
+  p50_val?: number
+  percentile_basis?: string
+  industry_standard_val?: number
+  industry_min_val?: number
+  industry_max_val?: number
+  industry_source?: string
+  industry_as_of?: string
+  current_val?: number
+  current_as_of?: string
+  explanation?: string
+}
+
+/** Request body for POST /api/governance.
+ *
+ * A metric may carry several policies (alerting / budget / SLA …) via `policies`,
+ * all enforcing the one shared `threshold`. The singular `policy`/`policy_id` are
+ * still accepted for back-compat. */
+export interface GovernanceBody {
+  metric_uid: string
+  policy_id?: string
+  threshold_id?: string
+  policy?: PolicyDraft
+  policies?: PolicyDraft[]
+  threshold: ThresholdDraft
+}
+
+/** Result of POST /api/governance. */
+export interface GovernanceResult {
+  status: string
+  metric_uid: string
+  /** First policy, kept for back-compat; `policies` is the full list. */
+  policy: { status: string; key: string }
+  policies: { status: string; key: string }[]
+  threshold: { status: string; key: string }
+  edges: { rel_type: string; status: string }[]
+  warning: string | null
+}
+
+/** Draft returned by POST /api/governance/extract (prefills the wizard). */
+export interface GovernanceDraft {
+  policy: PolicyDraft
+  threshold: ThresholdDraft
+  /** Set when extraction failed; the wizard shows it and prefills nothing. */
+  error?: string
+}
+
 // ---------------------------------------------------------------------------
 // SSE event shape
 // ---------------------------------------------------------------------------
@@ -365,6 +459,10 @@ export const api = {
     getJSON<MetricChartPayload>(
       `/metric-chart?metric_uid=${encodeURIComponent(metricUid)}`
     ),
+  dashboardCharts: (dashboardId: string) =>
+    getJSON<DashboardChartsPayload>(
+      `/dashboard-charts?dashboard_id=${encodeURIComponent(dashboardId)}`
+    ),
   dashboards: () =>
     getJSON<{ dashboards: DashboardInfo[] }>("/dashboards"),
   proposals: (runId?: string) =>
@@ -394,6 +492,14 @@ export const api = {
   // button, so there is intentionally no api.runCausal client.
   apply: (runId: string) =>
     postJSON<Record<string, unknown>>("/apply", { run_id: runId }),
+  // Governance authoring (left-drawer wizard).
+  createGovernance: (body: GovernanceBody) =>
+    postJSON<GovernanceResult>("/governance", body),
+  extractGovernance: (body: {
+    text: string
+    metric_uid?: string
+    metric_name?: string
+  }) => postJSON<GovernanceDraft>("/governance/extract", body),
 }
 
 // ---------------------------------------------------------------------------

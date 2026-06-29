@@ -51,7 +51,7 @@ from typing import Any
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 from starlette.requests import Request
 
 from harness.agent import engine
@@ -60,9 +60,10 @@ from harness.api.sse import event_stream
 from harness.ingest import apply as apply_mod
 from harness.ingest.prepass import all_dashboard_ids, run_prepass
 from harness.ingest.run_subprocess import EVENT_PREFIX
+from harness.kg.arbitration import upsert_edge, write_node_model
 from harness.kg.config import REPO_ROOT
 from harness.kg.driver import GraphDB, get_db
-from harness.kg.models import EDGE_ROLES, NODE_KEY_FIELDS, NODE_LABELS
+from harness.kg.models import EDGE_ROLES, NODE_KEY_FIELDS, NODE_LABELS, Policy, Threshold
 from harness.store.proposals import (
     approve_all_pending,
     latest_run_id,
@@ -314,6 +315,11 @@ def _artifact_path(name: str) -> Path:
 #: ``lookup_metric_notes`` tools read.
 _CHART_REGISTRY_PATH: Path = REPO_ROOT / "docs" / "frd-docs" / "chart-registry.json"
 
+#: canonical_id -> {chart_type, …}. The registry itself carries no chart_type;
+#: this map (built by the ingestion prepass) supplies the visualization type so
+#: dashboard-revealed charts render the right glyph instead of all defaulting KPI.
+_CHART_TYPE_MAP_PATH: Path = REPO_ROOT / "data" / "chart_type_map.json"
+
 
 #: Source kinds that mark a node as agent-authored (for provenance derivation).
 _AGENT_SOURCE_KINDS = frozenset({"llm_proposal", "statistical_proposal"})
@@ -420,6 +426,42 @@ class CausalBody(BaseModel):
     #: clean-process handshake); the API runs the deterministic stages only.
     use_llm: bool = False
     auto_approve: bool = False
+
+
+class GovernanceBody(BaseModel):
+    """Body for ``POST /api/governance`` — author a Policy + Threshold on a metric.
+
+    Writes one or more ``Policy`` nodes, a single shared ``Threshold`` node, and
+    the governance edges (``Policy -GOVERNS-> Metric``,
+    ``Metric -HAS_THRESHOLD-> Threshold``, and ``Policy -ENFORCES_THRESHOLD->
+    Threshold`` per policy) through the single arbitration writer.
+    ``policy``/``threshold`` are field maps validated against the Pydantic models
+    (unknown keys are dropped). A metric may carry several policies (alerting /
+    budget / SLA …) via ``policies``; all enforce the one shared Threshold.
+    The singular ``policy``/``policy_id`` remain accepted for back-compat. Ids are
+    derived from ``metric_uid`` (and the policy name) when omitted.
+    """
+
+    metric_uid: str
+    policy_id: str | None = None
+    threshold_id: str | None = None
+    policy: dict[str, Any] = Field(default_factory=dict)
+    policies: list[dict[str, Any]] | None = None
+    threshold: dict[str, Any] = Field(default_factory=dict)
+
+    def resolved_policies(self) -> list[dict[str, Any]]:
+        """The policies to write: the ``policies`` list, else the singular ``policy``."""
+        if self.policies:
+            return self.policies
+        return [self.policy]
+
+
+class ExtractBody(BaseModel):
+    """Body for ``POST /api/governance/extract`` — LLM-parse a doc into draft fields."""
+
+    text: str
+    metric_uid: str | None = None
+    metric_name: str | None = None
 
 
 # ---------------------------------------------------------------------------
@@ -555,7 +597,8 @@ def graph(limit: int = 2000, include_deprecated: bool = False) -> dict[str, Any]
 
 
 # ---------------------------------------------------------------------------
-# Skeleton artifacts (coverage + edge diff)
+# Coverage (computed LIVE from the graph) + edge diff (still reads the
+# data/skeleton/ artifact for proposal-run comparison)
 # ---------------------------------------------------------------------------
 
 
@@ -934,6 +977,46 @@ def metric_chart(metric_uid: str) -> dict[str, Any]:
     }
 
 
+@app.get("/api/dashboard-charts")
+def dashboard_charts(dashboard_id: str) -> dict[str, Any]:
+    """Return every chart-registry entry for one dashboard (read-only slice).
+
+    Backs the canvas "shift-click a Dashboard → cluster its charts" reveal: a slice
+    of ``docs/frd-docs/chart-registry.json`` filtered by ``dashboard_id`` — never a
+    graph write. Each entry already carries ``chart_id`` / ``canonical_id`` /
+    ``chart_type`` / ``formula`` / ``how_to_read`` / ``decisions_answered`` /
+    ``narration_text`` / ``metric_key`` (so metric-less composite charts surface
+    here too). A missing / unreadable registry file yields an empty list.
+
+    Args:
+        dashboard_id: The ``Dashboard.dashboard_id`` (registry ``dashboard_id``).
+
+    Returns:
+        ``{dashboard_id, count, charts}`` — ``charts`` sorted by chart id.
+    """
+    try:
+        registry = json.loads(_CHART_REGISTRY_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        registry = {}
+    try:
+        type_map = json.loads(_CHART_TYPE_MAP_PATH.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        type_map = {}
+    charts: list[dict[str, Any]] = []
+    if isinstance(registry, dict):
+        for entry in registry.values():
+            if not (isinstance(entry, dict) and str(entry.get("dashboard_id")) == dashboard_id):
+                continue
+            # Attach the visualization type (registry entries carry none).
+            if not entry.get("chart_type"):
+                mapped = type_map.get(str(entry.get("canonical_id"))) if isinstance(type_map, dict) else None
+                if isinstance(mapped, dict) and mapped.get("chart_type"):
+                    entry = {**entry, "chart_type": mapped["chart_type"]}
+            charts.append(entry)
+    charts.sort(key=lambda e: str(e.get("chart_id") or e.get("canonical_id") or ""))
+    return {"dashboard_id": dashboard_id, "count": len(charts), "charts": charts}
+
+
 @app.get("/api/dashboards")
 def dashboards() -> dict[str, list[dict[str, Any]]]:
     """List every dashboard with its prepass counts and whether it is ingested."""
@@ -1156,6 +1239,184 @@ async def apply_run(body: ApplyBody) -> dict[str, Any]:
         apply_mod.apply_approved, get_db(), body.run_id, emit=bus.emit
     )
     return summary
+
+
+# ---------------------------------------------------------------------------
+# Governance — Policy & Threshold authoring
+# ---------------------------------------------------------------------------
+
+#: Stdout marker the extract subprocess prints its one JSON result line with.
+_EXTRACT_PREFIX = "KGEXTRACT:"
+
+
+def _slug(text: str | None, *, fallback: str = "policy") -> str:
+    """Lower-snake a label into an id-safe slug (``fallback`` when empty)."""
+    out = re.sub(r"[^a-z0-9]+", "_", (text or "").lower()).strip("_")
+    return out or fallback
+
+
+def _governance_fields(
+    model_cls: type[BaseModel], data: dict[str, Any] | None
+) -> dict[str, Any]:
+    """Keep only known, non-empty model fields from a loose request map."""
+    allowed = set(model_cls.model_fields)
+    return {
+        k: v
+        for k, v in (data or {}).items()
+        if k in allowed and v is not None and v != ""
+    }
+
+
+def _write_governance(body: GovernanceBody) -> dict[str, Any]:
+    """Write the Policy node(s) + shared Threshold and the governance edges (idempotent).
+
+    A metric may carry several policies, all enforcing one shared Threshold:
+    one ``HAS_THRESHOLD`` edge per metric, plus ``GOVERNS`` + ``ENFORCES_THRESHOLD``
+    per policy. Runs off the event loop (blocking Neo4j writes). The metric need
+    not exist: nodes are still written and any edge to an absent metric returns
+    ``missing_endpoint`` (surfaced as a ``warning``), never a crash.
+    """
+    db = get_db()
+    metric_uid = body.metric_uid
+    tid = body.threshold_id or f"threshold:{metric_uid}:bands"
+
+    tfields = _governance_fields(Threshold, body.threshold)
+    tfields.update(
+        threshold_id=tid,
+        metric_id=metric_uid,
+        population_status=tfields.get("population_status", "populated"),
+    )
+    t_res = write_node_model(db, Threshold(**tfields))
+
+    # One HAS_THRESHOLD per metric; GOVERNS + ENFORCES_THRESHOLD per policy.
+    edges: list[dict[str, Any]] = []
+    triples: list[tuple[str, str, str, str, str]] = [
+        ("HAS_THRESHOLD", "Metric", metric_uid, "Threshold", tid),
+    ]
+
+    resolved = body.resolved_policies()
+    single = len(resolved) == 1  # only then may the caller pin policy_id explicitly
+    policy_results: list[dict[str, Any]] = []
+    for policy in resolved:
+        pid = (
+            body.policy_id
+            if single and body.policy_id
+            else f"policy:{metric_uid}:{_slug(policy.get('policy_name'))}"
+        )
+        pfields = _governance_fields(Policy, policy)
+        pfields.update(
+            policy_id=pid,
+            applies_to_kind=pfields.get("applies_to_kind", "Metric"),
+            metric_id=metric_uid,
+            population_status=pfields.get("population_status", "populated"),
+        )
+        p_res = write_node_model(db, Policy(**pfields))
+        bus.emit("node_written", label="Policy", key=pid)
+        policy_results.append({"status": p_res["status"], "key": pid})
+        triples.append(("GOVERNS", "Policy", pid, "Metric", metric_uid))
+        triples.append(("ENFORCES_THRESHOLD", "Policy", pid, "Threshold", tid))
+
+    for rel_type, fl, fk, tl, tk in triples:
+        res = upsert_edge(
+            db,
+            rel_type=rel_type,
+            from_label=fl,
+            from_key=fk,
+            to_label=tl,
+            to_key=tk,
+            props={"source_kind": "governance_ui"},
+        )
+        edges.append({"rel_type": rel_type, "status": res.get("status")})
+
+    bus.emit("node_written", label="Threshold", key=tid)
+
+    missing = [e["rel_type"] for e in edges if e["status"] == "missing_endpoint"]
+    warning = (
+        f"metric {metric_uid!r} not found; edges not drawn: {', '.join(missing)}"
+        if missing
+        else None
+    )
+    return {
+        "status": "ok",
+        "metric_uid": metric_uid,
+        # ``policy`` (first) kept for back-compat; ``policies`` is the full list.
+        "policy": policy_results[0],
+        "policies": policy_results,
+        "threshold": {"status": t_res["status"], "key": tid},
+        "edges": edges,
+        "warning": warning,
+    }
+
+
+@app.post("/api/governance")
+async def create_governance(body: GovernanceBody) -> dict[str, Any]:
+    """Author a Policy + Threshold against a metric (nodes + 3 edges, idempotent)."""
+    try:
+        return await asyncio.to_thread(_write_governance, body)
+    except (ValueError, ValidationError) as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+def _run_governance_extract(request_json: str, *, timeout: float = 60.0) -> dict[str, Any]:
+    """Spawn the LLM extract subprocess (clean env) and return its draft fields.
+
+    The agent SDK's bundled ``claude`` only completes its stdin handshake from a
+    clean main-thread ``asyncio.run`` in its own process — driven in-process under
+    uvicorn it hangs forever (same constraint that retired ``/api/run-causal``).
+    So we spawn ``uv run python -m harness.governance.extract_subprocess``, feed
+    the request JSON on stdin, and read its single ``KGEXTRACT:`` result line.
+    Runs inside :func:`asyncio.to_thread` so the blocking pipe I/O never touches
+    the event loop.
+    """
+    uv = shutil.which("uv") or "uv"
+    cmd = [uv, "run", "python", "-m", "harness.governance.extract_subprocess"]
+    # Strip the Claude-Code nesting env for the whole child chain (preserving any
+    # real auth token) — otherwise the bundled agent tries to attach to this
+    # parent session and hangs. Mirrors `_spawn_and_stream`.
+    _keep = ("TOKEN", "OAUTH", "API", "KEY")
+    child_env = {
+        k: v
+        for k, v in os.environ.items()
+        if not (
+            k in ("CLAUDECODE", "CLAUDE_EFFORT")
+            or (k.startswith("CLAUDE_CODE_") and not any(s in k for s in _keep))
+        )
+    }
+    proc = subprocess.Popen(  # noqa: S603 — fixed argv, no shell
+        cmd,
+        cwd=str(REPO_ROOT),
+        env=child_env,
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True,
+        start_new_session=True,
+    )
+    try:
+        out, err = proc.communicate(input=request_json, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        raise HTTPException(status_code=504, detail="extraction timed out") from None
+    for line in out.splitlines():
+        if line.startswith(_EXTRACT_PREFIX):
+            return json.loads(line[len(_EXTRACT_PREFIX) :])
+    raise HTTPException(
+        status_code=502,
+        detail=f"extraction failed (rc={proc.returncode}): {err[-500:]}",
+    )
+
+
+@app.post("/api/governance/extract")
+async def extract_governance(body: ExtractBody) -> dict[str, Any]:
+    """LLM-parse pasted/uploaded text into draft ``{policy, threshold}`` fields.
+
+    The draft is returned for the wizard to prefill — it is **not** written. The
+    user reviews/edits, then ``POST /api/governance`` performs the write.
+    """
+    if not body.text.strip():
+        raise HTTPException(status_code=400, detail="text is required")
+    request_json = body.model_dump_json()
+    return await asyncio.to_thread(_run_governance_extract, request_json)
 
 
 @app.post("/api/run-causal")

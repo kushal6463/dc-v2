@@ -24,6 +24,11 @@ export const LABEL_STYLE: Record<string, LabelStyle> = {
   Metric: { color: "#7ee081", glyph: "◔", label: "Metric" },
   Dashboard: { color: "#f0a868", glyph: "▥", label: "Dashboard" },
   UIComponent: { color: "#9aa7ff", glyph: "⬚", label: "Component" },
+  Policy: { color: "#ef6f6f", glyph: "§", label: "Policy" },
+  Threshold: { color: "#d9a83b", glyph: "⌁", label: "Threshold" },
+  // Client-only VIEW node: the specific chart revealed by shift-clicking a Metric
+  // (a chart INSTANCE, distinct from the generalised UIComponent chart-TYPE).
+  Chart: { color: "#5fb0d9", glyph: "▦", label: "Chart" },
 }
 
 export const DEFAULT_LABEL_STYLE: LabelStyle = {
@@ -82,6 +87,7 @@ export const PROVENANCE_COLORS: Record<Provenance, string> = {
   deterministic: "#3b82f6",
   agent: "#a855f7",
   human: "#22c55e",
+  synthetic: "#8d99ad",
 }
 
 export function provenanceColor(p?: string | null): string {
@@ -449,6 +455,11 @@ const EDGE_MAP: Record<string, EdgeVisual> = {
   HAS_METRIC: { color: "#7ee081", tier: "structural", label: "has metric" },
   USES_PLATFORM: { color: "#6ea8ff", tier: "structural", label: "uses platform" },
   INFLUENCES: { color: INFLUENCES_COLOR, tier: "lateral", label: "influences" },
+  // Governance edges (Policy/Threshold authoring).
+  GOVERNS: { color: "#ef6f6f", tier: "structural", label: "governed by" },
+  HAS_THRESHOLD: { color: "#d9a83b", tier: "structural", label: "measured against" },
+  ENFORCES_THRESHOLD: { color: "#e0863b", tier: "structural", label: "enforces" },
+  GOVERNED_BY: { color: "#ef6f6f", tier: "lateral", label: "governed by" },
 }
 
 export function edgeVisual(type: string): EdgeVisual {

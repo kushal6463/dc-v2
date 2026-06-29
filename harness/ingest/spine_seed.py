@@ -4,9 +4,12 @@ Seeds the reusable, client-portable backbone the LLM build attaches metrics to:
 the single :class:`~harness.kg.models.Business` root, the
 :class:`~harness.kg.models.Domain` functional columns, the
 :class:`~harness.kg.models.IntelligenceProduct` IQ apps, and the
-:class:`~harness.kg.models.Platform` source/action vendors. The spine is seeded
-**deterministically first** (this script) so the per-metric LLM job only has to
-create each metric node and wire it onto an already-present spine.
+:class:`~harness.kg.models.Platform` source/action vendors. It also draws the
+**Business root edges** (``HAS_DOMAIN`` / ``HAS_PRODUCT`` / ``USES_PLATFORM``) and
+the platform ``PARENT_OF`` hierarchy, so the tri-axis spine is fully rooted (not a
+set of disconnected islands). The spine is seeded **deterministically first**
+(this script) so the per-metric LLM job only has to create each metric node and
+wire it onto an already-present, already-rooted spine.
 
 Sources are two LOCAL seed files (never BC_2): ``harness/seed/spine_seed.json``
 (``business`` + ``domains[]`` + ``products[]``) and
@@ -108,6 +111,29 @@ def seed_spine(*, dry_run: bool = False) -> list[dict[str, Any]]:
     created = sum(1 for r in results if r.get("status") == "created")
     updated = sum(1 for r in results if r.get("status") == "updated")
 
+    # Business ROOT edges: connect the single Business node to every Domain
+    # (HAS_DOMAIN), IntelligenceProduct (HAS_PRODUCT), and Platform
+    # (USES_PLATFORM) so the tri-axis spine is actually ROOTED. Without these the
+    # Business node is an island and the canvas spine is disconnected. Idempotent
+    # (MERGE on the edge); mirrors ``kg bootstrap-spine``.
+    business = built[0]  # build_models() always emits the Business root first
+    _ROOT_REL = {
+        "Domain": "HAS_DOMAIN",
+        "IntelligenceProduct": "HAS_PRODUCT",
+        "Platform": "USES_PLATFORM",
+    }
+    root_edges = 0
+    for model in built[1:]:
+        rel = _ROOT_REL.get(model.LABEL)
+        if rel is None:
+            continue
+        upsert_edge(
+            db, rel_type=rel, from_label="Business", from_key=business.key_value,
+            to_label=model.LABEL, to_key=model.key_value,
+            props={"source_kind": "spine_seed"},
+        )
+        root_edges += 1
+
     # Platform hierarchy: draw PARENT_OF for every sub-platform that names a
     # parent (e.g. google_youtube -> google_ads), so a rebuild recreates the
     # google/meta sub-channel tree. Idempotent (MERGE on the edge).
@@ -124,7 +150,8 @@ def seed_spine(*, dry_run: bool = False) -> list[dict[str, Any]]:
             parent_edges += 1
     print(
         f"seeded {len(results)} spine nodes ({created} created, {updated} updated)"
-        f"; drew {parent_edges} platform PARENT_OF edges"
+        f"; drew {root_edges} Business root edges "
+        f"(HAS_DOMAIN/HAS_PRODUCT/USES_PLATFORM) + {parent_edges} platform PARENT_OF edges"
     )
     return results
 

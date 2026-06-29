@@ -38,7 +38,8 @@ Agentic build:
 * ``build`` — construct the metric/edge layer with the LLM agentic builder
   (:mod:`harness.agentic`). The deterministic skeleton / causal / edge-seed
   construction is gone; an LLM reads every metric and builds nodes + edges
-  itself (currently a stub pending the agentic engine).
+  itself through the ``mcp__graph__*`` write tools (4 phases: nodes → structural
+  → causal → critique).
 
 Every write flows through :mod:`harness.kg.arbitration`; the CLI never touches
 the driver for mutations directly. Database subcommands fail with a friendly
@@ -1120,6 +1121,26 @@ def cmd_enrich(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_seed_governance(args: argparse.Namespace) -> int:
+    """Seed the Google-Ads governance demo (Policy + Threshold per KPI).
+
+    Writes a Policy + Threshold for each of ROAS / CPA / CTR / CPC / conversion
+    rate and wires them to the metric (GOVERNS / HAS_THRESHOLD /
+    ENFORCES_THRESHOLD). The three KPIs not yet in the graph (CTR / CPC /
+    conversion rate) are created first, with DECOMPOSES_INTO formula edges to
+    their components. Idempotent (MERGE on identity); back up first with
+    ``python -m harness.store.backup export`` if desired.
+
+    Returns:
+        Process exit code (0 on success).
+    """
+    from harness.seed.governance_seed import seed_governance
+
+    summary = seed_governance(dry_run=bool(getattr(args, "dry_run", False)))
+    print("seed-governance:", json.dumps(summary, default=str))
+    return 0
+
+
 # ---------------------------------------------------------------------------
 # Argument parser
 # ---------------------------------------------------------------------------
@@ -1351,6 +1372,19 @@ def build_parser() -> argparse.ArgumentParser:
     p_enrich.add_argument("--no-migrate", action="store_true",
                           help="Skip the evidence-ledger migration.")
     p_enrich.set_defaults(func=cmd_enrich)
+
+    p_seed_gov = subparsers.add_parser(
+        "seed-governance",
+        help="Seed the Google-Ads governance demo: a Policy + Threshold per KPI "
+        "(ROAS/CPA/CTR/CPC/conversion-rate) wired by GOVERNS / HAS_THRESHOLD / "
+        "ENFORCES_THRESHOLD. Creates the 3 missing KPI metrics first. Idempotent.",
+    )
+    p_seed_gov.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Build + validate + print the models without writing to the DB.",
+    )
+    p_seed_gov.set_defaults(func=cmd_seed_governance)
 
     p_migrate = subparsers.add_parser(
         "migrate-metric-edges",

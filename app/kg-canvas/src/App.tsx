@@ -5,7 +5,7 @@ import { ActivityFeed } from "@/components/ActivityFeed"
 import { CanvasView } from "@/components/CanvasView"
 import { CommandSearch } from "@/components/CommandSearch"
 import { EdgeDiffReview } from "@/components/EdgeDiffReview"
-import { MetricChartPanel } from "@/components/MetricChartPanel"
+import { GovernancePanel } from "@/components/governance/GovernancePanel"
 import { NodeDetail } from "@/components/NodeDetail"
 import { ProgressBar } from "@/components/ProgressBar"
 import { ReviewQueue } from "@/components/ReviewQueue"
@@ -206,6 +206,7 @@ export function App() {
   // while an edge is selected, "detail" while a node is selected, else "activity".
   const inspectorOpen = useStore((s) => s.inspectorOpen)
   const setInspectorOpen = useStore((s) => s.setInspectorOpen)
+  const governanceOpen = useStore((s) => s.governanceOpen)
   const sidebarTab = useStore((s) => s.sidebarTab)
   const setSidebarTab = useStore((s) => s.setSidebarTab)
   const tab: SidebarTab =
@@ -289,9 +290,14 @@ export function App() {
           <CanvasView />
         </div>
 
-        {/* Shift-click metric chart panel — floats over the canvas, left of the
-            inspector. Hidden unless a metric chart has been opened. */}
-        <MetricChartPanel inspectorOpen={inspectorOpen} />
+        {/* Left governance drawer — always-collapsed; opened from the toolbar
+            ShieldPlus icon. Overlays the canvas (absolute) so there's no layout
+            shift, exactly like the right inspector. */}
+        {governanceOpen && (
+          <aside className="absolute inset-y-0 left-0 z-20 flex w-[min(440px,94vw)] flex-col border-r border-border bg-background shadow-xl isolate">
+            <GovernancePanel />
+          </aside>
+        )}
 
         {inspectorOpen && (
           <aside className="absolute inset-y-0 right-0 z-20 flex w-[min(420px,92vw)] flex-col border-l border-border bg-background shadow-xl isolate">

@@ -63,6 +63,8 @@ export interface FlowNodeData extends Record<string, unknown> {
   leaf?: boolean
   /** On a feedback loop in the current view — gets a solid ring. */
   loop?: boolean
+  /** Metric carries a Policy/Threshold (governance) — gets a § badge. */
+  governed?: boolean
 }
 
 export type FlowNode = Node<FlowNodeData>
@@ -293,6 +295,28 @@ const SHAPING_RELS = new Set([
   "USES_PLATFORM",
 ])
 
+// Relations stored one way but read more naturally the other way. GOVERNS is
+// persisted Policy→Metric; we render it Metric→Policy so it reads "Metric
+// governed by Policy" (matching the EDGE_MAP label). Render-only — the stored
+// edge direction and layout are untouched; we just swap the drawn endpoints so
+// the arrowhead and label agree.
+const INVERT_RENDER_RELS = new Set(["GOVERNS"])
+
+/**
+ * Metric ids that carry governance — i.e. have a Threshold (``HAS_THRESHOLD``
+ * out of the metric) or a Policy (``GOVERNS`` into the metric). Drives the node
+ * badge and the shift-click governance reveal. Mirrors the adjacency style used
+ * elsewhere; cheap to recompute from the edge list.
+ */
+export function governedMetricIds(edges: GraphEdge[]): Set<string> {
+  const out = new Set<string>()
+  for (const e of edges) {
+    if (e.type === "HAS_THRESHOLD") out.add(e.source)
+    else if (e.type === "GOVERNS") out.add(e.target)
+  }
+  return out
+}
+
 /**
  * SPINE overview — every metric clustered UNDER its primary Domain, with
  * Business → Domain → metric actually drawn.
@@ -411,6 +435,102 @@ function spineGroupedLayout(
   return { pos, members, drawEdges }
 }
 
+/** A dashboard is a curated "main" surface (shown at the top level of the
+ *  Dashboards view) when it is an executive/review summary OR a channel overview.
+ *  Everything else (operational sub-views, ml-* dashboards) is reachable by
+ *  drilling into its Product. */
+export function isMainDashboard(n: GraphNode): boolean {
+  const t = String((n.props as Record<string, unknown> | undefined)?.dashboard_type ?? "")
+  return t === "executive" || t === "review" || n.id.endsWith("-overview")
+}
+
+/**
+ * DASHBOARDS overview — the curated-main Dashboard nodes clustered under their
+ * Product (the existing IntelligenceProduct node is the cluster header; grouping
+ * is by the Dashboard's `product_id` prop, since no Dashboard→Product edge
+ * exists). Dashboards have no edges among themselves, so each product block is a
+ * simple packed grid of its mains. Non-main dashboards are omitted here — they
+ * appear when a Product is shift-clicked (revealProductDashboards). A layout-only
+ * Dashboard→Product membership edge is drawn per cluster for legibility.
+ */
+function dashboardGroupedLayout(sorted: GraphNode[]): {
+  pos: Record<string, XY>
+  members: Set<string>
+  drawEdges: GraphEdge[]
+} {
+  const mains = sorted.filter((n) => n.label === "Dashboard" && isMainDashboard(n))
+  const productById = new Map(
+    sorted.filter((n) => n.label === "IntelligenceProduct").map((n) => [n.id, n] as const),
+  )
+  const productOf = (d: GraphNode): string =>
+    String((d.props as Record<string, unknown> | undefined)?.product_id ?? "__none__")
+
+  const groups = new Map<string, string[]>()
+  for (const d of mains) {
+    const key = productOf(d)
+    const arr = groups.get(key)
+    if (arr) arr.push(d.id)
+    else groups.set(key, [d.id])
+  }
+
+  type Block = { key: string; bpos: Record<string, XY>; w: number; h: number }
+  const blocks: Block[] = []
+  for (const key of [...groups.keys()].sort((a, b) => a.localeCompare(b))) {
+    const ids = groups.get(key)!.sort((a, b) => a.localeCompare(b))
+    const t = packedTree(ids, [], layoutSize, { rankdir: "TB" }) // no intra edges → grid
+    blocks.push({ key, bpos: t.pos, w: Math.max(t.width, NODE_WIDTH), h: t.height })
+  }
+
+  const HEADER = NODE_HEIGHT + 70 // room for the Product header above each block
+  const GAPX = 150
+  const GAPY = 180
+  const sumArea = blocks.reduce((a, b) => a + b.w * (b.h + HEADER), 0)
+  const maxRow = Math.max(
+    blocks.reduce((m, b) => Math.max(m, b.w), 0),
+    Math.sqrt(sumArea) * 1.4,
+  )
+
+  const pos: Record<string, XY> = {}
+  const members = new Set<string>()
+  let cursorX = 0
+  let shelfY = 0
+  let shelfH = 0
+  for (const b of blocks) {
+    if (cursorX > 0 && cursorX + b.w > maxRow) {
+      shelfY += shelfH + HEADER + GAPY
+      cursorX = 0
+      shelfH = 0
+    }
+    const prod = productById.get(b.key)
+    if (prod) {
+      pos[prod.id] = { x: cursorX + b.w / 2 - NODE_WIDTH / 2, y: shelfY }
+      members.add(prod.id)
+    }
+    for (const id of Object.keys(b.bpos)) {
+      pos[id] = { x: cursorX + b.bpos[id].x, y: shelfY + HEADER + b.bpos[id].y }
+      members.add(id)
+    }
+    cursorX += b.w + GAPX
+    shelfH = Math.max(shelfH, b.h)
+  }
+
+  // Layout-only membership edges (dashboard → its product) for the cluster visual.
+  const drawEdges: GraphEdge[] = []
+  for (const [key, ids] of groups) {
+    if (!productById.has(key)) continue
+    for (const did of ids) {
+      drawEdges.push({
+        id: `dashmem::${did}->${key}`,
+        source: did,
+        target: key,
+        type: "PART_OF_PRODUCT",
+        props: {},
+      } as GraphEdge)
+    }
+  }
+  return { pos, members, drawEdges }
+}
+
 /**
  * Build React-Flow nodes+edges for the current view. With `focus` set, lays out a
  * radial ego ring of the focused node's full neighborhood (others hidden). Without
@@ -428,7 +548,7 @@ export function buildLayout(
   selectedNodeId: string | null,
   showIsolated: boolean = false,
   focusOpts: FocusOpts = DEFAULT_FOCUS_OPTS,
-  overview: "map" | "tree" | "spine" = "spine",
+  overview: "map" | "tree" | "spine" | "dash" = "spine",
 ): BuildResult {
   const sorted = [...nodes].sort((a, b) => a.id.localeCompare(b.id))
 
@@ -476,13 +596,34 @@ export function buildLayout(
     curvedAll = true
     focusTotal = rk.total
     focusShown = rk.kept.length
+  } else if (overview === "dash") {
+    // DASHBOARDS overview — curated-main dashboards clustered under their Product.
+    const g = dashboardGroupedLayout(sorted)
+    pos = g.pos
+    members = g.members
+    drawEdges = g.drawEdges
   } else if (overview === "spine") {
     // SPINE overview — metrics clustered under their Domain, Business→Domain→metric
     // drawn (see spineGroupedLayout). The default: shows the graph as CONNECTED.
     const g = spineGroupedLayout(sorted, edges, present)
-    pos = g.pos
-    members = g.members
-    drawEdges = g.drawEdges
+    if (g.members.size > 0) {
+      pos = g.pos
+      members = g.members
+      drawEdges = g.drawEdges
+    } else {
+      // The filtered set has NO spine (Metric/Domain/Business) — e.g. the user
+      // filtered NODE KINDS to Dashboard / Policy / Threshold / Chart only. Pack
+      // every filtered node (using whatever edges exist among them) so the
+      // selection actually renders — isolated kinds become a grid — instead of a
+      // blank canvas.
+      const allIds = sorted.map((n) => n.id)
+      const shaping = edges
+        .filter((e) => present.has(e.source) && present.has(e.target) && e.source !== e.target)
+        .map((e) => ({ source: e.source, target: e.target }))
+      pos = packedTree(allIds, shaping, layoutSize, { rankdir: "TB" }).pos
+      members = new Set(allIds)
+      drawEdges = edges
+    }
   } else {
     // OVERVIEW (no focus). "map" = hub-only skeleton; "tree" = full spine.
     let built = false
@@ -547,7 +688,42 @@ export function buildLayout(
     }
   }
 
-  const visible = members ? sorted.filter((n) => members!.has(n.id)) : sorted
+  // Synthetic VIEW nodes (e.g. the shift-click Chart node, props.synthetic) are
+  // not part of the causal/structural layout, so the ring/overview passes above
+  // never include them. Splice in any synthetic node whose anchor (the other end
+  // of its synthetic edge) is already visible — positioned just beside that
+  // anchor — plus its connecting edge, so the revealed chart always renders next
+  // to its metric (in causal focus, full ego, AND overview).
+  if (members) {
+    const synthIds = new Set(
+      sorted
+        .filter((n) => (n.props as Record<string, unknown> | undefined)?.synthetic)
+        .map((n) => n.id),
+    )
+    if (synthIds.size) {
+      const extraEdges: GraphEdge[] = []
+      for (const e of edges) {
+        const sSyn = synthIds.has(e.source)
+        const tSyn = synthIds.has(e.target)
+        if (sSyn === tSyn) continue // skip non-synthetic and synth↔synth edges
+        const anchor = sSyn ? e.target : e.source
+        const synthId = sSyn ? e.source : e.target
+        if (!members.has(anchor) || members.has(synthId)) continue
+        members.add(synthId)
+        const a = pos[anchor] ?? { x: 0, y: 0 }
+        pos[synthId] = { x: a.x + NODE_WIDTH + 80, y: a.y + 120 }
+        extraEdges.push(e)
+      }
+      if (extraEdges.length) drawEdges = [...drawEdges, ...extraEdges]
+    }
+  }
+
+  // `members && members.size > 0`: an EMPTY Set is truthy, so a layout that
+  // produced no members (e.g. a filtered set with nothing it could lay out) must
+  // fall back to showing all `sorted` rather than silently rendering nothing.
+  const visible =
+    members && members.size > 0 ? sorted.filter((n) => members!.has(n.id)) : sorted
+  const governed = governedMetricIds(edges)
   const rfNodes: FlowNode[] = visible.map((n) => ({
     id: n.id,
     type: "kg",
@@ -556,7 +732,13 @@ export function buildLayout(
     height: NODE_HEIGHT,
     sourcePosition: Position.Bottom,
     targetPosition: Position.Top,
-    data: { node: n, selected: n.id === selectedNodeId, dim: false, root: focus === n.id },
+    data: {
+      node: n,
+      selected: n.id === selectedNodeId,
+      dim: false,
+      root: focus === n.id,
+      governed: governed.has(n.id),
+    },
   }))
 
   const visibleIds = new Set(visible.map((n) => n.id))
@@ -566,10 +748,15 @@ export function buildLayout(
       const v = edgeVisual(e.type)
       const b = baseEdgeStyle(v.tier)
       const type = curvedAll || v.tier === "lateral" ? "default" : "smoothstep"
+      // Render-only direction flip (see INVERT_RENDER_RELS): swap the drawn
+      // endpoints so the arrowhead matches the label's reading.
+      const invert = INVERT_RENDER_RELS.has(e.type)
+      const source = invert ? e.target : e.source
+      const target = invert ? e.source : e.target
       return {
         id: e.id,
-        source: e.source,
-        target: e.target,
+        source,
+        target,
         type,
         zIndex: tierZ(v.tier),
         markerEnd: { type: MarkerType.ArrowClosed, color: v.color, width: 13, height: 13 },

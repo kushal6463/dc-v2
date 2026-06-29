@@ -37,6 +37,7 @@ import type { GraphEdge, GraphNode } from "@/lib/api"
 import {
   buildLayout,
   emphasize,
+  governedMetricIds,
   type EdgeData,
   type FlowEdge,
   type FlowNode,
@@ -175,6 +176,9 @@ function passesScopeDomain(
 // theme switch repaints every card but zoom/pan/hover do not.
 // ---------------------------------------------------------------------------
 
+// Governance badge color — matches the Policy node / GOVERNS edge (§) hue.
+const GOVERNANCE_COLOR = "#ef6f6f"
+
 const KGNode = memo(function KGNode({ data }: NodeProps<FlowNode>) {
   const d = data as FlowNodeData
   const node = d.node
@@ -255,25 +259,42 @@ const KGNode = memo(function KGNode({ data }: NodeProps<FlowNode>) {
             ? `${String(node.props.scope_key)} · ${st.label}`
             : st.label}
         </span>
-        {roleBadge && (
-          <span
-            title={`causal role: ${String(node.props?.causal_role)}`}
-            style={{
-              marginLeft: "auto",
-              flexShrink: 0,
-              fontSize: 8.5,
-              fontWeight: 600,
-              lineHeight: 1,
-              padding: "2px 5px",
-              borderRadius: 99,
-              color: roleBadge.color,
-              border: `1px solid ${roleBadge.color}66`,
-              background: `${roleBadge.color}1a`,
-            }}
-          >
-            {roleBadge.label}
-          </span>
-        )}
+        <span style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, flexShrink: 0 }}>
+          {d.governed && (
+            <span
+              title="Has a policy / threshold — shift-click to reveal its governance"
+              style={{
+                fontSize: 8.5,
+                fontWeight: 700,
+                lineHeight: 1,
+                padding: "2px 5px",
+                borderRadius: 99,
+                color: GOVERNANCE_COLOR,
+                border: `1px solid ${GOVERNANCE_COLOR}66`,
+                background: `${GOVERNANCE_COLOR}1a`,
+              }}
+            >
+              §
+            </span>
+          )}
+          {roleBadge && (
+            <span
+              title={`causal role: ${String(node.props?.causal_role)}`}
+              style={{
+                fontSize: 8.5,
+                fontWeight: 600,
+                lineHeight: 1,
+                padding: "2px 5px",
+                borderRadius: 99,
+                color: roleBadge.color,
+                border: `1px solid ${roleBadge.color}66`,
+                background: `${roleBadge.color}1a`,
+              }}
+            >
+              {roleBadge.label}
+            </span>
+          )}
+        </span>
       </div>
       <Handle type="source" position={Position.Bottom} style={{ opacity: 0, width: 1, height: 1, border: 0 }} />
     </div>
@@ -391,7 +412,13 @@ export function CanvasView() {
   const selectNode = useStore((s) => s.selectNode)
   const focusNodeId = useStore((s) => s.focusNodeId)
   const setFocus = useStore((s) => s.setFocus)
-  const shiftClickMetric = useStore((s) => s.shiftClickMetric)
+  const revealMetricChart = useStore((s) => s.revealMetricChart)
+  const revealDashboardCharts = useStore((s) => s.revealDashboardCharts)
+  const revealProductDashboards = useStore((s) => s.revealProductDashboards)
+  const revealMetricGovernance = useStore((s) => s.revealMetricGovernance)
+  // Metric ids that carry a policy/threshold — drives the shift-click dispatch
+  // (governed metrics reveal their governance; others reveal their chart).
+  const governedIds = useMemo(() => governedMetricIds(edges), [edges])
   const hoveredId = useStore((s) => s.hoveredId)
   const setHovered = useStore((s) => s.setHovered)
   const focusMode = useStore((s) => s.focusMode)
@@ -429,13 +456,13 @@ export function CanvasView() {
   // Overview presentation: "spine" = metrics grouped under their Domain (Business→
   // Domain→metric drawn — the connected default); "tree" = the metric→metric
   // decomposition forest; "map" = compact hub-only skeleton. Switching exits focus.
-  const [overview, setOverview] = useState<"map" | "tree" | "spine">("spine")
+  const [overview, setOverview] = useState<"map" | "tree" | "spine" | "dash">("spine")
   const [rf, setRf] = useState<ReactFlowInstance<FlowNode> | null>(null)
   // Transient locate highlight: the node ids flashed after a locate() request
   // (an edge flashes both its endpoints). Cleared after the flash window.
   const [locateFlash, setLocateFlash] = useState<Set<string>>(new Set())
 
-  const pickOverview = (v: "map" | "tree" | "spine") => {
+  const pickOverview = (v: "map" | "tree" | "spine" | "dash") => {
     setOverview(v)
     setFocus(null) // clicking an overview returns to it (clears focus)
   }
@@ -921,7 +948,7 @@ export function CanvasView() {
         {/* Spine = metrics under their Domain (connected) · Tree = decomposition
             forest · Map = compact hub skeleton */}
         <div className="flex items-center rounded-md border border-border bg-background/80 p-0.5">
-          {(["spine", "tree", "map"] as const).map((v) => (
+          {(["spine", "tree", "map", "dash"] as const).map((v) => (
             <button
               key={v}
               onClick={() => pickOverview(v)}
@@ -931,7 +958,9 @@ export function CanvasView() {
                   ? "Spine — every metric grouped under its Domain (Business → Domain → metric)"
                   : v === "tree"
                     ? "Decomposition tree — the metric→metric forest"
-                    : "Hub map — the metrics everything decomposes into"
+                    : v === "map"
+                      ? "Hub map — the metrics everything decomposes into"
+                      : "Dashboards — main dashboards grouped by product; shift-click one for its charts + metrics"
               }
               className={`rounded px-2.5 py-0.5 text-xs capitalize transition-colors ${
                 overview === v
@@ -939,7 +968,7 @@ export function CanvasView() {
                   : "text-muted-foreground hover:bg-accent hover:text-foreground"
               }`}
             >
-              {v}
+              {v === "dash" ? "Dashboards" : v}
             </button>
           ))}
         </div>
@@ -998,11 +1027,27 @@ export function CanvasView() {
           // Shift-click enters focus; while already focused, a plain click on a
           // neighbor re-centers (walk to the next hop). Always keep selection.
           if (e.shiftKey || focus) setFocus(n.id)
-          // Shift-click ALSO opens the canonical chart for a Metric (no-op for
-          // non-metric nodes) — runs alongside the focus/ego behavior above.
-          if (e.shiftKey) void shiftClickMetric(n.id)
           selectNode(n.id)
           selectEdge(null)
+          // Shift-click drill-down, dispatched by node kind (each action no-ops
+          // for the wrong label): Dashboard → its charts; Product → its
+          // dashboards; a governed Metric → its policy/threshold (full-ego
+          // focus); any other Metric → its chart. Runs after focus/select.
+          if (e.shiftKey) {
+            const sn = nodes.find((x) => x.id === n.id)
+            if (sn?.label === "Dashboard") void revealDashboardCharts(n.id)
+            else if (sn?.label === "IntelligenceProduct") void revealProductDashboards(n.id)
+            else if (sn?.label === "Metric" && governedIds.has(n.id)) {
+              // Make sure the governance edges aren't hidden (e.g. "Causal only"),
+              // then center on the metric's policy/threshold fan.
+              setHiddenTypes((prev) => {
+                const next = new Set(prev)
+                for (const t of ["HAS_THRESHOLD", "ENFORCES_THRESHOLD", "GOVERNS"]) next.delete(t)
+                return next.size === prev.size ? prev : next
+              })
+              revealMetricGovernance(n.id)
+            } else void revealMetricChart(n.id)
+          }
         }}
         onEdgeClick={(_, e) => selectEdge(e.id)}
         onNodeMouseEnter={(_, n) => setHovered(n.id)}

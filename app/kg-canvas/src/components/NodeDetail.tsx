@@ -15,6 +15,7 @@ import {
   type TraversePayload,
 } from "@/lib/api"
 import { Badge } from "@/components/ui/badge"
+import { ChartDetail } from "@/components/ChartDetail"
 
 // Internal / header-duplicated keys we never surface as properties.
 const HIDDEN_FIELDS = new Set([
@@ -47,6 +48,28 @@ const LINEAGE_FIELDS = new Set([
   "data_stale",
   "formula_sql_mismatch",
   "formula_sql_note",
+])
+
+// Threshold band/industry/current fields rendered by ThresholdBandsPanel as a
+// direction-aware comparison ladder — excluded from the generic Properties grid
+// for Threshold nodes so they aren't ALSO dumped raw.
+const THRESHOLD_BAND_FIELDS = new Set([
+  "threshold_type",
+  "direction",
+  "unit",
+  "p95_val",
+  "p85_val",
+  "p75_val",
+  "p50_val",
+  "percentile_basis",
+  "industry_standard_val",
+  "industry_min_val",
+  "industry_max_val",
+  "industry_source",
+  "industry_as_of",
+  "current_val",
+  "current_as_of",
+  "target_value_num",
 ])
 
 function formatValue(value: unknown): string {
@@ -99,6 +122,7 @@ export function NodeDetail() {
   const nodes = useStore((s) => s.nodes)
   const edges = useStore((s) => s.edges)
   const selectNode = useStore((s) => s.selectNode)
+  const locate = useStore((s) => s.locate)
   const setFocus = useStore((s) => s.setFocus)
   const setFocusMode = useStore((s) => s.setFocusMode)
   const setFocusDir = useStore((s) => s.setFocusDir)
@@ -198,11 +222,13 @@ export function NodeDetail() {
   const fields = useMemo(() => {
     const props = (node?.props ?? {}) as Record<string, unknown>
     const isMetricNode = node?.label === "Metric"
+    const isThresholdNode = node?.label === "Threshold"
     const out: [string, unknown][] = []
     for (const [k, v] of Object.entries(props)) {
       if (HIDDEN_FIELDS.has(k)) continue
       if (isMetricNode && summaryKeys.has(k)) continue
       if (isMetricNode && LINEAGE_FIELDS.has(k)) continue
+      if (isThresholdNode && THRESHOLD_BAND_FIELDS.has(k)) continue
       if (v === null || v === undefined || v === "") continue
       out.push([k, v])
     }
@@ -278,6 +304,16 @@ export function NodeDetail() {
 
       {/* body */}
       <div className="flex-1 space-y-5 overflow-y-auto px-4 py-4">
+        {/* synthetic Chart VIEW node: render the dedicated chart detail (glyph +
+            chart_id/canonical_id + dashboard mapping + formula/how-to-read/…) and
+            skip the generic metric/threshold/properties sections. */}
+        {node.label === "Chart" ? (
+          <ChartDetail
+            props={node.props}
+            onLocateDashboard={(id) => locate({ kind: "node", id })}
+          />
+        ) : (
+          <>
         {/* metric summary (curated, metric nodes only) */}
         {summary.length > 0 && (
           <div>
@@ -298,6 +334,10 @@ export function NodeDetail() {
         {/* data lineage: mart sources, warehouse columns, SQL provenance +
             freshness (metric nodes only; the panel self-hides when absent) */}
         {isMetric && <DataLineagePanel props={node.props} />}
+
+        {/* threshold bands: company percentile ladder vs industry benchmark
+            (Threshold nodes only; direction-aware; self-hides when absent) */}
+        {node.label === "Threshold" && <ThresholdBandsPanel props={node.props} />}
 
         {/* properties */}
         <div>
@@ -372,12 +412,168 @@ export function NodeDetail() {
             onMinConfidenceChange={setTraverseMinConfidence}
           />
         )}
+          </>
+        )}
       </div>
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
+// Threshold bands panel (Threshold nodes).
+//
+// A direction-aware comparison ladder: the company's own percentile distribution
+// (p50<p75<p85<p95) against the industry benchmark band [min,max] (+ standard
+// marker), plus the current value and target. Bars encode value magnitude
+// (normalised to the largest anchor); the "standing" line reads the metric's
+// direction so reaching p95 means "top tail" for higher-is-better and the low
+// tail for lower-is-better. Self-hides when the node carries no band numbers.
+// ---------------------------------------------------------------------------
+
+function thNum(props: Record<string, unknown>, key: string): number | undefined {
+  const v = props[key]
+  return typeof v === "number" ? v : undefined
+}
+
+// One labeled magnitude bar in the threshold ladder (module-scoped so it is a
+// stable component, not redefined per render).
+function BandBar({
+  label,
+  v,
+  color,
+  maxV,
+}: {
+  label: string
+  v: number | undefined
+  color: string
+  maxV: number
+}) {
+  if (v == null) return null
+  const width = Math.max(2, Math.min(100, (v / maxV) * 100))
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-14 shrink-0 font-mono text-[10px] text-muted-foreground">
+        {label}
+      </span>
+      <div className="h-2 flex-1 rounded-full bg-muted/40">
+        <div
+          className="h-2 rounded-full"
+          style={{ width: `${width}%`, background: color }}
+        />
+      </div>
+      <span className="w-12 shrink-0 text-right text-[11px] tabular-nums">{v}</span>
+    </div>
+  )
+}
+
+function ThresholdBandsPanel({ props }: { props: Record<string, unknown> }) {
+  const dir = props.direction as string | undefined
+  const unit = props.unit as string | undefined
+  const ttype = props.threshold_type as string | undefined
+  const lower = dir === "lower_is_better"
+
+  const bands = [
+    { k: "p50", v: thNum(props, "p50_val") },
+    { k: "p75", v: thNum(props, "p75_val") },
+    { k: "p85", v: thNum(props, "p85_val") },
+    { k: "p95", v: thNum(props, "p95_val") },
+  ]
+  const iMin = thNum(props, "industry_min_val")
+  const iMax = thNum(props, "industry_max_val")
+  const iStd = thNum(props, "industry_standard_val")
+  const current = thNum(props, "current_val")
+  const target = thNum(props, "target_value_num")
+
+  const anchors = [
+    ...bands.map((b) => b.v),
+    iMin,
+    iMax,
+    iStd,
+    current,
+    target,
+  ].filter((x): x is number => typeof x === "number")
+  if (anchors.length === 0) return null
+
+  const maxV = Math.max(...anchors, 0.000001)
+
+  // The strongest percentile band the current value reaches (direction-aware).
+  const presentBands = bands.filter(
+    (b): b is { k: string; v: number } => typeof b.v === "number"
+  )
+  let standing: string | null = null
+  if (current != null && presentBands.length) {
+    const ordered = [...presentBands].reverse() // p95 → p50
+    const hit = ordered.find((b) => (lower ? current <= b.v : current >= b.v))
+    standing = hit
+      ? `Current ${current} ${lower ? "sits within" : "reaches"} ${hit.k}`
+      : `Current ${current} ${lower ? "is above" : "is below"} ${presentBands[0].k}`
+  }
+
+  const COMPANY = "#d9a83b"
+  const INDUSTRY = "#6ea8ff"
+  const CURRENT = "#7ee081"
+  const TARGET = "#c98bff"
+
+  return (
+    <div>
+      <div className="mb-2 flex items-center gap-2 text-[11px] font-medium tracking-wide text-muted-foreground uppercase">
+        Threshold bands
+        {dir ? (
+          <span className="rounded bg-muted px-1.5 py-0.5 text-[9px] normal-case">
+            {dir.replace(/_/g, " ")}
+          </span>
+        ) : null}
+        {unit ? (
+          <span className="text-[9px] normal-case text-muted-foreground">{unit}</span>
+        ) : null}
+      </div>
+
+      {standing ? (
+        <div className="mb-2 rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-xs text-emerald-700 dark:text-emerald-400">
+          {standing}
+        </div>
+      ) : null}
+
+      <div className="space-y-1.5">
+        <div className="text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+          Company {ttype === "percentile" ? "percentiles" : "distribution"}
+        </div>
+        {bands.map((b) => (
+          <BandBar key={b.k} label={b.k} v={b.v} color={COMPANY} maxV={maxV} />
+        ))}
+
+        {iMin != null || iMax != null || iStd != null ? (
+          <>
+            <div className="pt-1 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+              Industry
+            </div>
+            <BandBar label="ind. min" v={iMin} color={INDUSTRY} maxV={maxV} />
+            <BandBar label="ind. std" v={iStd} color={INDUSTRY} maxV={maxV} />
+            <BandBar label="ind. max" v={iMax} color={INDUSTRY} maxV={maxV} />
+          </>
+        ) : null}
+
+        {current != null || target != null ? (
+          <>
+            <div className="pt-1 text-[10px] font-medium tracking-wide text-muted-foreground uppercase">
+              Company value
+            </div>
+            <BandBar label="current" v={current} color={CURRENT} maxV={maxV} />
+            <BandBar label="target" v={target} color={TARGET} maxV={maxV} />
+          </>
+        ) : null}
+      </div>
+
+      {props.industry_source || props.industry_as_of ? (
+        <div className="mt-2 text-[10px] text-muted-foreground">
+          benchmark: {String(props.industry_source ?? "—")}
+          {props.industry_as_of ? ` · as of ${String(props.industry_as_of)}` : ""}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 // Data-lineage panel (Metric nodes).
 //
 // Surfaces a metric's mart/SQL provenance + data-quality signals — kept separate

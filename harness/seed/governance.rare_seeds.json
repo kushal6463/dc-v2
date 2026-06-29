@@ -1,0 +1,238 @@
+{
+  "_comment": "Google-Ads governance demo seed. Per metric: an optional Metric definition (only for the 3 metrics not already in the graph), a Policy (the rule), and a Threshold (the breach lines + company percentile bands + industry benchmark). The seeder (harness/seed/governance_seed.py) derives policy_id/threshold_id, sets metric_id/applies_to_kind/source, and draws GOVERNS / HAS_THRESHOLD / ENFORCES_THRESHOLD (+ DECOMPOSES_INTO for derived metrics). Numbers are realistic demo values (industry from public Google-Ads benchmarks); percentile bands are illustrative until the statistical layer computes them from marts.",
+  "metrics": [
+    {
+      "metric_uid": "google_ads.roas",
+      "create_metric": false,
+      "policy": {
+        "policy_name": "ROAS floor",
+        "description": "Alert when blended Google Ads ROAS falls below 2.0x — below the industry floor, ad spend is not returning.",
+        "policy_type": "alerting",
+        "condition_type": "threshold",
+        "condition_operator": "lt",
+        "condition_value": 2.0,
+        "severity": "high",
+        "auto_investigate": true,
+        "evaluation_window": "P1D"
+      },
+      "threshold": {
+        "threshold_type": "percentile",
+        "operator": "gte",
+        "direction": "higher_is_better",
+        "unit": "ratio",
+        "severity": "high",
+        "p50_val": 2.1,
+        "p75_val": 2.6,
+        "p85_val": 3.0,
+        "p95_val": 3.6,
+        "percentile_basis": "company trailing-90d daily distribution",
+        "industry_min_val": 2.0,
+        "industry_max_val": 2.5,
+        "industry_standard_val": 2.0,
+        "industry_source": "Google Ads benchmarks (WordStream 2024)",
+        "industry_as_of": "2024-01-01",
+        "current_val": 2.8,
+        "current_as_of": "2025-12-31",
+        "target_value_num": 3.0,
+        "grain": "daily",
+        "explanation": "ROAS is higher-is-better. Industry standard sits at 2.0–2.5x; a strong startup runs ~3.0x. Company currently 2.8x (between p85 and p95)."
+      }
+    },
+    {
+      "metric_uid": "google_ads.cpa",
+      "create_metric": false,
+      "policy": {
+        "policy_name": "CPA ceiling",
+        "description": "Alert when cost per acquisition exceeds $60 — above the efficient range for this account.",
+        "policy_type": "alerting",
+        "condition_type": "threshold",
+        "condition_operator": "gt",
+        "condition_value": 60.0,
+        "severity": "high",
+        "auto_investigate": true,
+        "evaluation_window": "P1D"
+      },
+      "threshold": {
+        "threshold_type": "percentile",
+        "operator": "lte",
+        "direction": "lower_is_better",
+        "unit": "currency",
+        "severity": "high",
+        "p50_val": 55.0,
+        "p75_val": 47.0,
+        "p85_val": 42.0,
+        "p95_val": 38.0,
+        "percentile_basis": "company trailing-90d daily distribution",
+        "industry_min_val": 45.0,
+        "industry_max_val": 60.0,
+        "industry_standard_val": 48.96,
+        "industry_source": "Google Ads benchmarks (WordStream 2024)",
+        "industry_as_of": "2024-01-01",
+        "current_val": 52.0,
+        "current_as_of": "2025-12-31",
+        "target_value_num": 40.0,
+        "grain": "daily",
+        "explanation": "CPA is lower-is-better, so the percentile ladder descends (p95 is the best/lowest tail). Industry standard ~$48.96; company at $52 sits just below p50 — room to improve toward the $40 target."
+      }
+    },
+    {
+      "metric_uid": "google_ads.ctr",
+      "create_metric": true,
+      "metric": {
+        "metric_base": "ctr",
+        "display_name": "Click-Through Rate",
+        "unit_family": "percent",
+        "value_format": "percentage",
+        "default_direction": "higher_is_better",
+        "aggregation": "ratio",
+        "category": "google_ads",
+        "is_derived": true,
+        "description": "Google Ads click-through rate: clicks divided by impressions, as a percentage.",
+        "formula_text": "CTR = SUM(CLICKS) / SUM(IMPRESSIONS) × 100",
+        "components": [
+          {"to": "google_ads.clicks", "role": "numerator"},
+          {"to": "google_ads.impressions", "role": "denominator"}
+        ]
+      },
+      "policy": {
+        "policy_name": "CTR minimum",
+        "description": "Alert when click-through rate drops below 3.0% — creative or targeting may be stale.",
+        "policy_type": "alerting",
+        "condition_type": "threshold",
+        "condition_operator": "lt",
+        "condition_value": 3.0,
+        "severity": "medium",
+        "auto_investigate": false,
+        "evaluation_window": "P7D"
+      },
+      "threshold": {
+        "threshold_type": "percentile",
+        "operator": "gte",
+        "direction": "higher_is_better",
+        "unit": "percent",
+        "severity": "medium",
+        "p50_val": 4.2,
+        "p75_val": 5.5,
+        "p85_val": 6.3,
+        "p95_val": 7.5,
+        "percentile_basis": "company trailing-90d daily distribution",
+        "industry_min_val": 3.0,
+        "industry_max_val": 5.0,
+        "industry_standard_val": 3.17,
+        "industry_source": "Google Ads search benchmarks (WordStream 2024)",
+        "industry_as_of": "2024-01-01",
+        "current_val": 5.1,
+        "current_as_of": "2025-12-31",
+        "target_value_num": 6.0,
+        "grain": "daily",
+        "explanation": "CTR is higher-is-better. Industry search average ~3.17% (3–5% range); company at 5.1% is between p50 and p75 — above industry, working toward the 6% target."
+      }
+    },
+    {
+      "metric_uid": "google_ads.cpc",
+      "create_metric": true,
+      "metric": {
+        "metric_base": "cpc",
+        "display_name": "Cost Per Click",
+        "unit_family": "currency",
+        "value_format": "currency",
+        "default_direction": "lower_is_better",
+        "aggregation": "ratio",
+        "category": "google_ads",
+        "is_derived": true,
+        "description": "Google Ads average cost per click: spend divided by clicks.",
+        "formula_text": "CPC = SUM(SPEND) / SUM(CLICKS)",
+        "components": [
+          {"to": "google_ads.spend", "role": "numerator"},
+          {"to": "google_ads.clicks", "role": "denominator"}
+        ]
+      },
+      "policy": {
+        "policy_name": "CPC ceiling",
+        "description": "Alert when average cost per click exceeds $4.00 — auction costs running hot.",
+        "policy_type": "alerting",
+        "condition_type": "threshold",
+        "condition_operator": "gt",
+        "condition_value": 4.0,
+        "severity": "medium",
+        "auto_investigate": false,
+        "evaluation_window": "P7D"
+      },
+      "threshold": {
+        "threshold_type": "percentile",
+        "operator": "lte",
+        "direction": "lower_is_better",
+        "unit": "currency",
+        "severity": "medium",
+        "p50_val": 2.9,
+        "p75_val": 2.3,
+        "p85_val": 2.0,
+        "p95_val": 1.7,
+        "percentile_basis": "company trailing-90d daily distribution",
+        "industry_min_val": 2.0,
+        "industry_max_val": 4.0,
+        "industry_standard_val": 2.69,
+        "industry_source": "Google Ads search benchmarks (WordStream 2024)",
+        "industry_as_of": "2024-01-01",
+        "current_val": 2.6,
+        "current_as_of": "2025-12-31",
+        "target_value_num": 2.0,
+        "grain": "daily",
+        "explanation": "CPC is lower-is-better, so the ladder descends (p95 is the cheapest tail). Industry search average ~$2.69; company at $2.60 is around p50 — near the $2.00 target."
+      }
+    },
+    {
+      "metric_uid": "google_ads.conversion_rate",
+      "create_metric": true,
+      "metric": {
+        "metric_base": "conversion_rate",
+        "display_name": "Conversion Rate",
+        "unit_family": "percent",
+        "value_format": "percentage",
+        "default_direction": "higher_is_better",
+        "aggregation": "ratio",
+        "category": "google_ads",
+        "is_derived": true,
+        "description": "Google Ads conversion rate: conversions divided by clicks, as a percentage.",
+        "formula_text": "Conversion Rate = SUM(CONVERSIONS) / SUM(CLICKS) × 100",
+        "components": [
+          {"to": "google_ads.conversions", "role": "numerator"},
+          {"to": "google_ads.clicks", "role": "denominator"}
+        ]
+      },
+      "policy": {
+        "policy_name": "Conversion-rate minimum",
+        "description": "Alert when conversion rate drops below 3.0% — landing page or offer may be underperforming.",
+        "policy_type": "alerting",
+        "condition_type": "threshold",
+        "condition_operator": "lt",
+        "condition_value": 3.0,
+        "severity": "medium",
+        "auto_investigate": false,
+        "evaluation_window": "P7D"
+      },
+      "threshold": {
+        "threshold_type": "percentile",
+        "operator": "gte",
+        "direction": "higher_is_better",
+        "unit": "percent",
+        "severity": "medium",
+        "p50_val": 4.0,
+        "p75_val": 5.2,
+        "p85_val": 6.1,
+        "p95_val": 7.8,
+        "percentile_basis": "company trailing-90d daily distribution",
+        "industry_min_val": 3.0,
+        "industry_max_val": 6.0,
+        "industry_standard_val": 3.75,
+        "industry_source": "Google Ads search benchmarks (WordStream 2024)",
+        "industry_as_of": "2024-01-01",
+        "current_val": 4.8,
+        "current_as_of": "2025-12-31",
+        "target_value_num": 6.0,
+        "grain": "daily",
+        "explanation": "Conversion rate is higher-is-better. Industry search average ~3.75% (3–6% range); company at 4.8% is between p50 and p75 — above industry, targeting 6%."
+      }
+    }
+  ]
+}

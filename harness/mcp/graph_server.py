@@ -45,6 +45,8 @@ from harness.kg.models import (
     Domain,
     IntelligenceProduct,
     Metric,
+    Policy,
+    Threshold,
 )
 
 mcp = FastMCP("graph")
@@ -513,6 +515,245 @@ def create_metric_node(
         result = write_node_model(get_db(), model)
     except Exception as exc:
         return _error(str(exc), label="Metric", key=metric_uid)
+    return _node_result(model, result)
+
+
+@mcp.tool()
+def create_policy_node(
+    policy_id: str,
+    applies_to_kind: str = "Metric",
+    metric_id: str | None = None,
+    policy_name: str | None = None,
+    description: str | None = None,
+    policy_type: str | None = None,
+    condition_type: str | None = None,
+    condition_operator: str | None = None,
+    condition_value: float | None = None,
+    condition_value_high: float | None = None,
+    condition_expression: str | None = None,
+    evaluation_window: str | None = None,
+    severity: str | None = None,
+    auto_investigate: bool | None = None,
+    notify_channels: str | None = None,
+    owner_role_id: str | None = None,
+    approval_required: bool | None = None,
+    approval_role_ids: str | None = None,
+    priority: int | None = None,
+    effective_from: str | None = None,
+    effective_to: str | None = None,
+    is_active: bool | None = None,
+    status: str | None = None,
+    review_state: str = "active",
+    population_status: str = "populated",
+    source: str | None = None,
+) -> str:
+    """Create or update a Policy governance node (schema-valid) via arbitration.
+
+    A Policy is a *rule the business must obey* (FRD FR-CG-001). It governs a
+    metric (``Policy -GOVERNS-> Metric``) and enforces a Threshold
+    (``Policy -ENFORCES_THRESHOLD-> Threshold``); draw those edges separately.
+
+    Args:
+        policy_id: Unique identity (``Policy.policy_id``).
+        applies_to_kind: Node kind the policy governs (default ``Metric``).
+        metric_id: The governed ``Metric.metric_uid`` (when metric-scoped).
+        policy_name: Human-readable policy name.
+        description: Free-text description of the rule.
+        policy_type: One of the ``PolicyType`` values (``access`` |
+            ``interpretation`` | ``alerting`` | ``escalation`` | ``approval`` |
+            ``action_guardrail`` | ``data_quality``).
+        condition_type: One of the ``ConditionType`` values (``threshold`` |
+            ``anomaly`` | ``trend`` | ``missing_data``).
+        condition_operator: One of the ``ComparisonOperator`` values (``lt`` |
+            ``lte`` | ``gt`` | ``gte`` | ``eq`` | ``neq`` | ``between`` |
+            ``outside`` | ``percent_change`` | ``z_score``).
+        condition_value: The breach value the operator compares against.
+        condition_value_high: Upper bound for ``between``/``outside``.
+        condition_expression: Free-text/SQL condition expression.
+        evaluation_window: Evaluation window (e.g. ``P7D``).
+        severity: One of the ``Severity`` values (``critical`` | ``high`` |
+            ``medium`` | ``low`` | ``info`` | ``blocking``).
+        auto_investigate: Whether a breach auto-wakes the investigation agent.
+        notify_channels: Pipe-delimited notification channels.
+        owner_role_id: Owning ``Role.role_id``.
+        approval_required: Whether changes need approval.
+        approval_role_ids: Pipe-delimited approver ``Role.role_id`` values.
+        priority: Integer priority (higher wins on conflict).
+        effective_from: ISO date the policy takes effect.
+        effective_to: ISO date the policy expires.
+        is_active: Whether the policy is currently active.
+        status: One of the ``SurfaceStatus`` values.
+        review_state: Governance review state (``draft`` | ``active`` |
+            ``needs_review`` | ``retired``); default ``active``.
+        population_status: ``defined`` | ``populated``; default ``populated``.
+        source: Provenance string (e.g. ``demo_seed`` | ``llm_extract``).
+
+    Returns:
+        JSON string ``{"status", "label", "key", "fields"}`` (or an error).
+    """
+    try:
+        model = Policy(
+            policy_id=policy_id,
+            applies_to_kind=applies_to_kind,
+            metric_id=_none_if_blank(metric_id),
+            policy_name=_none_if_blank(policy_name),
+            description=_none_if_blank(description),
+            policy_type=policy_type,
+            condition_type=condition_type,
+            condition_operator=condition_operator,
+            condition_value=condition_value,
+            condition_value_high=condition_value_high,
+            condition_expression=_none_if_blank(condition_expression),
+            evaluation_window=_none_if_blank(evaluation_window),
+            severity=severity,
+            auto_investigate=auto_investigate,
+            notify_channels=_split_list(notify_channels),
+            owner_role_id=_none_if_blank(owner_role_id),
+            approval_required=approval_required,
+            approval_role_ids=_split_list(approval_role_ids),
+            priority=priority,
+            effective_from=_none_if_blank(effective_from),
+            effective_to=_none_if_blank(effective_to),
+            is_active=is_active,
+            status=status,
+            review_state=review_state,
+            population_status=population_status,
+            source=_none_if_blank(source),
+        )
+        result = write_node_model(get_db(), model)
+    except Exception as exc:
+        return _error(str(exc), label="Policy", key=policy_id)
+    return _node_result(model, result)
+
+
+@mcp.tool()
+def create_threshold_node(
+    threshold_id: str,
+    metric_id: str | None = None,
+    metric_name: str | None = None,
+    threshold_type: str | None = None,
+    operator: str | None = None,
+    direction: str | None = None,
+    unit: str | None = None,
+    severity: str | None = None,
+    green_value: str | None = None,
+    yellow_value: str | None = None,
+    red_value: str | None = None,
+    warning_value_num: float | None = None,
+    critical_value_num: float | None = None,
+    target_value_num: float | None = None,
+    p95_val: float | None = None,
+    p85_val: float | None = None,
+    p75_val: float | None = None,
+    p50_val: float | None = None,
+    percentile_basis: str | None = None,
+    industry_standard_val: float | None = None,
+    industry_min_val: float | None = None,
+    industry_max_val: float | None = None,
+    industry_source: str | None = None,
+    industry_as_of: str | None = None,
+    current_val: float | None = None,
+    current_as_of: str | None = None,
+    category: str | None = None,
+    grain: str | None = None,
+    evaluation_window: str | None = None,
+    explanation: str | None = None,
+    owner_role_id: str | None = None,
+    review_state: str = "active",
+    population_status: str = "populated",
+    source: str | None = None,
+) -> str:
+    """Create or update a Threshold governance node (schema-valid) via arbitration.
+
+    A Threshold is the *breach line* on a metric (FRD FR-CG-001). It hangs off a
+    metric (``Metric -HAS_THRESHOLD-> Threshold``); draw that edge separately.
+    Beyond the static green/yellow/red bands it carries the company's own
+    percentile distribution (``p50/p75/p85/p95``) and an external industry
+    benchmark (value + ``[min, max]`` band + source + as-of) for comparison.
+
+    Args:
+        threshold_id: Unique identity (``Threshold.threshold_id``).
+        metric_id: The metric this threshold bounds (``Metric.metric_uid``).
+        metric_name: Human-readable metric name (denormalised convenience).
+        threshold_type: One of the ``ThresholdType`` values (``static`` |
+            ``percentile`` | ``seasonal`` | ``warning`` | ``critical`` |
+            ``target`` | ``anomaly`` | ``sla`` | ``budget``).
+        operator: One of the ``ComparisonOperator`` values.
+        direction: ``higher_is_better`` | ``lower_is_better`` |
+            ``target_is_best``.
+        unit: Display unit (``ratio`` | ``percent`` | ``currency`` | …).
+        severity: One of the ``Severity`` values for a band breach.
+        green_value: Healthy-band display value.
+        yellow_value: Warning-band display value.
+        red_value: Critical-band display value.
+        warning_value_num: Numeric warning threshold.
+        critical_value_num: Numeric critical threshold.
+        target_value_num: Numeric target/aspirational value.
+        p95_val: Company 95th-percentile value (own distribution).
+        p85_val: Company 85th-percentile value.
+        p75_val: Company 75th-percentile value.
+        p50_val: Company median value.
+        percentile_basis: How the percentiles were computed (e.g.
+            ``company trailing-90d daily``).
+        industry_standard_val: The industry benchmark point value.
+        industry_min_val: Lower bound of the industry-standard band.
+        industry_max_val: Upper bound of the industry-standard band.
+        industry_source: Benchmark provenance (e.g. ``llm:claude-opus-4-8``).
+        industry_as_of: ISO date the benchmark reflects.
+        current_val: The metric's own current value (for comparison).
+        current_as_of: ISO date of the current snapshot.
+        category: Free-text category.
+        grain: Evaluation grain (e.g. ``daily``).
+        evaluation_window: Evaluation window (e.g. ``P30D``).
+        explanation: Prose explanation of the bands.
+        owner_role_id: Owning ``Role.role_id``.
+        review_state: Governance review state; default ``active``.
+        population_status: ``defined`` | ``populated``; default ``populated``.
+        source: Provenance string (e.g. ``demo_seed`` | ``llm_extract``).
+
+    Returns:
+        JSON string ``{"status", "label", "key", "fields"}`` (or an error).
+    """
+    try:
+        model = Threshold(
+            threshold_id=threshold_id,
+            metric_id=_none_if_blank(metric_id),
+            metric_name=_none_if_blank(metric_name),
+            threshold_type=threshold_type,
+            operator=operator,
+            direction=direction,
+            unit=_none_if_blank(unit),
+            severity=severity,
+            green_value=_none_if_blank(green_value),
+            yellow_value=_none_if_blank(yellow_value),
+            red_value=_none_if_blank(red_value),
+            warning_value_num=warning_value_num,
+            critical_value_num=critical_value_num,
+            target_value_num=target_value_num,
+            p95_val=p95_val,
+            p85_val=p85_val,
+            p75_val=p75_val,
+            p50_val=p50_val,
+            percentile_basis=_none_if_blank(percentile_basis),
+            industry_standard_val=industry_standard_val,
+            industry_min_val=industry_min_val,
+            industry_max_val=industry_max_val,
+            industry_source=_none_if_blank(industry_source),
+            industry_as_of=_none_if_blank(industry_as_of),
+            current_val=current_val,
+            current_as_of=_none_if_blank(current_as_of),
+            category=_none_if_blank(category),
+            grain=_none_if_blank(grain),
+            evaluation_window=_none_if_blank(evaluation_window),
+            explanation=_none_if_blank(explanation),
+            owner_role_id=_none_if_blank(owner_role_id),
+            review_state=review_state,
+            population_status=population_status,
+            source=_none_if_blank(source),
+        )
+        result = write_node_model(get_db(), model)
+    except Exception as exc:
+        return _error(str(exc), label="Threshold", key=threshold_id)
     return _node_result(model, result)
 
 

@@ -14,10 +14,10 @@ dependencies = [
     "pydantic-settings==2.14.1",
     "python-dotenv==1.2.2",
     # --- Agent + MCP ---
-    "mcp==1.27.2",
-    "claude-agent-sdk==0.2.101",
+    "mcp==1.28.1",
+    "claude-agent-sdk==0.2.110",
     # --- API + live canvas transport (M2) ---
-    "fastapi==0.137.0",
+    "fastapi==0.138.1",
     "uvicorn[standard]==0.49.0",
     "sse-starlette==3.4.4",
 ]

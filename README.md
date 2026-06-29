@@ -18,9 +18,14 @@ deterministic spine seed (Phase 0) → LLM **node** agents (parallel, by namespa
 **critique** (loops / orphans / leaves report) — every write lands in Neo4j via the
 single `MERGE` arbitration writer.
 
-> **dc-kg is NOT a git repo.** There is no git rollback. The **Neo4j backup**
-> (`harness/store/backup.py export`) is the only safety net for graph data — a live
-> build always exports first, then wipes, then rebuilds.
+> **Full architecture:** see [`ARCHITECTURE.md`](ARCHITECTURE.md) (browsable HTML:
+> [`ARCHITECTURE.html`](ARCHITECTURE.html)) for modules, the AI layer, and end-to-end data flow,
+> and [`docs/final-schema-claude.md`](docs/final-schema-claude.md) for the node/edge property contract.
+
+> **The graph data is not version-controlled.** The repo's *code* is in git, but the **graph itself
+> lives only in Neo4j** — there is no git rollback for graph data. The **Neo4j backup**
+> (`harness/store/backup.py export`) is the only safety net — a live build always exports first,
+> then wipes, then rebuilds.
 
 ## Stack
 

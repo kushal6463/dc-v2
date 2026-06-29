@@ -46,3 +46,6 @@ data/compositional_edges*.csv
 data/crossproduct_edges*.csv
 data/model_edges*.csv
 data/structural_edges*.csv
+
+# Local scratch / temp backups (session working dir — never tracked)
+scratchpad/

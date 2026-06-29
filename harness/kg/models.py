@@ -1002,6 +1002,23 @@ class Threshold(GraphNode):
     upper_2sigma: float | None = None
     min_val: float | None = None
     max_val: float | None = None
+    # Company percentile distribution (own data; dummy/LLM-seeded now, computed
+    # from marts later — the deferred statistical layer).
+    p95_val: float | None = None
+    p85_val: float | None = None
+    p75_val: float | None = None
+    p50_val: float | None = None
+    percentile_basis: str | None = None  # e.g. "company trailing-90d daily"
+    # Industry benchmark (value + band + provenance) for comparison.
+    industry_standard_val: float | None = None
+    industry_min_val: float | None = None
+    industry_max_val: float | None = None
+    industry_source: str | None = None  # "llm:claude-opus-4-8" | "WordStream 2024"
+    industry_as_of: str | None = None  # ISO date the benchmark reflects
+    # Company's own current snapshot + the severity of a band breach.
+    current_val: float | None = None
+    current_as_of: str | None = None
+    severity: Severity | None = None
     category: str | None = None
     unit: str | None = None
     grain: str | None = None

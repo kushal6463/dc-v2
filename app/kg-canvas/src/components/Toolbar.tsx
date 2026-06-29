@@ -10,6 +10,7 @@ import {
   PanelRightOpen,
   Palette,
   Search,
+  ShieldPlus,
   SlidersHorizontal,
 } from "lucide-react"
 
@@ -95,6 +96,8 @@ export function Toolbar() {
   // never hides it.
   const inspectorOpen = useStore((s) => s.inspectorOpen)
   const toggleInspector = useStore((s) => s.toggleInspector)
+  const governanceOpen = useStore((s) => s.governanceOpen)
+  const toggleGovernance = useStore((s) => s.toggleGovernance)
   const filtersOpen = useStore((s) => s.filtersOpen)
   const toggleFiltersOpen = useStore((s) => s.toggleFiltersOpen)
 
@@ -199,6 +202,19 @@ export function Toolbar() {
       <div className="shrink-0 text-xs font-semibold text-foreground sm:text-sm">
         ThoughtWire Causal KG
       </div>
+
+      {/* Governance: open the left "Add policy & threshold" drawer. */}
+      <Button
+        variant={governanceOpen ? "default" : "ghost"}
+        size="icon-sm"
+        className="shrink-0"
+        aria-label="Add policy and threshold"
+        aria-pressed={governanceOpen}
+        title="Governance — add policy & threshold"
+        onClick={toggleGovernance}
+      >
+        <ShieldPlus />
+      </Button>
 
       {/* Build controls (ingest / causal / apply) collapsed into one popover —
           the graph is normally built from the `kg` CLI runbook, so these stay out
